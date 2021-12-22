@@ -1,7 +1,5 @@
 package com.p2m.core.launcher
 
-import com.p2m.annotation.module.api.ApiLauncher
-import java.lang.Exception
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -9,7 +7,6 @@ interface InterceptorService {
     fun doInterceptions(channel: InterceptableChannel, callback: InterceptorCallback)
 }
 
-@ApiLauncher("")
 object InterceptorServiceDefault:InterceptorService {
 
     override fun doInterceptions(channel: InterceptableChannel, callback: InterceptorCallback) {
@@ -33,8 +30,8 @@ object InterceptorServiceDefault:InterceptorService {
         if (interceptorIterator.hasNext()) {
             val interceptor = interceptorIterator.next()
             interceptor.process(blockOrigin, object : InterceptorCallback {
-                override fun onContinue(block: InterceptableChannel) {
-                    doInterception(interceptorIterator, block)
+                override fun onContinue(channel: InterceptableChannel) {
+                    doInterception(interceptorIterator, channel)
                 }
 
                 override fun onInterrupt(e: Throwable?) {
@@ -58,7 +55,7 @@ interface InterceptorCallback {
 interface LaunchInterceptor : IInterceptor<LaunchChannel>
 
 interface IInterceptor<C : InterceptableChannel> {
-    fun process(channel: C, callback: InterceptorCallback)
+    fun process(channel: InterceptableChannel, callback: InterceptorCallback)
 }
 
 /**
@@ -70,10 +67,10 @@ interface OnIntercept {
 
 typealias Channel = () -> Unit
 
-open class SafeChannel(private val channel: Channel) {
-    private var onFailure : ((e: Throwable) -> Unit)? = null
+open class SafeChannel(internal var channel: Channel) {
+    private var onFailure : ((channel: SafeChannel) -> Unit)? = null
 
-    protected open fun onFailure(failureBlock: (e: Throwable) -> Unit): SafeChannel {
+    protected open fun onFailure(failureBlock: (channel: SafeChannel) -> Unit): SafeChannel {
         this.onFailure = failureBlock
         return this
     }
@@ -84,7 +81,7 @@ open class SafeChannel(private val channel: Channel) {
         } catch (e: Throwable) {
             val failureBlock = onFailure
             if (failureBlock != null) {
-                failureBlock(e)
+                failureBlock(this)
             } else {
                 // 降级处理
 
@@ -109,7 +106,7 @@ open class InterceptableChannel(
     internal var tag : Any? = null
     internal var interceptors: ArrayList<IInterceptor<InterceptableChannel>> = arrayListOf()
 
-    protected open fun interceptors(interceptors: ArrayList<IInterceptor<InterceptableChannel>>): InterceptableChannel {
+    internal fun interceptors(interceptors: ArrayList<IInterceptor<InterceptableChannel>>): InterceptableChannel {
         this.interceptors.clear()
         this.interceptors += interceptors
         return this
@@ -130,8 +127,8 @@ open class InterceptableChannel(
         return this
     }
 
-    override fun onFailure(failureBlock: (e: Throwable) -> Unit): InterceptableChannel {
-        return super.onFailure(failureBlock) as InterceptableChannel
+    protected open fun onFailure(failureBlock: (channel: InterceptableChannel) -> Unit): InterceptableChannel {
+        return super.onFailure { failureBlock(it as InterceptableChannel) } as InterceptableChannel
     }
 
     override fun invoke() {
@@ -139,28 +136,27 @@ open class InterceptableChannel(
             super.invoke()
         }
 
-        if (isGreenChannel) {
+        if (!isGreenChannel) {
+            InterceptorServiceDefault.doInterceptions(this, object : InterceptorCallback {
+                override fun onContinue(channel: InterceptableChannel) {
+                    if (channel === this@InterceptableChannel) {
+                        superInvoke()
+                    } else {
+                        channel.invoke()
+                    }
+                }
+
+                override fun onInterrupt(e: Throwable?) {
+                    val interceptBlock = interceptBlock
+                    if (interceptBlock != null) {
+                        interceptBlock(this@InterceptableChannel)
+                    }
+                }
+
+            })
+        } else {
             superInvoke()
-            return
         }
-
-        InterceptorServiceDefault.doInterceptions(this, object : InterceptorCallback {
-            override fun onContinue(block: InterceptableChannel) {
-                if (block === this@InterceptableChannel) {
-                    superInvoke()
-                } else {
-                    block.invoke()
-                }
-            }
-
-            override fun onInterrupt(e: Throwable?) {
-                val interceptBlock = interceptBlock
-                if (interceptBlock != null) {
-                    interceptBlock(this@InterceptableChannel)
-                }
-            }
-
-        })
     }
 
     override fun hashCode(): Int {

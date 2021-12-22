@@ -45,11 +45,7 @@ interface ServiceLauncher : Launcher {
      * as input param, all other fields (action, data, type) are null, though
      * they can be modified later in [onFillIntent].
      */
-    fun launchBlock(
-        isGreenChannel: Boolean = false,
-        interceptTimeoutSecond: Int = 10,
-        launchBlock: LaunchServiceBlock
-    ): InterceptableChannel
+    fun launchChannel(launchBlock: LaunchServiceBlock): LaunchChannelDelegate
 }
 
 /**

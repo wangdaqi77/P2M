@@ -36,7 +36,7 @@ import kotlin.reflect.KProperty
  */
 interface ActivityLauncher<I, O> : Launcher{
 
-    class Delegate<I, O>(clazz: Class<*>, createActivityResultContractBlock: () -> ActivityResultContractP2MCompact<I, O>) {
+    class Delegate<I, O>(clazz: Class<*>, createActivityResultContractBlock: () -> ActivityResultContractCompat<I, O>) {
         private val real by lazy(LazyThreadSafetyMode.NONE) {
             InternalActivityLauncher<I, O>(clazz, createActivityResultContractBlock)
         }
@@ -49,59 +49,55 @@ interface ActivityLauncher<I, O> : Launcher{
      * all other fields (action, data, type) are null, though
      * they can be modified later in [onFillIntent].
      */
-    fun launch(
-        isGreenChannel: Boolean = false,
-        interceptTimeoutSecond: Int = 10,
-        launchBlock: LaunchActivityBlock
-    )
+    fun launchChannel(launchBlock: LaunchActivityBlock) : LaunchChannelDelegate
 
     /**
      * Register a activity result for that [Activity] class annotated by [ApiLauncher].
      *
      * No need to explicitly pass in a instance of activity result contract during registration,
      * that instance will auto create, that type is implement class of
-     * [ActivityResultContractP2MCompact] and use [ApiLauncherActivityResultContractFor]
+     * [ActivityResultContractCompat] and use [ApiLauncherActivityResultContractFor]
      * annotated, and that must has a empty constructor.
      *
      * @return a instance of ActivityResultLauncher.
      *
      * @see ApiLauncher
      * @see ApiLauncherActivityResultContractFor
-     * @see ActivityResultContractP2MCompact
+     * @see ActivityResultContractCompat
      */
-    fun registerForActivityResult(activity: ComponentActivity, callback: ActivityResultCallbackP2MCompact<O>): ActivityResultLauncherP2MCompact<I, O>
+    fun registerResultLauncher(activity: ComponentActivity, callback: ActivityResultCallbackCompat<O>): ActivityResultLauncherCompat<I, O>
 
     /**
      * Register a activity result for that [Activity] class annotated by [ApiLauncher].
      *
      * No need to explicitly pass in a instance of activity result contract during registration,
      * that instance will auto create, that type is implement class of
-     * [ActivityResultContractP2MCompact] and use [ApiLauncherActivityResultContractFor]
+     * [ActivityResultContractCompat] and use [ApiLauncherActivityResultContractFor]
      * annotated, and that must has a empty constructor.
      *
      * @return a instance of ActivityResultLauncher.
      *
      * @see ApiLauncher
      * @see ApiLauncherActivityResultContractFor
-     * @see ActivityResultContractP2MCompact
+     * @see ActivityResultContractCompat
      */
-    fun registerForActivityResult(fragment: Fragment, callback: ActivityResultCallbackP2MCompact<O>): ActivityResultLauncherP2MCompact<I, O>
+    fun registerResultLauncher(fragment: Fragment, callback: ActivityResultCallbackCompat<O>): ActivityResultLauncherCompat<I, O>
 
     /**
      * Register a activity result for that [Activity] class annotated by [ApiLauncher].
      *
      * No need to explicitly pass in a instance of activity result contract during registration,
      * that instance will auto create, that type is implement class of
-     * [ActivityResultContractP2MCompact] and use [ApiLauncherActivityResultContractFor]
+     * [ActivityResultContractCompat] and use [ApiLauncherActivityResultContractFor]
      * annotated, and that must has a empty constructor.
      *
      * @return a instance of ActivityResultLauncher.
      *
      * @see ApiLauncher
      * @see ApiLauncherActivityResultContractFor
-     * @see ActivityResultContractP2MCompact
+     * @see ActivityResultContractCompat
      */
-    fun registerForActivityResult(activityResultRegistry: ActivityResultRegistry, key: String, callback: ActivityResultCallbackP2MCompact<O>): ActivityResultLauncherP2MCompact<I, O>
+    fun registerResultLauncher(activityResultRegistry: ActivityResultRegistry, key: String, callback: ActivityResultCallbackCompat<O>): ActivityResultLauncherCompat<I, O>
 }
 
 /**
@@ -109,35 +105,49 @@ interface ActivityLauncher<I, O> : Launcher{
  *
  * @see ApiLauncher
  */
-class ActivityResultLauncherP2MCompact<I, O>(private val activityLauncher:ActivityLauncher<I, O>, private val activityResultLauncher: ActivityResultLauncher<I>) {
+interface ActivityResultLauncherCompat<I, O> {
 
     /**
      * Launch a activity result for that [Activity] class annotated by [ApiLauncher].
      *
      * No need to explicitly pass in a instance of activity result contract during registration,
      * that instance will auto create, that type is implement class of
-     * [ActivityResultContractP2MCompact] and use [ApiLauncherActivityResultContractFor]
+     * [ActivityResultContractCompat] and use [ApiLauncherActivityResultContractFor]
      * annotated, and that must has a empty constructor.
      *
      * @return a instance of ActivityResultLauncher.
      *
      * @see ApiLauncher
      * @see ApiLauncherActivityResultContractFor
-     * @see ActivityResultContractP2MCompact
+     * @see ActivityResultContractCompat
      */
-    fun launch(input: I, options: ActivityOptionsCompat? = null) {
-        activityResultLauncher.launch(input, options)
-    }
+    fun launchChannel(options: ActivityOptionsCompat? = null, inputBlock: () -> I) : LaunchChannelDelegate
 
-    fun unregister() = activityResultLauncher.unregister()
+    fun unregister()
 
-    @Suppress("UNCHECKED_CAST")
-    fun getContract(): ActivityResultContractP2MCompact<I, O> =
-        activityResultLauncher.contract as ActivityResultContractP2MCompact<I, O>
+    fun getContract(): ActivityResultContractCompat<I, O>
 }
 
-abstract class ActivityResultContractP2MCompact<I, O> :
-    ActivityResultContract<I, ActivityResultP2MCompact<O>>() {
+
+
+
+internal class InternalActivityResultLauncherCompat<I, O>(private val activityLauncher:ActivityLauncher<I, O>, private val activityResultLauncher: ActivityResultLauncher<I>): ActivityResultLauncherCompat<I, O> {
+
+    override fun launchChannel(options: ActivityOptionsCompat?, inputBlock: () -> I) =
+        LaunchChannel
+            .delegate(activityLauncher) {
+                activityResultLauncher.launch(inputBlock(), options)
+            }
+
+    override fun unregister() = activityResultLauncher.unregister()
+
+    @Suppress("UNCHECKED_CAST")
+    override fun getContract(): ActivityResultContractCompat<I, O> =
+        activityResultLauncher.contract as ActivityResultContractCompat<I, O>
+}
+
+abstract class ActivityResultContractCompat<I, O> :
+    ActivityResultContract<I, ActivityResultCompat<O>>() {
 
     internal lateinit var activityClazz: Class<*>
 
@@ -150,14 +160,14 @@ abstract class ActivityResultContractP2MCompact<I, O> :
     abstract fun inputIntoCreatedIntent(input: I, intent: Intent)
 
     /**
-     * Returns output of result, that will provide to [ActivityResultCallbackP2MCompact].
+     * Returns output of result, that will provide to [ActivityResultCallbackCompat].
      *
      * @param resultCode - from [Activity.setResult] of owner activity.
      * @param intent - from [Activity.setResult] of owner activity.
      * @return - output of result.
      *
-     * @see ActivityLauncher.registerForActivityResult
-     * @see ActivityResultLauncherP2MCompact.launch
+     * @see ActivityLauncher.registerResultLauncher
+     * @see InternalActivityResultLauncherCompat.launch
      */
     abstract fun outputFromResultIntent(resultCode: Int, intent: Intent?): O?
 
@@ -167,24 +177,24 @@ abstract class ActivityResultContractP2MCompact<I, O> :
         return intent.also { inputIntoCreatedIntent(input, it) }
     }
 
-    final override fun parseResult(resultCode: Int, intent: Intent?): ActivityResultP2MCompact<O> =
-        ActivityResultP2MCompact(resultCode, outputFromResultIntent(resultCode, intent))
+    final override fun parseResult(resultCode: Int, intent: Intent?): ActivityResultCompat<O> =
+        ActivityResultCompat(resultCode, outputFromResultIntent(resultCode, intent))
 }
 
-class DefaultActivityResultContractP2MCompact : ActivityResultContractP2MCompact<Intent, Intent>() {
+class DefaultActivityResultContractCompat : ActivityResultContractCompat<Intent, Intent>() {
 
     override fun inputIntoCreatedIntent(input: Intent, intent: Intent) = Unit
 
     override fun outputFromResultIntent(resultCode: Int, intent: Intent?): Intent? = intent
 }
 
-data class ActivityResultP2MCompact<O>(val resultCode: Int, val output: O?)
+data class ActivityResultCompat<O>(val resultCode: Int, val output: O?)
 
 
 /**
  * A callback for receive activity result.
  */
-typealias ActivityResultCallbackP2MCompact<O> = (resultCode: Int, output: O?) -> Unit
+typealias ActivityResultCallbackCompat<O> = (resultCode: Int, output: O?) -> Unit
 
 
 /**
