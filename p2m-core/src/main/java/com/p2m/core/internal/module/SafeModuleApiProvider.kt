@@ -1,5 +1,6 @@
 package com.p2m.core.internal.module
 
+import com.p2m.core.exception.P2MException
 import com.p2m.core.internal.moduleName
 import com.p2m.core.module.*
 
@@ -27,6 +28,6 @@ internal class SafeModuleApiProviderImpl(
                 return dependNode.module.api as MODULE_API
             }
         }
-        throw IllegalStateException("${clazz.moduleName} is unavailable, only modules ${self.internalModuleUnit.moduleName} depend on can be obtained when ${self.internalModuleUnit.moduleName} initializing.")
+        throw P2MException("${clazz.moduleName} is unavailable, only modules ${self.internalModuleUnit.moduleName} depend on can be obtained when ${self.internalModuleUnit.moduleName} initializing.")
     }
 }

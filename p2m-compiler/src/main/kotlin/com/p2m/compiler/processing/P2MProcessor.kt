@@ -15,7 +15,6 @@ import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
 import com.squareup.kotlinpoet.metadata.toImmutableKmClass
 import com.sun.tools.javac.code.Symbol
-import com.sun.tools.javac.code.Type
 import java.io.File
 import java.io.Writer
 import javax.annotation.processing.Processor
@@ -563,8 +562,8 @@ class P2MProcessor : BaseProcessor() {
         val ActivityLauncherDelegate = ClassName.bestGuess("$ActivityLauncher.$CLASS_LAUNCHER_DELEGATE")
         val ServiceLauncherDelegate = ClassName.bestGuess("$ServiceLauncher.$CLASS_LAUNCHER_DELEGATE")
         val FragmentLauncherDelegate = ClassName.bestGuess("$FragmentLauncher.$CLASS_LAUNCHER_DELEGATE")
-        val DefaultActivityResultContractP2MCompact = ClassName(PACKAGE_NAME_LAUNCHER, CLASS_DefaultActivityResultContractP2MCompact)
-        val ActivityResultContractP2MCompact = ClassName(PACKAGE_NAME_LAUNCHER, CLASS_ActivityResultContractP2MCompact)
+        val DefaultActivityResultContractCompat = ClassName(PACKAGE_NAME_LAUNCHER, CLASS_DefaultActivityResultContractP2MCompat)
+        val ActivityResultContractP2MCompat = ClassName(PACKAGE_NAME_LAUNCHER, CLASS_ActivityResultContractCompat)
 
         // 收集ActivityResultContract - 支持ResultApi
         val activityResultContractMap = mutableMapOf<String, TypeElement>()
@@ -573,8 +572,8 @@ class P2MProcessor : BaseProcessor() {
             element as TypeElement
             element.checkKotlinClass()
             val typeSpec = element.toTypeSpec()
-            check(typeSpec.superclass.toString().startsWith(ActivityResultContractP2MCompact.canonicalName)) {
-                "The super class of ${element.qualifiedName.toString()} must is ${ActivityResultContractP2MCompact.canonicalName}, current: ${typeSpec.superclass}."
+            check(typeSpec.superclass.toString().startsWith(ActivityResultContractP2MCompat.canonicalName)) {
+                "The super class of ${element.qualifiedName.toString()} must is ${ActivityResultContractP2MCompat.canonicalName}, current: ${typeSpec.superclass}."
             }
             val annotation = element.getAnnotation(ApiLauncherActivityResultContractFor::class.java)
             annotation.launcherName.forEach { launcherName->
@@ -624,7 +623,7 @@ class P2MProcessor : BaseProcessor() {
                         .apply {
                             elementUtils.getKDoc(element)?.apply { addKdoc(this) }
                             addKdoc("@see %T - origin.\n", className)
-                            addKdoc("@see %T - activity result contract.", activityResultContractMap[launcherName]?.className() ?: DefaultActivityResultContractP2MCompact)
+                            addKdoc("@see %T - activity result contract.", activityResultContractMap[launcherName]?.className() ?: DefaultActivityResultContractCompat)
                         }
                 }
                 typeUtils.isSubtype(tm, fragmentTm)
@@ -695,7 +694,7 @@ class P2MProcessor : BaseProcessor() {
                             "%T(%T::class.java) { %T() }",
                             ActivityLauncherDelegate,
                             className,
-                            activityResultContractMap[launcherName]?.className() ?: DefaultActivityResultContractP2MCompact
+                            activityResultContractMap[launcherName]?.className() ?: DefaultActivityResultContractCompat
                         )
                 }
                 typeUtils.isSubtype(tm, fragmentTm)

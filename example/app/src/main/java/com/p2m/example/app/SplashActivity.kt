@@ -24,20 +24,24 @@ class SplashActivity : AppCompatActivity() {
                 P2M.apiOf(Main::class.java)
                     .launcher
                     .activityOfMain
-                    .launch(this) {
-                        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    .launchChannel {
+                        it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                        it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(it)
                     }
+                    .navigation()
                 finish()
-            }else{
+            } else {
                 // 未登录
                 P2M.apiOf(Account::class.java)
                     .launcher
                     .activityOfLogin
-                    .launch(this) {
-                        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    .launchChannel {
+                        it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                        it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(it)
                     }
+                    .navigation()
                 finish()
             }
 

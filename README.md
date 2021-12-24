@@ -257,7 +257,8 @@ class LoginActivity: Activity() {
 P2M.apiOf(Account::class.java)
     .launcher
     .activityOfLogin
-    .launch(this)
+    .launchChannel(::startActivity)
+    .navigation()
 ```
 Activity的启动器还[支持ResultApi](#Activity启动器如何支持ResultApi)。
 
@@ -399,7 +400,9 @@ private val modifyAccountNameLauncherForActivityResult =
         }
 
 // 启动界面
-modifyAccountNameLauncherForActivityResult.launch(null)
+modifyAccountNameLauncherForActivityResult
+    .launchChannel{ /*return input*/ }
+    .navigation()
 ```
 
 如何单独运行模块？

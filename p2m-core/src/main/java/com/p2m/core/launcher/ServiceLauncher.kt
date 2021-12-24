@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.app.Service
 import com.p2m.annotation.module.api.ApiLauncher
+import com.p2m.core.channel.GreenChannel
 import com.p2m.core.internal.launcher.InternalServiceLauncher
 import kotlin.reflect.KProperty
 
@@ -21,12 +22,13 @@ import kotlin.reflect.KProperty
  * P2M.apiOf(Account)
  *      .launcher
  *      .serviceOfWork
- *      .launch(::startService)
+ *      .launchChannel(::startService)
+ *      .navigation()
  * ```
  *
- * @see Context.startService - e.g.`launch(::startService)`.
- * @see Context.startForegroundService - e.g.`launch(::startForegroundService)`.
- * @see Context.bindService - e.g. use `launch(::xx)` need declare `fun xx(intent: Intent)`
+ * @see Context.startService - e.g.`launchChannel(::startService)`.
+ * @see Context.startForegroundService - e.g.`launchChannel(::startForegroundService)`.
+ * @see Context.bindService - e.g. use `launchChannel(::xx)` need declare `fun xx(intent: Intent)`
  * method for call bindService.
  * @see ApiLauncher
  */
@@ -43,9 +45,9 @@ interface ServiceLauncher : Launcher {
      *
      * [launchBlock] is real launch method, that has a created Intent instance
      * as input param, all other fields (action, data, type) are null, though
-     * they can be modified later in [onFillIntent].
+     * they can be modified later in [launchBlock].
      */
-    fun launchChannel(launchBlock: LaunchServiceBlock): LaunchChannelDelegate
+    fun launchChannel(launchBlock: LaunchServiceBlock): GreenChannel
 }
 
 /**

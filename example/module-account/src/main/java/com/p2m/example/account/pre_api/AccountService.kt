@@ -29,9 +29,11 @@ class AccountService{
         P2M.apiOf(Account::class.java)
             .launcher
             .activityOfLogin
-            .launch(context) {
-                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            .launchChannel {
+                it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(it)
             }
+            .navigation()
     }
 }

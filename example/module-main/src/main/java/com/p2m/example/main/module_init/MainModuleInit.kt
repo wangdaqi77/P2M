@@ -31,11 +31,12 @@ class MainModuleInit : ModuleInit {
                 P2M.apiOf(Main::class.java)
                     .launcher
                     .activityOfMain
-                    .launch(context) {
-                        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        context.startActivity(this)
+                    .launchChannel {
+                        it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                        it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        context.startActivity(it)
                     }
+                    .navigation()
             }
 
         })

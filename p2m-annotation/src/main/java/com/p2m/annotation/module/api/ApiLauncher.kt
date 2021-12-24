@@ -30,7 +30,8 @@ import kotlin.reflect.jvm.internal.impl.resolve.constants.KClassValue
  * P2M.apiOf(Account)
  *      .launcher
  *      .activityOfLogin
- *      .launch(::startActivity)
+ *      .launchChannel(::startActivity)
+ *      .navigation()
  * ```
  *
  * @property launcherName - used to generate property names, it follows the hump nomenclature.

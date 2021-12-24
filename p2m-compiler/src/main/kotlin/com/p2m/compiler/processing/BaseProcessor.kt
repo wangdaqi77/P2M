@@ -37,8 +37,8 @@ abstract class BaseProcessor : AbstractProcessor() {
         const val CLASS_EVENT_INTERNAL_MUTABLE_DELEGATE = "InternalMutableDelegate"
 
         const val PACKAGE_NAME_LAUNCHER = "${PACKAGE_NAME_CORE}.launcher"
-        const val CLASS_ActivityResultContractP2MCompact = "ActivityResultContractP2MCompact"
-        const val CLASS_DefaultActivityResultContractP2MCompact = "DefaultActivityResultContractP2MCompact"
+        const val CLASS_ActivityResultContractCompat = "ActivityResultContractCompat"
+        const val CLASS_DefaultActivityResultContractP2MCompat = "DefaultActivityResultContractCompat"
         const val CLASS_ActivityLauncher = "ActivityLauncher"
         const val CLASS_FragmentLauncher = "FragmentLauncher"
         const val CLASS_ServiceLauncher = "ServiceLauncher"

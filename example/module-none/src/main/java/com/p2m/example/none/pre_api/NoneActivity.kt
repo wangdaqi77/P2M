@@ -18,12 +18,10 @@ class NoneActivity : AppCompatActivity() {
         setContentView(View(this))
 
 
-        P2M.apiOf(None::class.java)
+        val fragment = P2M.apiOf(None::class.java)
             .launcher
             .fragmentOfTest
-            .launch {
-                // block of launch
-            }
+            .navigation()
     }
 
 }

@@ -2,6 +2,7 @@ package com.p2m.core.internal.module
 
 import android.content.Context
 import android.content.pm.PackageManager
+import com.p2m.core.exception.P2MException
 import com.p2m.core.module.Module
 import java.lang.RuntimeException
 
@@ -20,7 +21,7 @@ internal class ManifestModuleFinder(context: Context) {
             return table[moduleName]!!
         }
         val value = metaData.getString("p2m:module=${moduleName}")
-            ?: throw RuntimeException("Not found module impl class, that name is $moduleName")
+            ?: throw P2MException("Not found module impl class, that name is $moduleName")
         val attributes = value.trim().split(",")
         attributes.forEach {
             val attribute = it.trim().split("=")
@@ -34,6 +35,6 @@ internal class ManifestModuleFinder(context: Context) {
                 return clazz
             }
         }
-        throw RuntimeException("Not found module impl class, that name is $moduleName")
+        throw P2MException("Not found module impl class, that name is $moduleName")
     }
 }

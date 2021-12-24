@@ -1,7 +1,5 @@
 package com.p2m.core.launcher
 
-import android.app.Fragment
-import android.content.Intent
 import com.p2m.annotation.module.api.ApiLauncher
 import com.p2m.core.internal.launcher.InternalFragmentLauncher
 import kotlin.reflect.KProperty
@@ -17,18 +15,10 @@ import kotlin.reflect.KProperty
  *
  * then get a instance for launch in external module:
  * ```kotlin
- * P2M.apiOf(Main)
+ * val homeFragment = P2M.apiOf(Main)
  *      .launcher
  *      .fragmentOfHome
- *      .launch { fragment->
- *          // block of launch
- *      }
- *
- * // or
- * P2M.apiOf(Main)
- *      .launcher
- *      .fragmentOfHome
- *      .launch(::launchBlock)
+ *      .navigation()
  * ```
  *
  * @see ApiLauncher
@@ -42,11 +32,11 @@ interface FragmentLauncher<T> : Launcher {
     }
 
     /**
-     * Launch a fragment for that [Fragment] class annotated by [ApiLauncher].
+     * Create a fragment for that class annotated by [ApiLauncher].
      *
      * @return a instance.
      */
-    fun launchChannel(launchBlock: LaunchFragmentBlock<T>): LaunchChannelDelegate
+    fun navigation(): T
 }
 
 /**
