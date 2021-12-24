@@ -42,8 +42,7 @@ buildscript {
 apply plugin: "p2m-android"
 ```
 注意事项：
- * P2M内部使用了Kotlin和APG，如上在`settings.gradle`文件中必须声明Kotlin依赖项和APG依赖项，参考示例中工程中[根目录下的settings.gradle](./example/settings.gradle)；
- * 工程根目录下的`build.gradle`文件中要移除Kotlin依赖项和APG依赖项，参考示例工程中[根目录下的build.gradle](./example/build.gradle)。
+ * P2M内部使用了Kotlin和APG，如上在`settings.gradle`文件中必须声明Kotlin依赖项和APG依赖项，与此同时工程根目录下的`build.gradle`文件中要移除Kotlin依赖项和APG依赖项，参考示例中工程中[根目录下的settings.gradle](./example/settings.gradle)和[根目录下的build.gradle](./example/build.gradle)。
 
 声明插件后，使用`p2m { }`配置大多数功能，在`settings.gradle`文件中：
 ```
@@ -287,16 +286,16 @@ P2M.apiOf(Account::class.java)
 `ApiEvent`是为模块的事件而设计的，同一模块内只能注解一个类：
  * 被注解类必须是`interface`；
  * 被注解类中所有使用`ApiEventField`注解的成员字段将会转换成[可感知生命周期的可订阅的事件持有类型][live-event]（概况一下就是类似LiveData，但是比LiveData适合事件场景），这些类型用于发送事件和订阅事件。
-   * `ApiEventField`需要指定`eventOn`和`mutableFromExternal`，默认为`@ApiEventField(eventOn = EventOn.MAIN, mutableFromExternal = false)`；
+   * `ApiEventField`需要指定`eventOn`和`externalMutable`，默认为`@ApiEventField(eventOn = EventOn.MAIN, externalMutable = false)`；
      * `eventOn = MAIN`表示在主线程维护和接收事件，`eventOn = BACKGROUND`表示在后台线程维护和接收事件；
-     * `mutableFromExternal = false`表示外部模块不可发出事件，为了保证事件的安全性，不推荐外部模块发出事件。
+     * `externalMutable = false`表示外部模块不可发出事件，为了保证事件的安全性，不推荐外部模块发出事件。
  * 模块内部通过调用`P2M.apiOf(${moduleName}::class.java).event.mutable()`发出事件；
 
 例如，外部模块需要登录成功后进行跳转，因此`Account`模块需要暴露登录成功的事件，且此事件禁止外部模块更改，首先在`Account`模块声明：
 ```kotlin
 @ApiEvent
 interface AccountEvent {
-    @ApiEventField(eventOn = EventOn.BACKGROUND, mutableFromExternal = false)
+    @ApiEventField(eventOn = EventOn.BACKGROUND, externalMutable = false)
     val loginSuccess: Unit
 }
 ```

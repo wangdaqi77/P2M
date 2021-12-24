@@ -13,7 +13,7 @@ package com.p2m.annotation.module.api
  * ```kotlin
  * @ApiEvent
  * interface Event {
- *      @ApiEventField(eventOn = EventOn.BACKGROUND, mutableFromExternal = false)
+ *      @ApiEventField(eventOn = EventOn.BACKGROUND, externalMutable = false)
  *      val loginSuccess : Unit
  * }
  * ```
@@ -35,19 +35,19 @@ annotation class ApiEvent
 
 /**
  *  A field uses this annotation, it will generate different event holder property
- * according to [eventOn] and [mutableFromExternal].
+ * according to [eventOn] and [externalMutable].
  *
  * Default is [EventOn.MAIN] + immutable from external.
  *
  * Use only in class annotated by [ApiEvent].
  *
  * @property eventOn specified thread to receive event.
- * @property mutableFromExternal mutable from external, if true that External module
+ * @property externalMutable mutable from external, if true that External module
  * support call setValue and postValue.
  */
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.BINARY)
-annotation class ApiEventField(val eventOn: EventOn = EventOn.MAIN, val mutableFromExternal: Boolean = false)
+annotation class ApiEventField(val eventOn: EventOn = EventOn.MAIN, val externalMutable: Boolean = false)
 
 /**
  * Which thread to maintain event do you want.

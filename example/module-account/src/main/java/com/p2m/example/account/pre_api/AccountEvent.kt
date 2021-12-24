@@ -12,7 +12,7 @@ interface AccountEvent{
      *
      * 信息发生变化时发送事件
      */
-    @ApiEventField(eventOn = EventOn.MAIN, mutableFromExternal = false)
+    @ApiEventField(eventOn = EventOn.MAIN, externalMutable = false)
     val loginInfo: LoginUserInfo?
 
     /**
@@ -20,7 +20,7 @@ interface AccountEvent{
      *
      * 状态发生变化时发送事件
      */
-    @ApiEventField // 等效于 @ApiEventField(eventOn = EventOn.MAIN, mutableFromExternal = false)
+    @ApiEventField // 等效于 @ApiEventField(eventOn = EventOn.MAIN, externalMutable = false)
     val loginState: Boolean
 
     /**
@@ -32,11 +32,11 @@ interface AccountEvent{
     val loginSuccess: Unit
 
     /**
-     * mutableFromExternal = true，表示外部模块可以setValue和postValue
+     * externalMutable = true，表示外部模块可以setValue和postValue
      *
      * 为了保证事件的安全性不推荐设置
      */
-    @ApiEventField(eventOn = EventOn.MAIN, mutableFromExternal = true)
+    @ApiEventField(eventOn = EventOn.MAIN, externalMutable = true)
     val testMutableEventFromExternal: Int
 
     val testAPT:Int     // 这个字段没有被注解，因此它将被过滤

@@ -1001,10 +1001,10 @@ class P2MProcessor : BaseProcessor() {
         val MutableLiveEvent = ClassName(PACKAGE_NAME_EVENT, CLASS_MUTABLE_LIVE_EVENT)
         val BackgroundLiveEvent = ClassName(PACKAGE_NAME_EVENT, CLASS_BACKGROUND_EVENT)
         val MutableBackgroundLiveEvent = ClassName(PACKAGE_NAME_EVENT, CLASS_MUTABLE_BACKGROUND_EVENT)
-        val getEventClassName = { eventOn: EventOn, mutableFromExternal: Boolean ->
+        val getEventClassName = { eventOn: EventOn, externalMutable: Boolean ->
             when (eventOn) {
-                EventOn.MAIN -> if (!mutableFromExternal) LiveEvent else MutableLiveEvent
-                EventOn.BACKGROUND -> if (!mutableFromExternal) BackgroundLiveEvent else MutableBackgroundLiveEvent
+                EventOn.MAIN -> if (!externalMutable) LiveEvent else MutableLiveEvent
+                EventOn.BACKGROUND -> if (!externalMutable) BackgroundLiveEvent else MutableBackgroundLiveEvent
             }
         }
         val getDelegateOuterClassName = { eventOn: EventOn ->
@@ -1024,7 +1024,7 @@ class P2MProcessor : BaseProcessor() {
             .filter { eventFieldMap.containsKey(it.name) }
         val apiPropertySpecsBuilders = eventOriginPropertySpecs.map { // 所有的属性builder
             val (eventField, eventDoc) = eventFieldMap[it.name]!!
-            val eventClassName = getEventClassName(eventField.eventOn, eventField.mutableFromExternal)
+            val eventClassName = getEventClassName(eventField.eventOn, eventField.externalMutable)
             PropertySpec.builder(it.name, eventClassName.parameterizedBy(it.type)).apply {
                 mutable(false)
                 annotations.clear()
@@ -1053,10 +1053,10 @@ class P2MProcessor : BaseProcessor() {
 
         val implPropertySpecs = eventOriginPropertySpecs.map {
             val (eventField, _) = eventFieldMap[it.name]!!
-            val mutableFromExternal = eventField.mutableFromExternal
-            val eventClassName = getEventClassName(eventField.eventOn, eventField.mutableFromExternal)
+            val externalMutable = eventField.externalMutable
+            val eventClassName = getEventClassName(eventField.eventOn, eventField.externalMutable)
             val delegateOuterClassName = getDelegateOuterClassName(eventField.eventOn)
-            val delegateName = if(mutableFromExternal) CLASS_EVENT_MUTABLE_DELEGATE else CLASS_EVENT_DELEGATE
+            val delegateName = if(externalMutable) CLASS_EVENT_MUTABLE_DELEGATE else CLASS_EVENT_DELEGATE
             PropertySpec.builder(it.name, eventClassName.parameterizedBy(it.type)).run {
                 mutable(false)
                 addModifiers(KModifier.OVERRIDE)
