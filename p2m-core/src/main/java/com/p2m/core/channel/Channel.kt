@@ -1,6 +1,7 @@
 package com.p2m.core.channel
 
 import com.p2m.core.exception.ChannelClosedException
+import com.p2m.core.internal.log.logW
 
 typealias ChannelBlock = () -> Unit
 
@@ -21,9 +22,14 @@ class GreenChannel internal constructor(owner: Any, channelBlock: ChannelBlock) 
         greenChannel()
     }
 
-    override fun onStarted(onStarted: (channel: Channel) -> Unit): GreenChannel {
+    public override fun callback(navigationCallback: NavigationCallback) {
+        super.callback(navigationCallback)
+    }
+
+    public override fun onStarted(onStarted: (channel: Channel) -> Unit): GreenChannel {
         return super.onStarted(onStarted) as GreenChannel
     }
+
     public override fun onFailure(onFailure: (channel: Channel) -> Unit): GreenChannel {
         return super.onFailure(onFailure) as GreenChannel
     }
@@ -40,6 +46,10 @@ class GreenChannel internal constructor(owner: Any, channelBlock: ChannelBlock) 
 
 class InterruptibleChannel internal constructor(owner: Any, channelBlock: ChannelBlock) :
     Channel(owner, channelBlock) {
+
+    public override fun callback(navigationCallback: NavigationCallback) {
+        super.callback(navigationCallback)
+    }
 
     override fun onStarted(onStarted: (channel: Channel) -> Unit): InterruptibleChannel {
         return super.onStarted(onStarted) as InterruptibleChannel
@@ -94,7 +104,8 @@ open class Channel internal constructor(val owner: Any, private var channelBlock
     private var closedException : ChannelClosedException? = null
     private val lock = Any()
     internal var tag : Any? = null
-    private val navigationCallback: NavigationCallback by lazy(LazyThreadSafetyMode.NONE) {
+    private var navigationCallback: NavigationCallback? = null
+    private val _navigationCallback: NavigationCallback by lazy(LazyThreadSafetyMode.NONE) {
         object : NavigationCallback {
             override fun onStarted(channel: Channel) {
                 onStarted?.invoke(channel)
@@ -114,17 +125,34 @@ open class Channel internal constructor(val owner: Any, private var channelBlock
         }
     }
 
+    private fun setNavigationCallbackIfNull() {
+        if (this.navigationCallback != null && this.navigationCallback !== this._navigationCallback) {
+            logW("Called `callback(NavigationCallback)` already.")
+        }
+        this.navigationCallback = this._navigationCallback
+    }
+
+    protected open fun callback(navigationCallback: NavigationCallback) {
+        if (this.navigationCallback === _navigationCallback) {
+            logW("Called `onStarted { }` or `onFailure { }` or `onCompleted { }` or `onInterrupt { }` already.")
+        }
+        this.navigationCallback = navigationCallback
+    }
+
     protected open fun onStarted(onStarted: (channel: Channel) -> Unit): Channel {
+        setNavigationCallbackIfNull()
         this.onStarted = onStarted
         return this
     }
 
     protected open fun onFailure(onFailure: (channel: Channel) -> Unit): Channel {
+        setNavigationCallbackIfNull()
         this.onFailure = onFailure
         return this
     }
 
     protected open fun onCompleted(onCompleted: (channel: Channel) -> Unit): Channel {
+        setNavigationCallbackIfNull()
         this.onCompleted = onCompleted
         return this
     }
@@ -145,6 +173,7 @@ open class Channel internal constructor(val owner: Any, private var channelBlock
     }
 
     protected open fun onInterrupt(onInterrupt: (channel: Channel) -> Unit): Channel {
+        setNavigationCallbackIfNull()
         this.onInterrupt = onInterrupt
         return this
     }
@@ -167,7 +196,7 @@ open class Channel internal constructor(val owner: Any, private var channelBlock
         synchronized(lock) {
             if (!isStarted) {
                 isStarted = true
-                navigationCallback.onStarted(this)
+                navigationCallback?.onStarted(this)
             }
 
             if (!isGreenChannel) {
@@ -177,7 +206,7 @@ open class Channel internal constructor(val owner: Any, private var channelBlock
                     }
 
                     override fun onInterrupt(e: Throwable?) {
-                        navigationCallback.onInterrupt(this@Channel)
+                        navigationCallback?.onInterrupt(this@Channel)
                     }
 
                 })
@@ -192,13 +221,13 @@ open class Channel internal constructor(val owner: Any, private var channelBlock
         synchronized(lock) {
             try {
                 if (isClosed) {
-                    navigationCallback.onFailure(this, closedException!!)
+                    navigationCallback?.onFailure(this, closedException!!)
                     return
                 }
                 channelBlock()
-                navigationCallback.onCompleted(this)
+                navigationCallback?.onCompleted(this)
             } catch (e: Throwable) {
-                navigationCallback.onFailure(this, e)
+                navigationCallback?.onFailure(this, e)
             } finally {
                 close()
             }

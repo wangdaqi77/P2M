@@ -7,22 +7,22 @@ import androidx.annotation.MainThread
 import com.p2m.core.app.App
 import com.p2m.core.config.P2MConfigManager
 import com.p2m.core.internal.config.InternalP2MConfigManager
+import com.p2m.core.internal.module.*
+import com.p2m.core.internal.module.DefaultModuleFactory
+import com.p2m.core.internal.module.DefaultModuleNameCollectorFactory
+import com.p2m.core.internal.module.ExternalModuleInfoFinder
+import com.p2m.core.internal.module.ManifestModuleInfoFinder
+import com.p2m.core.internal.module.ModuleContainerDefault
 import com.p2m.core.internal.moduleName
 import com.p2m.core.internal.module.deriver.InternalDriver
-import com.p2m.core.internal.module.DefaultModuleCollectorFactory
-import com.p2m.core.internal.module.DefaultModuleFactory
-import com.p2m.core.internal.module.ModuleContainerImpl
-import com.p2m.core.internal.module.ManifestModuleFinder
 import com.p2m.core.module.*
+import java.util.*
 
 @SuppressLint("StaticFieldLeak")
 object P2M : ModuleApiProvider{
     internal lateinit var internalContext : Context
-    private lateinit var moduleCollector : ModuleCollector
     private lateinit var driver: InternalDriver
-    private lateinit var manifestModuleFinder : ManifestModuleFinder
-    private val moduleFactory: ModuleFactory = DefaultModuleFactory()
-    private val moduleContainer = ModuleContainerImpl()
+    private val moduleContainer = ModuleContainerDefault()
     internal val configManager: P2MConfigManager = InternalP2MConfigManager()
 
     /**
@@ -36,20 +36,27 @@ object P2M : ModuleApiProvider{
      * Initialization.
      */
     @MainThread
-    fun init(context: Context, vararg externalModuleName: String) {
+    fun init(context: Context, vararg externalModule: ModuleInfo) {
         check(!this::internalContext.isInitialized) { "`P2M.init()` can only be called once." }
         check(Looper.getMainLooper() === Looper.myLooper()) { "`P2M.init()` must be called on the main thread." }
-        val app = App()
+
         val applicationContext = context.applicationContext
         this.internalContext = applicationContext
-        this.manifestModuleFinder = ManifestModuleFinder(applicationContext)
-        this.moduleCollector = DefaultModuleCollectorFactory()
-            .newInstance("${applicationContext.packageName}.ModuleAutoCollector")
-            .apply {
-                injectForCreatedModule(app, moduleContainer)
-                injectForExternal(manifestModuleFinder, moduleFactory, moduleContainer, *externalModuleName)
-                injectForAllFromTop(app, manifestModuleFinder, moduleFactory, moduleContainer)
-            }
+
+
+        val externalModules = Arrays.copyOf(externalModule, externalModule.size)
+        val moduleNameCollector: ModuleNameCollector = DefaultModuleNameCollectorFactory()
+            .newInstance("${applicationContext.packageName}.GeneratedModuleNameCollector")
+            .apply { collectExternal(externalModules) }
+        val moduleInfoFinder: ModuleInfoFinder = GlobalModuleInfoFinder(
+            ExternalModuleInfoFinder(externalModules),
+            ManifestModuleInfoFinder(applicationContext)
+        )
+        val moduleFactory: ModuleFactory = DefaultModuleFactory()
+
+        val app = App()
+        moduleContainer.register(app, moduleNameCollector, moduleInfoFinder, moduleFactory)
+
         this.driver = InternalDriver(applicationContext, app, this.moduleContainer)
         this.driver.considerOpenAwait()
     }

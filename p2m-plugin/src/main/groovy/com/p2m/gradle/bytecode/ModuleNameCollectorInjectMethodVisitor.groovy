@@ -6,10 +6,10 @@ import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.commons.AdviceAdapter
 
 @Deprecated
-class ModuleAutoCollectorInjectMethodVisitor extends AdviceAdapter {
+class ModuleNameCollectorInjectMethodVisitor extends AdviceAdapter {
     HashMap<String, BaseProjectUnit> p2mProject
 
-    protected ModuleAutoCollectorInjectMethodVisitor(int api, MethodVisitor methodVisitor, int access, String name, String descriptor, HashMap<String, BaseProjectUnit> p2mProject) {
+    protected ModuleNameCollectorInjectMethodVisitor(int api, MethodVisitor methodVisitor, int access, String name, String descriptor, HashMap<String, BaseProjectUnit> p2mProject) {
         super(api, methodVisitor, access, name, descriptor)
         this.p2mProject = p2mProject
     }

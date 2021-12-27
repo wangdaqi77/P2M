@@ -4,10 +4,10 @@ import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.p2m.gradle.bean.BaseProjectUnit
 import com.p2m.gradle.bean.ModuleProjectUnit
-import com.p2m.gradle.task.GenerateModuleAutoCollector
+import com.p2m.gradle.task.GenerateModuleNameCollector
 import org.gradle.api.tasks.TaskProvider
 
-class GenerateModuleAutoCollectorJavaTaskRegister {
+class GenerateModuleNameCollectorJavaTaskRegister {
 
     public static void register(BaseProjectUnit moduleProject, boolean collectSelf){
 
@@ -17,27 +17,27 @@ class GenerateModuleAutoCollectorJavaTaskRegister {
             variant = variant as ApplicationVariant
             def variantName = variant.name
             def variantTaskMiddleName = variantName.capitalize()
-            def taskName = "generate${variantTaskMiddleName}ModuleAutoCollector"
+            def taskName = "generate${variantTaskMiddleName}GeneratedModuleNameCollector"
             HashSet<String> validDependenciesName = new HashSet<String>()
             validDependencies.forEach { validDependenciesName.add(it.moduleName) }
-            def generateModuleAutoCollectorSourceOutputDir = new File(
+            def generateModuleNameCollectorSourceOutputDir = new File(
                     project.getBuildDir().absolutePath
                             + File.separator
                             + "generated"
                             + File.separator
                             + "source"
                             + File.separator
-                            + "moduleAutoCollector"
+                            + "GeneratedModuleNameCollector"
                             + File.separator
                             + variantName)
-            TaskProvider taskProvider = project.tasks.register(taskName, GenerateModuleAutoCollector.class) { task ->
-                task.sourceOutputDir.set(generateModuleAutoCollectorSourceOutputDir)
+            TaskProvider taskProvider = project.tasks.register(taskName, GenerateModuleNameCollector.class) { task ->
+                task.sourceOutputDir.set(generateModuleNameCollectorSourceOutputDir)
                 task.packageName.set(variant.applicationId)
                 task.validDependenciesName.set(validDependenciesName)
             }
 
-            variant.registerJavaGeneratingTask(taskProvider.get(), generateModuleAutoCollectorSourceOutputDir)
-            variant.addJavaSourceFoldersToModel(generateModuleAutoCollectorSourceOutputDir)
+            variant.registerJavaGeneratingTask(taskProvider.get(), generateModuleNameCollectorSourceOutputDir)
+            variant.addJavaSourceFoldersToModel(generateModuleNameCollectorSourceOutputDir)
         }
     }
 

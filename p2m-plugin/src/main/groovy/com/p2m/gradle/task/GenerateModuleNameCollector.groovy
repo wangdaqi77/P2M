@@ -16,10 +16,10 @@ import org.gradle.api.tasks.TaskAction
 import javax.lang.model.element.Modifier
 
 @CacheableTask
-class GenerateModuleAutoCollector extends DefaultTask {
-    public static final String MODULE_AUTO_COLLECTOR = "ModuleAutoCollector"
+class GenerateModuleNameCollector extends DefaultTask {
+    public static final String MODULE_AUTO_COLLECTOR = "GeneratedModuleNameCollector"
     public static final String MODULE_AUTO_COLLECTOR_NAME = MODULE_AUTO_COLLECTOR + ".java"
-    public static final String MODULE_AUTO_COLLECTOR_SUPER = "com.p2m.core.module.ModuleCollector"
+    public static final String MODULE_AUTO_COLLECTOR_SUPER = "com.p2m.core.module.ModuleNameCollector"
     private ListProperty<List<String>> validDependenciesName = project.objects.listProperty(String.class)
     private Property<String> packageName = project.objects.property(String.class)
 
@@ -47,11 +47,11 @@ class GenerateModuleAutoCollector extends DefaultTask {
         if (!pkgFolder.isDirectory() && !pkgFolder.mkdirs()) {
             throw new RuntimeException("Failed to create " + pkgFolder.getAbsolutePath())
         }
-        def moduleAutoCollectorFile = new File(pkgFolder, MODULE_AUTO_COLLECTOR_NAME)
+        def moduleNameCollectorJavaFile = new File(pkgFolder, MODULE_AUTO_COLLECTOR_NAME)
 
         Closer closer = Closer.create()
         try {
-            FileOutputStream fos = closer.register(new FileOutputStream(moduleAutoCollectorFile))
+            FileOutputStream fos = closer.register(new FileOutputStream(moduleNameCollectorJavaFile))
             OutputStreamWriter out = closer.register(new OutputStreamWriter(fos, Charsets.UTF_8))
             JavaWriter writer = closer.register(new JavaWriter(out))
 

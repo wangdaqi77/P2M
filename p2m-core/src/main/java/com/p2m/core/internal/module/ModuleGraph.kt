@@ -9,12 +9,12 @@ import com.p2m.core.module.task.TaskFactory
 
 internal class ModuleGraph private constructor(
     private val context: Context,
-    private val moduleContainer: ModuleContainerImpl,
+    private val moduleContainer: ModuleContainerDefault,
     private val top: Module<*>
 ) : Graph<Class<out Module<*>>, ModuleNode>() {
 
     companion object{
-        internal fun create(context:Context, moduleContainer: ModuleContainerImpl, top: Module<*>): ModuleGraph {
+        internal fun create(context:Context, moduleContainer: ModuleContainerDefault, top: Module<*>): ModuleGraph {
             return ModuleGraph(context, moduleContainer, top)
         }
     }

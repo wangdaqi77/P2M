@@ -22,7 +22,7 @@ internal class Stage<N : Node<N>> {
     val isEmpty
         get() = nodes == null || nodes!!.isEmpty()
 
-    private fun updateName(value: java.util.ArrayList<N>?) {
+    private fun updateName(value: ArrayList<N>?) {
         val size = value?.size ?: 0
         name = if (size > 0) {
             val sb = StringBuilder(size * 10)

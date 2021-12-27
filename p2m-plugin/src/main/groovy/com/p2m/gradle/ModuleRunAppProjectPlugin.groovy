@@ -3,7 +3,7 @@ package com.p2m.gradle
 import com.p2m.gradle.bean.LocalModuleProjectUnit
 import com.p2m.gradle.bean.ModuleProjectUnit
 import com.p2m.gradle.bean.RemoteModuleProjectUnit
-import com.p2m.gradle.utils.GenerateModuleAutoCollectorJavaTaskRegister
+import com.p2m.gradle.utils.GenerateModuleNameCollectorJavaTaskRegister
 import com.p2m.gradle.utils.LastProcessManifestRegister
 import com.p2m.gradle.utils.RunAppConfigUtils
 import org.gradle.api.Project
@@ -75,6 +75,6 @@ class ModuleRunAppProjectPlugin extends BaseSupportDependencyModulePlugin {
             application.appendNode('meta-data', attributes)
         }
 
-        GenerateModuleAutoCollectorJavaTaskRegister.register(moduleProject, true)
+        GenerateModuleNameCollectorJavaTaskRegister.register(moduleProject, true)
     }
 }

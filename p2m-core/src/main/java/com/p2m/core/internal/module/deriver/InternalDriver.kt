@@ -6,7 +6,7 @@ import android.os.Looper
 import com.p2m.core.module.driver.Driver
 import com.p2m.core.module.driver.Driver.State
 import com.p2m.core.internal.execution.BeginDirection
-import com.p2m.core.internal.module.ModuleContainerImpl
+import com.p2m.core.internal.module.ModuleContainerDefault
 import com.p2m.core.internal.module.ModuleGraph
 import com.p2m.core.internal.module.ModuleGraphExecutor
 import com.p2m.core.module.Module
@@ -16,7 +16,7 @@ import java.util.concurrent.locks.ReentrantLock
 internal class InternalDriver(
     private val context: Context,
     private val topModule: Module<*>,
-    private val moduleContainer: ModuleContainerImpl
+    private val moduleContainer: ModuleContainerDefault
 ) : Driver{
     @Volatile
     var state: State = State.NEW

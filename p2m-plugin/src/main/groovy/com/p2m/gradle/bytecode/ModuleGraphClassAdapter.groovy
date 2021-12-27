@@ -18,7 +18,7 @@ class ModuleGraphClassAdapter extends ClassVisitor {
         if (name == "inject") {
             // println("visitMethod -> inject")
             def methodVisitor = cv.visitMethod(access, name, descriptor, signature, exceptions)
-            return new ModuleAutoCollectorInjectMethodVisitor(api, methodVisitor, access, name, descriptor, p2mProject)
+            return new ModuleNameCollectorInjectMethodVisitor(api, methodVisitor, access, name, descriptor, p2mProject)
         }else {
             super.visitMethod(access,name,descriptor,signature,exceptions)
         }
