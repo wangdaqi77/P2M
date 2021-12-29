@@ -9,7 +9,7 @@ internal class TaskNode constructor(
     val taskName: String,
     val task: Task<*, *>,
     val input: Any?,
-    val safeTaskProvider: TaskOutputProviderImplForTask,
+    val taskProvider: TaskOutputProviderImplForTask,
     override val isTop: Boolean
 ) : Node<TaskNode>() {
 

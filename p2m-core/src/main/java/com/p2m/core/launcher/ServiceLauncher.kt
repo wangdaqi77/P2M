@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.app.Service
 import com.p2m.annotation.module.api.ApiLauncher
-import com.p2m.core.channel.GreenChannel
+import com.p2m.core.channel.LaunchGreenChannel
 import com.p2m.core.internal.launcher.InternalServiceLauncher
 import kotlin.reflect.KProperty
 
@@ -41,13 +41,18 @@ interface ServiceLauncher : Launcher {
     }
 
     /**
-     * Launch a service for that [Service] class annotated by [ApiLauncher].
+     * Will create a launch green channel for that [Service] class uses
+     * annotation [ApiLauncher], please call `navigation` to launch.
      *
      * [launchBlock] is real launch method, that has a created Intent instance
-     * as input param, all other fields (action, data, type) are null, though
-     * they can be modified later in [launchBlock].
+     * as input param, all other fields (action, data, type) are null, they can
+     * be modified later in [launchBlock].
+     *
+     * @return [LaunchGreenChannel] - call `navigation` to launch.
+     *
+     * @see LaunchGreenChannel.navigation
      */
-    fun launchChannel(launchBlock: LaunchServiceBlock): GreenChannel
+    fun launchChannel(launchBlock: LaunchServiceBlock): LaunchGreenChannel
 }
 
 /**

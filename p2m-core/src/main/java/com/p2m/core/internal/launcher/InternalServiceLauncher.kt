@@ -6,7 +6,7 @@ import com.p2m.core.launcher.ServiceLauncher
 
 internal class InternalServiceLauncher(private val clazz: Class<*>) : ServiceLauncher {
     override fun launchChannel(launchBlock: LaunchServiceBlock) =
-        Channel.green(this) {
+        Channel.launchGreen(this) {
             InternalSafeIntent(clazz).apply(launchBlock)
         }
 }

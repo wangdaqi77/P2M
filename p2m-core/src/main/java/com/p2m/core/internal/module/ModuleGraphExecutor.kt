@@ -1,7 +1,9 @@
 package com.p2m.core.internal.module
 
 import com.p2m.core.internal.execution.BeginDirection
+import com.p2m.core.internal.execution.TagRunnable
 import com.p2m.core.internal.graph.AbsGraphExecutor
+import com.p2m.core.internal.graph.GraphThreadPoolExecutor
 import com.p2m.core.internal.graph.Stage
 import com.p2m.core.internal.graph.Node.State
 import com.p2m.core.internal.log.logI
@@ -15,37 +17,17 @@ import java.util.concurrent.atomic.AtomicInteger
 internal class ModuleGraphExecutor(
     override val graph: ModuleGraph,
     private val isEvaluating: ThreadLocal<Boolean>,
-    private val executingModuleProvider: ThreadLocal<SafeModuleApiProvider>
-) : AbsGraphExecutor<Class<out Module<*>>, ModuleNode, ModuleGraph>() {
+    private val executingModuleProvider: ThreadLocal<SafeModuleApiProvider>,
+    direction: BeginDirection
+) : AbsGraphExecutor<Class<out Module<*>>, ModuleNode, ModuleGraph>(direction) {
 
-    companion object {
-        private val executor: ExecutorService = ThreadPoolExecutor(
-            0,
-            Int.MAX_VALUE,
-            60,
-            TimeUnit.SECONDS,
-            SynchronousQueue<Runnable>(),
-            object : ThreadFactory {
-                private val THREAD_NAME = "p2m_module_graph_%d"
-                private val threadId = AtomicInteger(0)
-
-                override fun newThread(r: Runnable): Thread {
-                    val t = Thread(r)
-                    t.isDaemon = false
-                    t.priority = Thread.NORM_PRIORITY
-                    t.name = String.format(THREAD_NAME, threadId.getAndIncrement())
-                    return t
-                }
-            }
-        )
-    }
-
-    override val messageQueue: BlockingQueue<Runnable> = ArrayBlockingQueue<Runnable>(graph.moduleSize)
+    private val executor: ExecutorService = GraphThreadPoolExecutor()
+    override val messageQueue: BlockingQueue<Runnable> = ArrayBlockingQueue(graph.moduleSize)
 
     override fun runNode(node: ModuleNode, onDependsNodeComplete: () -> Unit) {
         node.markStarted(onDependsNodeComplete) {
             // Started
-            asyncTask(Runnable {
+            executor.execute(TagRunnable(node.name) {
                 val evaluatingWhenDependingIdle = {
                     // Evaluating
                     node.evaluating()
@@ -70,8 +52,8 @@ internal class ModuleGraphExecutor(
         mark(State.EXECUTING)
         if (!taskContainer.onlyHasTop) {
             val taskGraph = TaskGraph.create(context, name, taskContainer, safeModuleApiProvider)
-            val taskGraphExecution = TaskGraphExecutor(taskGraph, executingModuleProvider)
-            taskGraphExecution.runningAndLoop(BeginDirection.TAIL)
+            val taskGraphExecution = TaskGraphExecutor(taskGraph, executor, executingModuleProvider, BeginDirection.TAIL)
+            taskGraphExecution.loop()
         }
     }
 
@@ -114,10 +96,6 @@ internal class ModuleGraphExecutor(
         module.internalInit.onExecuted(context, taskOutputProviderImplForModule)
         executingModuleProvider.set(null)
         markCompleted()
-    }
-
-    override fun asyncTask(runnable: Runnable) {
-        executor.execute(runnable)
     }
 
     override fun onCompletedForGraph(graph: ModuleGraph) {

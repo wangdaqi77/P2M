@@ -10,7 +10,7 @@ internal class TaskGraph private constructor(
     val context: Context,
     val moduleName: String,
     private val taskContainer: TaskContainerImpl,
-    val SafeModuleApiProvider: SafeModuleApiProvider
+    val safeModuleApiProvider: SafeModuleApiProvider
 ) : Graph<Class<out Task<*, *>>, TaskNode>() {
     private val nodes: HashMap<Class<out Task<*, *>>, TaskNode> = HashMap()
     val taskSize
@@ -75,15 +75,22 @@ internal class TaskGraph private constructor(
     
     private fun createNodes() {
         taskContainer.getAll().forEach {
-            val clazz = it.getOwner()
-            val safeTaskProvider = TaskOutputProviderImplForTask(taskContainer, it)
-            nodes[clazz] = TaskNode(context, clazz.simpleName, it.ownerInstance, it.input, safeTaskProvider, clazz === taskContainer.topTaskClass)
+            val clazz = it.getOwnerClass()
+            val taskProvider = TaskOutputProviderImplForTask(taskContainer, it)
+            nodes[clazz] = TaskNode(
+                context = context,
+                taskName = "${moduleName}::${clazz.simpleName}",
+                task = it.ownerInstance,
+                input = it.input,
+                taskProvider = taskProvider,
+                clazz === taskContainer.topTaskClass
+            )
         }
     }
     
     private fun depends() {
         taskContainer.getAll().forEach {
-            val owner = it.getOwner()
+            val owner = it.getOwnerClass()
             it.getDependencies().forEach { dependClass ->
                 if (!nodes.containsKey(dependClass)) logW("${owner.canonicalName} depend on ${dependClass.canonicalName}, but not registered of ${dependClass.canonicalName}")
                 owner.dependOn(dependClass)

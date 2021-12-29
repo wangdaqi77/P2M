@@ -24,10 +24,10 @@ class SplashBActivity : AppCompatActivity() {
                 P2M.apiOf(Main::class.java)
                     .launcher
                     .activityOfMain
-                    .launch(this) {
-                        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    .launchChannel {
+                        startActivity(it)
                     }
+                    .navigation()
                 finish()
             }else{
                 // 未登录

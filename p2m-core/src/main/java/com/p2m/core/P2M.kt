@@ -7,6 +7,7 @@ import androidx.annotation.MainThread
 import com.p2m.core.app.App
 import com.p2m.core.config.P2MConfigManager
 import com.p2m.core.internal.config.InternalP2MConfigManager
+import com.p2m.core.internal.execution.InternalExecutor
 import com.p2m.core.internal.module.*
 import com.p2m.core.internal.module.DefaultModuleFactory
 import com.p2m.core.internal.module.DefaultModuleNameCollectorFactory
@@ -21,9 +22,10 @@ import java.util.*
 @SuppressLint("StaticFieldLeak")
 object P2M : ModuleApiProvider{
     internal lateinit var internalContext : Context
-    private lateinit var driver: InternalDriver
-    private val moduleContainer = ModuleContainerDefault()
+    internal val _executor by lazy { InternalExecutor() }
     internal val configManager: P2MConfigManager = InternalP2MConfigManager()
+    private val moduleContainer = ModuleContainerDefault()
+    private lateinit var driver: InternalDriver
 
     /**
      * Start a config.

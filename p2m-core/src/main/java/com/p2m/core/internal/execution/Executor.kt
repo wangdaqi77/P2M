@@ -2,11 +2,13 @@ package com.p2m.core.internal.execution
 
 internal interface Executor{
 
-    fun runningAndLoop(direction: BeginDirection)
+    fun loop()
 
     fun postTask(runnable: Runnable)
 
-    fun asyncTask(runnable: Runnable)
+    fun postTaskDelay(ms:Long, runnable: Runnable)
 
-    fun quitLoop(runnable: Runnable)
+    fun removeTask(runnable: Runnable)
+
+    fun quitLoop(runnable: Runnable? = null)
 }

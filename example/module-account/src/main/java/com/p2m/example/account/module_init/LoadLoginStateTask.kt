@@ -10,8 +10,8 @@ import com.p2m.example.account.UserDiskCache
 class LoadLoginStateTask: Task<UserDiskCache, Boolean>() {
 
     // 运行在子线程，当所有的依赖项完成模块初始化且所有注册的任务执行完毕时调用
-    override fun onExecute(context: Context, taskOutputProvider: TaskOutputProvider) {
+    override fun onExecute(context: Context, taskOutputProvider: TaskOutputProvider): Boolean {
         val userDiskCache = input
-        output = userDiskCache?.readLoginState()
+        return userDiskCache.readLoginState()
     }
 } 

@@ -34,7 +34,7 @@ class AccountModuleInit : ModuleInit {
 
         // 在该模块初始化完成时务必对其Api区输入正确的数据，只有这样才能保证其他模块安全的使用该模块。
         val account = P2M.apiOf(Account::class.java)                        // 找到自身的Api区
-        account.event.mutable().loginState.setValue(loginState ?: false)    // 保存到事件持有者
+        account.event.mutable().loginState.setValue(loginState)             // 保存到事件持有者
         account.event.mutable().loginInfo.setValue(loginInfo)               // 保存到事件持有者
     }
 }

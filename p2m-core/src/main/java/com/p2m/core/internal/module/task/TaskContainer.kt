@@ -1,5 +1,6 @@
 package com.p2m.core.internal.module.task
 
+import com.p2m.core.internal.NULL
 import com.p2m.core.module.task.Task
 import com.p2m.core.module.task.TaskFactory
 import com.p2m.core.module.task.TaskUnit
@@ -34,12 +35,12 @@ internal class TaskContainerImpl(
                 "${clazz1.canonicalName} registered already."
             }
             val task = taskFactory.newInstance(clazz1)
-            val taskUnit = TaskUnitImpl(clazz1, null, task)
+            val taskUnit = TaskUnitImpl(clazz1, NULL, task)
             container[clazz1] = taskUnit
         }
     }
 
-    override fun <INPUT> register(clazz: Class<out Task<INPUT, *>>, input: INPUT?): TaskUnitImpl {
+    override fun <INPUT> register(clazz: Class<out Task<INPUT, *>>, input: INPUT): TaskUnitImpl {
         check(!container.containsKey(clazz)) {
             "${clazz.canonicalName} registered already."
         }

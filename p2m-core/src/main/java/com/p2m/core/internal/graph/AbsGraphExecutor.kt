@@ -4,18 +4,20 @@ import com.p2m.core.internal.execution.BeginDirection
 import com.p2m.core.internal.execution.Executor
 import java.util.concurrent.*
 
-internal abstract class AbsGraphExecutor<KEY, NODE : Node<NODE>, GRAPH : Graph<KEY, NODE>> : Executor {
+internal abstract class AbsGraphExecutor<KEY, NODE : Node<NODE>, GRAPH : Graph<KEY, NODE>> constructor(
+    private val direction: BeginDirection
+) : Executor {
 
     private var ownerThread: Thread? = null
     private var quit = false
-    abstract val graph: GRAPH
+    protected abstract val graph: GRAPH
     abstract val messageQueue: BlockingQueue<Runnable>
 
-    override fun runningAndLoop(direction: BeginDirection) {
+    override fun loop() {
         ownerThread = Thread.currentThread()
         quit = false
 
-        runGraph(graph, direction) {
+        runGraph(graph) {
             onCompletedForGraph(graph)
         }
 
@@ -31,14 +33,6 @@ internal abstract class AbsGraphExecutor<KEY, NODE : Node<NODE>, GRAPH : Graph<K
         ownerThread = null
     }
 
-    override fun quitLoop(runnable: Runnable) {
-        postTask(object : ExitRunnable {
-            override fun run() {
-                runnable.run()
-            }
-        })
-    }
-
     override fun postTask(runnable: Runnable) {
         check(!quit) { "Not post task, exit already." }
 
@@ -49,7 +43,23 @@ internal abstract class AbsGraphExecutor<KEY, NODE : Node<NODE>, GRAPH : Graph<K
         messageQueue.put(runnable)
     }
 
-    private fun runGraph(graph: GRAPH, direction: BeginDirection, onComplete: () -> Unit) {
+    override fun postTaskDelay(ms: Long, runnable: Runnable) {
+        // nothing
+    }
+
+    override fun removeTask(runnable: Runnable) {
+        // nothing
+    }
+
+    override fun quitLoop(runnable: Runnable?) {
+        postTask(object : ExitRunnable {
+            override fun run() {
+                runnable?.run()
+            }
+        })
+    }
+
+    private fun runGraph(graph: GRAPH, onComplete: () -> Unit) {
         val function = { stage: Stage<NODE> ->
             check(!stage.hasRing) {
                 "Cannot be interdependent：" + stage.ringNodes!!

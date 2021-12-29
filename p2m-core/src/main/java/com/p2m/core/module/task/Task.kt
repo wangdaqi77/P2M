@@ -1,32 +1,59 @@
 package com.p2m.core.module.task
 
 import android.content.Context
+import com.p2m.core.internal.NULL
 import com.p2m.core.module.ModuleInit
 
 /**
  * A task is the smallest unit in a module to perform necessary initialization.
  *
- * It is design for the module fast complete necessary initialization.
+ * It is design for fast complete necessary initialization.
  *
  * Note:
- *  * Only recommended to execute lightweight work.
- *  * Set up `output` synchronously during [onExecute], so as to ensure that can obtain
- *  the output safely in [onExecute] of external tasks or in its own [ModuleInit.onExecuted].
+ *  * Only recommended to execute lightweight work, because will block the main thread
+ *  if `onExecute` running too long.
  *
- * @param INPUT corresponds type of [input].
- * @param OUTPUT corresponds type of [output].
+ * For example, In order to provide necessary data for external, the login status needs
+ * to be loaded when `Account` module is initialize.
+ * ```kotlin
+ * @ModuleInitializer
+ * class AccountModuleInit : ModuleInit {
+ *     override fun onEvaluate(context: Context, taskRegister: TaskRegister) {
+ *         val userDiskCache = UserDiskCache(context)
+ *         // register task.
+ *         taskRegister.register(LoadLoginStateTask::class.java, userDiskCache)
+ *     }
  *
- * @see ModuleInit - How to register a task and how to use a task.
+ *     override fun onExecuted(context: Context, taskOutputProvider: TaskOutputProvider) {
+ *         // get output of LoadLoginStateTask
+ *         val loginState = taskOutputProvider.outputOf(LoadLoginStateTask::class.java)
+ *
+ *         // input data in its api...
+ *     }
+ * }
+ *
+ * class LoadLastUserTask: Task<UserDiskCache, Boolean>() {
+ *     override fun onExecute(context: Context, taskOutputProvider: TaskOutputProvider): Boolean {
+ *         val userDiskCache = input
+ *         return userDiskCache?.readLoginState() ?: false
+ *     }
+ * }
+ * ```
+ *
+ * @param INPUT corresponds type of input.
+ * @param OUTPUT corresponds type of output.
  */
 abstract class Task<INPUT, OUTPUT> {
-
-    internal var inputObj: Any? = null
+    internal var inputObj: Any? = NULL
 
     @Suppress("UNCHECKED_CAST")
-    protected val input: INPUT?
-        get() = inputObj as? INPUT
+    protected val input: INPUT
+        get() = NULL.unbox(inputObj)
 
-    var output: OUTPUT? = null
+    internal var outputObj : Any? = NULL
+
+    internal val output: OUTPUT
+        get() = NULL.unbox(outputObj)
 
     /**
      * The task executing, called after [ModuleInit.onEvaluate] and before [ModuleInit.onExecuted].
@@ -34,9 +61,16 @@ abstract class Task<INPUT, OUTPUT> {
      * Note:
      *  * Running in alone work thread.
      *
-     * @param taskOutputProvider task output provider, can get task output of some dependency.
+     * @param taskOutputProvider task output provider, call `taskOutputProvider.outputOf`
+     * can get output of dependency.
      *
-     * @see TaskOutputProvider TaskOutputProvider - get some task output.
+     * @return output.
+     *
+     * @see TaskOutputProvider TaskOutputProvider - get output of dependency.
      */
-     abstract fun onExecute(context: Context, taskOutputProvider: TaskOutputProvider)
+    abstract fun onExecute(context: Context, taskOutputProvider: TaskOutputProvider): OUTPUT
+
+    override fun toString(): String {
+        return this::class.java.simpleName
+    }
 }

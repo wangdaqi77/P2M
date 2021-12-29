@@ -11,10 +11,15 @@ import androidx.core.app.ActivityOptionsCompat
 import androidx.fragment.app.Fragment
 import com.p2m.annotation.module.api.ApiLauncher
 import com.p2m.annotation.module.api.ApiLauncherActivityResultContractFor
+import com.p2m.core.P2M
+import com.p2m.core.app.App
 import com.p2m.core.channel.Channel
-import com.p2m.core.channel.InterruptibleChannel
+import com.p2m.core.channel.IInterceptor
+import com.p2m.core.channel.LaunchChannel
+import com.p2m.core.channel.RecoverableChannel
 import com.p2m.core.internal.launcher.InternalActivityLauncher
 import com.p2m.core.internal.launcher.InternalSafeIntent
+import java.lang.ref.WeakReference
 import kotlin.reflect.KProperty
 
 /**
@@ -48,19 +53,28 @@ interface ActivityLauncher<I, O> : Launcher{
     }
 
     /**
-     * Launch for that [Activity] class annotated by [ApiLauncher],
-     * all other fields (action, data, type) are null, though
-     * they can be modified later in [launchBlock].
+     * Will create a interruptible launch channel for that [Activity] class
+     * uses annotation [ApiLauncher], please call `navigation` to launch.
+     *
+     * [launchBlock] is real launch method, that has a created Intent instance
+     * as input param, all other fields (action, data, type) are null, they can
+     * be modified later in [launchBlock].
+     *
+     * @return [LaunchChannel] - call `navigation` to launch.
+     *
+     * @see ApiLauncher
+     * @see LaunchChannel.navigation
+     * @see IInterceptor
      */
-    fun launchChannel(launchBlock: LaunchActivityBlock) : InterruptibleChannel
+    fun launchChannel(launchBlock: LaunchActivityBlock) : LaunchChannel
 
     /**
      * Register a activity result for that [Activity] class annotated by [ApiLauncher].
      *
      * No need to explicitly pass in a instance of activity result contract during registration,
-     * that instance will auto create, that type is implement class of
-     * [ActivityResultContractCompat] and use [ApiLauncherActivityResultContractFor]
-     * annotated, and that must has a empty constructor.
+     * that instance will auto create. that type is use [ApiLauncherActivityResultContractFor]
+     * annotated implement class of [ActivityResultContractCompat], that must has a empty
+     * constructor.
      *
      * @return a instance of ActivityResultLauncher.
      *
@@ -74,9 +88,9 @@ interface ActivityLauncher<I, O> : Launcher{
      * Register a activity result for that [Activity] class annotated by [ApiLauncher].
      *
      * No need to explicitly pass in a instance of activity result contract during registration,
-     * that instance will auto create, that type is implement class of
-     * [ActivityResultContractCompat] and use [ApiLauncherActivityResultContractFor]
-     * annotated, and that must has a empty constructor.
+     * that instance will auto create. that type is use [ApiLauncherActivityResultContractFor]
+     * annotated implement class of [ActivityResultContractCompat], that must has a empty
+     * constructor.
      *
      * @return a instance of ActivityResultLauncher.
      *
@@ -90,9 +104,9 @@ interface ActivityLauncher<I, O> : Launcher{
      * Register a activity result for that [Activity] class annotated by [ApiLauncher].
      *
      * No need to explicitly pass in a instance of activity result contract during registration,
-     * that instance will auto create, that type is implement class of
-     * [ActivityResultContractCompat] and use [ApiLauncherActivityResultContractFor]
-     * annotated, and that must has a empty constructor.
+     * that instance will auto create. that type is use [ApiLauncherActivityResultContractFor]
+     * annotated implement class of [ActivityResultContractCompat], that must has a empty
+     * constructor.
      *
      * @return a instance of ActivityResultLauncher.
      *
@@ -109,22 +123,20 @@ interface ActivityLauncher<I, O> : Launcher{
  * @see ApiLauncher
  */
 interface ActivityResultLauncherCompat<I, O> {
-
     /**
-     * Launch a activity result for that [Activity] class annotated by [ApiLauncher].
+     * Will create a interruptible launch channel for that [Activity] class
+     * uses annotation [ApiLauncher], please call `navigation` to launch.
      *
-     * No need to explicitly pass in a instance of activity result contract during registration,
-     * that instance will auto create, that type is implement class of
-     * [ActivityResultContractCompat] and use [ApiLauncherActivityResultContractFor]
-     * annotated, and that must has a empty constructor.
+     * Will launch activity result if there is no interruption, and at same
+     * time call [inputBlock] get input as launch input param.
      *
-     * @return a instance of ActivityResultLauncher.
+     * @return [LaunchChannel] - call `navigation` to launch.
      *
-     * @see ApiLauncher
-     * @see ApiLauncherActivityResultContractFor
-     * @see ActivityResultContractCompat
+     * @see ActivityLauncher.registerResultLauncher
+     * @see LaunchChannel.navigation
+     * @see IInterceptor
      */
-    fun launchChannel(options: ActivityOptionsCompat? = null, inputBlock: () -> I) : InterruptibleChannel
+    fun launchChannel(options: ActivityOptionsCompat? = null, inputBlock: () -> I) : LaunchChannel
 
     fun unregister()
 
@@ -138,8 +150,12 @@ internal class InternalActivityResultLauncherCompat<I, O>(
 ) : ActivityResultLauncherCompat<I, O> {
 
     override fun launchChannel(options: ActivityOptionsCompat?, inputBlock: () -> I) =
-        Channel.interruptible(activityLauncher) {
+        Channel.launch(activityLauncher, P2M.apiOf(App::class.java).service.interceptorService) {
             activityResultLauncher.launch(inputBlock(), options)
+        }.apply {
+            onProduceRecoverableChannel { recoverableChannel ->
+                getContract().waitSaveRecoverableChannel = WeakReference(recoverableChannel)
+            }
         }
 
     override fun unregister() = activityResultLauncher.unregister()
@@ -153,6 +169,7 @@ abstract class ActivityResultContractCompat<I, O> :
     ActivityResultContract<I, ActivityResultCompat<O>>() {
 
     internal lateinit var activityClazz: Class<*>
+    internal var waitSaveRecoverableChannel: WeakReference<RecoverableChannel?>? = null
 
     /**
      * Fill input into created intent.
@@ -177,6 +194,11 @@ abstract class ActivityResultContractCompat<I, O> :
     final override fun createIntent(context: Context, input: I): Intent {
         val intent = if (input is Intent) InternalSafeIntent(input as Intent) else InternalSafeIntent()
         intent.setClassInternal(activityClazz)
+        waitSaveRecoverableChannel?.get()?.also { recoverableChannel ->
+            P2M.apiOf(App::class.java)
+                .service
+                .saveRecoverableChannel(intent, recoverableChannel)
+        }
         return intent.also { inputIntoCreatedIntent(input, it) }
     }
 

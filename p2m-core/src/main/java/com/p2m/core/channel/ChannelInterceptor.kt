@@ -1,5 +1,7 @@
 package com.p2m.core.channel
 
+import com.p2m.core.exception.P2MException
+
 interface InterceptorService {
     fun doInterceptions(
         channel: Channel,
@@ -8,7 +10,7 @@ interface InterceptorService {
     )
 }
 
-object InterceptorServiceDefault : InterceptorService {
+internal class InterceptorServiceDefault : InterceptorService {
 
     override fun doInterceptions(
         channel: Channel,
@@ -19,10 +21,11 @@ object InterceptorServiceDefault : InterceptorService {
         @Suppress("UNCHECKED_CAST")
         val interceptorIterator = interceptors.iterator()
         try {
-            doInterception(interceptorIterator, channel)
-            if (interceptorIterator.hasNext()) {
-                callback.onInterrupt(channel.tag as? Throwable)
-            } else {
+            doInterception(interceptorIterator, channel) { e ->
+                callback.onInterrupt(e)
+            }
+
+            if (!interceptorIterator.hasNext()) {
                 callback.onContinue(channel)
             }
         } catch (e : Throwable) {
@@ -30,21 +33,20 @@ object InterceptorServiceDefault : InterceptorService {
         }
     }
 
-    private fun doInterception(interceptorIterator: Iterator<IInterceptor>, channel: Channel) {
+    private fun doInterception(interceptorIterator: Iterator<IInterceptor>, channel: Channel, onInterrupted: (e: Throwable) -> Unit) {
         if (interceptorIterator.hasNext()) {
             val interceptor = interceptorIterator.next()
             interceptor.process(channel, object : InterceptorCallback {
                 override fun onContinue(channel: Channel) {
-                    doInterception(interceptorIterator, channel)
+                    doInterception(interceptorIterator, channel, onInterrupted)
                 }
 
                 override fun onInterrupt(e: Throwable?) {
-                    channel.tag = e ?: IllegalStateException("No message.")
+                    onInterrupted(e ?: P2MException("No message."))
                 }
             })
         }
     }
-
 }
 
 /**

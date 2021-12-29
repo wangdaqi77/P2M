@@ -5,8 +5,8 @@ import com.p2m.annotation.module.api.ApiLauncherActivityResultContractFor
 import com.p2m.core.launcher.ActivityResultContractCompat
 
 @ApiLauncherActivityResultContractFor("ModifyAccountName")
-class ModifyUserNameActivityResultContract: ActivityResultContractCompat<Unit?, String>() {
-    override fun inputIntoCreatedIntent(input: Unit?, intent: Intent) {
+class ModifyUserNameActivityResultContract: ActivityResultContractCompat<Unit, String>() {
+    override fun inputIntoCreatedIntent(input: Unit, intent: Intent) {
         // NOTHING
     }
 

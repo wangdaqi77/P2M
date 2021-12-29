@@ -54,8 +54,8 @@ internal class InternalDriver(
     private fun openReal() {
         isEvaluating = ThreadLocal()
         safeModuleApiProvider = ThreadLocal()
-        val moduleGraphExecution = ModuleGraphExecutor(moduleGraph, isEvaluating!!, safeModuleApiProvider!!)
-        moduleGraphExecution.runningAndLoop(BeginDirection.TAIL)
+        val moduleGraphExecution = ModuleGraphExecutor(moduleGraph, isEvaluating!!, safeModuleApiProvider!!, BeginDirection.TAIL)
+        moduleGraphExecution.loop()
         isEvaluating = null
         safeModuleApiProvider = null
         state = State.OPENED

@@ -3,6 +3,7 @@ package com.p2m.example.app
 import android.app.Application
 import android.util.Log
 import com.p2m.core.P2M
+import com.p2m.core.app.App
 import com.p2m.core.log.ILogger
 import com.p2m.core.log.Level
 

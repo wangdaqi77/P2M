@@ -5,7 +5,7 @@ package com.p2m.core.module.task
  */
 interface TaskUnit {
     
-    fun getOwner(): Class<out Task<*, *>>
+    fun getOwnerClass(): Class<out Task<*, *>>
 
     /**
      * Add the given dependency to this task.

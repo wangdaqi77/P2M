@@ -9,5 +9,5 @@ interface TaskOutputProvider {
      *
      * @param clazz find instance of task by the param.
      */
-    fun <OUTPUT> outputOf(clazz: Class<out Task<*, OUTPUT>>): OUTPUT?
+    fun <OUTPUT> outputOf(clazz: Class<out Task<*, OUTPUT>>): OUTPUT
 }

@@ -7,7 +7,10 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
 import androidx.fragment.app.Fragment
 import com.p2m.annotation.module.api.ApiLauncher
+import com.p2m.core.P2M
+import com.p2m.core.app.App
 import com.p2m.core.channel.Channel
+import com.p2m.core.channel.LaunchChannel
 import com.p2m.core.launcher.*
 
 internal class InternalActivityLauncher<I, O>(
@@ -22,14 +25,21 @@ internal class InternalActivityLauncher<I, O>(
      *
      * @return a instance of Intent.
      */
-    private fun createIntent(): Intent {
+    private fun createIntent(): InternalSafeIntent {
         return InternalSafeIntent(clazz)
     }
 
-    override fun launchChannel(launchBlock: LaunchActivityBlock) =
-        Channel.interruptible(this) {
-            launchBlock(createIntent())
+    override fun launchChannel(launchBlock: LaunchActivityBlock): LaunchChannel {
+        val appService = P2M.apiOf(App::class.java).service
+        val intent = createIntent()
+        return Channel.launch(this, appService.interceptorService) {
+            launchBlock(intent)
+        }.apply {
+            onProduceRecoverableChannel { recoverableChannel ->
+                appService.saveRecoverableChannel(intent, recoverableChannel)
+            }
         }
+    }
 
     override fun registerResultLauncher(activity: ComponentActivity, callback: ActivityResultCallbackCompat<O>): ActivityResultLauncherCompat<I, O> {
         return activity.registerForActivityResult(createActivityResultContract()) {

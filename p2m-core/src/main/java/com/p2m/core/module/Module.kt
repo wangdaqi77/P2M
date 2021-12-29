@@ -18,6 +18,7 @@ import com.p2m.core.internal.module.ModuleVisitor
  * For example, `Main` module use `Account` module, so `Main` depends on `Account`,
  * in `settings.gradle`:
  * ```
+ * apply plugin: "p2m-android"
  * p2m {
  *      module("Account") {
  *          // some configuration
