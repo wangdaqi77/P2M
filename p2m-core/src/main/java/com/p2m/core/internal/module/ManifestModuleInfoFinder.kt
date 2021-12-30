@@ -6,7 +6,6 @@ import com.p2m.core.exception.P2MException
 import com.p2m.core.internal.log.logI
 import com.p2m.core.internal.log.logW
 import com.p2m.core.module.Module
-import com.p2m.core.module.ModuleInfo
 
 internal interface ModuleInfoFinder {
     fun findModuleInfo(moduleName: String): ModuleInfo?
@@ -69,7 +68,7 @@ internal class ManifestModuleInfoFinder(context: Context): ModuleInfoFinder {
     }
 }
 
-internal class ExternalModuleInfoFinder(externalModule: Array<out ModuleInfo>) : ModuleInfoFinder {
+internal class ExternalModuleInfoFinder(externalModule: ArrayList<out ModuleInfo>) : ModuleInfoFinder {
 
     private val table = HashMap<String, ModuleInfo>()
 

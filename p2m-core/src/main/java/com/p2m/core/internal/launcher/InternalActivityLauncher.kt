@@ -1,16 +1,14 @@
 package com.p2m.core.internal.launcher
 
 import android.app.Activity
-import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
 import androidx.fragment.app.Fragment
 import com.p2m.annotation.module.api.ApiLauncher
-import com.p2m.core.P2M
-import com.p2m.core.app.App
 import com.p2m.core.channel.Channel
 import com.p2m.core.channel.LaunchChannel
+import com.p2m.core.internal._P2M
 import com.p2m.core.launcher.*
 
 internal class InternalActivityLauncher<I, O>(
@@ -30,13 +28,12 @@ internal class InternalActivityLauncher<I, O>(
     }
 
     override fun launchChannel(launchBlock: LaunchActivityBlock): LaunchChannel {
-        val appService = P2M.apiOf(App::class.java).service
         val intent = createIntent()
-        return Channel.launch(this, appService.interceptorService) {
+        return Channel.launch(this, _P2M.interceptorService) {
             launchBlock(intent)
         }.apply {
             onProduceRecoverableChannel { recoverableChannel ->
-                appService.saveRecoverableChannel(intent, recoverableChannel)
+                _P2M.saveRecoverableChannel(intent, recoverableChannel)
             }
         }
     }

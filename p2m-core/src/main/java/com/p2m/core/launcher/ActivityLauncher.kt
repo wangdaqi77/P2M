@@ -11,12 +11,11 @@ import androidx.core.app.ActivityOptionsCompat
 import androidx.fragment.app.Fragment
 import com.p2m.annotation.module.api.ApiLauncher
 import com.p2m.annotation.module.api.ApiLauncherActivityResultContractFor
-import com.p2m.core.P2M
-import com.p2m.core.app.App
 import com.p2m.core.channel.Channel
 import com.p2m.core.channel.IInterceptor
 import com.p2m.core.channel.LaunchChannel
 import com.p2m.core.channel.RecoverableChannel
+import com.p2m.core.internal._P2M
 import com.p2m.core.internal.launcher.InternalActivityLauncher
 import com.p2m.core.internal.launcher.InternalSafeIntent
 import java.lang.ref.WeakReference
@@ -33,7 +32,7 @@ import kotlin.reflect.KProperty
  *
  * then launch in `activity` of external module:
  * ```kotlin
- * val fragment = P2M.apiOf(Account)
+ * P2M.apiOf(Account)
  *      .launcher
  *      .activityOfLogin
  *      .launchChannel(::startActivity)
@@ -150,7 +149,7 @@ internal class InternalActivityResultLauncherCompat<I, O>(
 ) : ActivityResultLauncherCompat<I, O> {
 
     override fun launchChannel(options: ActivityOptionsCompat?, inputBlock: () -> I) =
-        Channel.launch(activityLauncher, P2M.apiOf(App::class.java).service.interceptorService) {
+        Channel.launch(activityLauncher, _P2M.interceptorService) {
             activityResultLauncher.launch(inputBlock(), options)
         }.apply {
             onProduceRecoverableChannel { recoverableChannel ->
@@ -195,9 +194,7 @@ abstract class ActivityResultContractCompat<I, O> :
         val intent = if (input is Intent) InternalSafeIntent(input as Intent) else InternalSafeIntent()
         intent.setClassInternal(activityClazz)
         waitSaveRecoverableChannel?.get()?.also { recoverableChannel ->
-            P2M.apiOf(App::class.java)
-                .service
-                .saveRecoverableChannel(intent, recoverableChannel)
+            _P2M.saveRecoverableChannel(intent, recoverableChannel)
         }
         return intent.also { inputIntoCreatedIntent(input, it) }
     }
