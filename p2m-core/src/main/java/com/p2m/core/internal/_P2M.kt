@@ -3,7 +3,8 @@ package com.p2m.core.internal
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import androidx.annotation.MainThread
+import android.os.SystemClock
+import androidx.annotation.WorkerThread
 import com.p2m.core.app.App
 import com.p2m.core.channel.InterceptorServiceDefault
 import com.p2m.core.channel.RecoverableChannel
@@ -12,6 +13,8 @@ import com.p2m.core.internal.channel.RecoverableChannelHelper
 import com.p2m.core.internal.config.InternalP2MConfigManager
 import com.p2m.core.internal.execution.Executor
 import com.p2m.core.internal.execution.InternalExecutor
+import com.p2m.core.internal.log.logE
+import com.p2m.core.internal.log.logW
 import com.p2m.core.internal.module.*
 import com.p2m.core.internal.module.DefaultModuleFactory
 import com.p2m.core.internal.module.DefaultModuleNameCollectorFactory
@@ -28,15 +31,35 @@ internal object _P2M : ModuleApiProvider {
     internal val executor: Executor by lazy { InternalExecutor() }
     internal val interceptorService = InterceptorServiceDefault()
     internal val configManager: P2MConfigManager = InternalP2MConfigManager()
-    internal val recoverableChannelHelper = RecoverableChannelHelper()
+    internal val recoverableChannelHelper by lazy { RecoverableChannelHelper() }
     private val moduleContainer = ModuleContainerDefault()
     private lateinit var driver: InternalDriver
 
-    fun init(context: Context, externalModuleClassLoader: ClassLoader = context.classLoader, externalPublicModuleClassName: Array<out String>) {
+    fun init(
+        context: Context,
+        externalModuleClassLoader: ClassLoader = context.classLoader,
+        externalPublicModuleClassName: Array<out String>,
+        @WorkerThread onIdea: (() -> Unit)? = null
+    ) {
         check(!_P2M::internalContext.isInitialized) { "`can only be called once." }
 
         val applicationContext = context.applicationContext
         this.internalContext = applicationContext
+
+        var ideaStartTime = 0L
+        val app = App()
+            .onEvaluate {
+                recoverableChannelHelper.init(context, executor)
+                ideaStartTime = SystemClock.uptimeMillis()
+                onIdea?.invoke()
+            }
+            .onEvaluateTooLongStart {
+                logE("running `onIdea` too long, it is recommended to shorten to ${(SystemClock.uptimeMillis() - ideaStartTime).also { ideaStartTime+=it }} ms.")
+            }
+            .onEvaluateTooLongEnd {
+                logE("`onIdea` was ran for too long, timeout: ${SystemClock.uptimeMillis() - ideaStartTime} ms.")
+            }
+
 
         val externalModules = externalPublicModuleClassName.mapTo(ArrayList(externalPublicModuleClassName.size)) { className ->
                 ModuleInfo.fromExternal(
@@ -52,11 +75,7 @@ internal object _P2M : ModuleApiProvider {
             ManifestModuleInfoFinder(applicationContext)
         )
         val moduleFactory: ModuleFactory = DefaultModuleFactory()
-
-        val app = App()
         moduleContainer.register(app, moduleNameCollector, moduleInfoFinder, moduleFactory)
-
-        recoverableChannelHelper.init(context, executor)
 
         this.driver = InternalDriver(applicationContext, app, this.moduleContainer)
         this.driver.considerOpenAwait()

@@ -1,5 +1,6 @@
 package com.p2m.core.module
 
+import com.p2m.core.exception.P2MException
 import com.p2m.core.internal.module.ModuleInfo
 
 abstract class ModuleNameCollector {
@@ -11,7 +12,9 @@ abstract class ModuleNameCollector {
 
     internal fun collectExternal(externalModules: ArrayList<ModuleInfo>) {
         for (externalModule in externalModules) {
-            moduleNames.add(externalModule.name)
+            if (!moduleNames.add(externalModule.name)) {
+                throw P2MException("The same module name exists: ${externalModule.name}, external public module class: ${externalModule.publicClass}")
+            }
         }
     }
 }

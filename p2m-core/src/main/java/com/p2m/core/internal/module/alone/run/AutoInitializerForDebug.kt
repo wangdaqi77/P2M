@@ -14,10 +14,16 @@ internal class AutoInitializerForDebug : ContentProvider() {
 
     override fun onCreate(): Boolean {
         val context = context ?: return false
+
         P2M.config {
             logger = object : ILogger {
                 override fun log(level: Level, msg: String, throwable: Throwable?) {
-                    Log.i("P2M", "AutoInitializer -> $msg")
+                    when(level) {
+                        Level.INFO -> Log.i("P2M", "AutoInitializer -> $msg", throwable)
+                        Level.DEBUG -> Log.d("P2M", "AutoInitializer -> $msg", throwable)
+                        Level.WARNING -> Log.w("P2M", "AutoInitializer -> $msg", throwable)
+                        Level.ERROR -> Log.e("P2M", "AutoInitializer -> $msg", throwable)
+                    }
                 }
             }
         }

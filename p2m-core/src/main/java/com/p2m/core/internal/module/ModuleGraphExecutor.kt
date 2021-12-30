@@ -1,18 +1,21 @@
 package com.p2m.core.internal.module
 
+import android.os.SystemClock
+import com.p2m.core.app.App
 import com.p2m.core.internal.execution.BeginDirection
 import com.p2m.core.internal.execution.TagRunnable
 import com.p2m.core.internal.graph.AbsGraphExecutor
 import com.p2m.core.internal.graph.GraphThreadPoolExecutor
 import com.p2m.core.internal.graph.Stage
 import com.p2m.core.internal.graph.Node.State
+import com.p2m.core.internal.log.logE
 import com.p2m.core.internal.log.logI
+import com.p2m.core.internal.log.logW
 import com.p2m.core.internal.module.task.TaskOutputProviderImplForModule
 import com.p2m.core.internal.module.task.TaskGraph
 import com.p2m.core.internal.module.task.TaskGraphExecutor
 import com.p2m.core.module.Module
 import java.util.concurrent.*
-import java.util.concurrent.atomic.AtomicInteger
 
 internal class ModuleGraphExecutor(
     override val graph: ModuleGraph,
@@ -20,6 +23,10 @@ internal class ModuleGraphExecutor(
     private val executingModuleProvider: ThreadLocal<SafeModuleApiProvider>,
     direction: BeginDirection
 ) : AbsGraphExecutor<Class<out Module<*>>, ModuleNode, ModuleGraph>(direction) {
+
+    companion object {
+        private const val EVALUATING_TIMEOUT = 10L
+    }
 
     private val executor: ExecutorService = GraphThreadPoolExecutor()
     override val messageQueue: BlockingQueue<Runnable> = ArrayBlockingQueue(graph.moduleSize)
@@ -67,22 +74,40 @@ internal class ModuleGraphExecutor(
 
     private fun ModuleNode.depending(evaluatingWhenDependingIdle: () -> Unit) {
         mark(State.DEPENDING)
+
+        var idleRunning = true
         if (dependNodes.isEmpty()) {
             evaluatingWhenDependingIdle()
+            idleRunning = false
             return
         }
-
         val countDownLatch = CountDownLatch(dependNodes.size)
         val onDependenciesComplete = {
             // Dependencies be Completed.
             countDownLatch.countDown()
+
+            if (isTop && countDownLatch.count == 0L) {
+                logI("all module completed.")
+
+                if (idleRunning) {
+                    (module as App).onEvaluateTooLongStart?.invoke()
+                }
+            }
         }
 
         dependNodes.forEach { dependNode ->
             runNode(dependNode, onDependenciesComplete)
         }
 
-        evaluatingWhenDependingIdle()
+        if (isTop) {
+            evaluatingWhenDependingIdle()
+            if (countDownLatch.count == 0L) {
+                (module as App).onEvaluateTooLongEnd?.invoke()
+            }
+        } else {
+            evaluatingWhenDependingIdle()
+        }
+        idleRunning = false
 
         // Wait dependencies be Completed.
         countDownLatch.await()

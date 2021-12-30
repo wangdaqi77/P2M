@@ -29,15 +29,15 @@ class GraphThreadPoolExecutor : ThreadPoolExecutor(
 ) {
     override fun beforeExecute(t: Thread?, r: Runnable) {
         super.beforeExecute(t, r)
-        if (r is TagRunnable) {
-            logI("beforeExecute for ${r.tag}")
-        }
+//        if (r is TagRunnable) {
+//            logI("beforeExecute for ${r.tag}")
+//        }
     }
 
     override fun afterExecute(r: Runnable, t: Throwable?) {
         super.afterExecute(r, t)
-        if (r is TagRunnable) {
-            logI("afterExecute for ${r.tag}")
-        }
+//        if (r is TagRunnable) {
+//            logI("afterExecute for ${r.tag}")
+//        }
     }
 }

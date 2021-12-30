@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.os.Looper
 import androidx.annotation.MainThread
+import androidx.annotation.WorkerThread
 import com.p2m.core.config.P2MConfigManager
 import com.p2m.core.internal._P2M
 import com.p2m.core.module.*
@@ -19,11 +20,21 @@ object P2M : ModuleApiProvider {
 
     /**
      * Initialization.
+     *
+     * @param context
+     * @param externalModuleClassLoader classLoader for [externalPublicModuleClassName]
+     * @param externalPublicModuleClassName class name for external public module
+     * @param onIdea run on work thread.
      */
     @MainThread
-    fun init(context: Context, externalModuleClassLoader: ClassLoader = context.classLoader, vararg externalPublicModuleClassName: String) {
+    fun init(
+        context: Context,
+        externalModuleClassLoader: ClassLoader = context.classLoader,
+        vararg externalPublicModuleClassName: String,
+        @WorkerThread onIdea: (() -> Unit)? = null
+    ) {
         check(Looper.getMainLooper() === Looper.myLooper()) { "`P2M.init()` must be called on the main thread." }
-        _P2M.init(context, externalModuleClassLoader, externalPublicModuleClassName)
+        _P2M.init(context, externalModuleClassLoader, externalPublicModuleClassName, onIdea)
     }
 
     /**

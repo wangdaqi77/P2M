@@ -10,8 +10,8 @@ internal data class ModuleInfo(
     val implClass: Class<out Module<*>>,    // PACKAGE_NAME.impl._MODULE_NAME
 ) {
     companion object{
-        private const val MODULE_PUBLIC_PACKAGE_SUFFIX = ".api"
-        private const val MODULE_IMPL_PACKAGE_SUFFIX = ".impl"
+        private const val MODULE_PUBLIC_PACKAGE_SUFFIX = ".p2m.api"
+        private const val MODULE_IMPL_PACKAGE_SUFFIX = ".p2m.impl"
 
         @Suppress("UNCHECKED_CAST")
         fun fromExternal(classLoader: ClassLoader, publicClassName: String): ModuleInfo {
@@ -23,7 +23,7 @@ internal data class ModuleInfo(
                     endIndex = publicClassName.length
                 )
                 check(publicPackageName.endsWith(MODULE_PUBLIC_PACKAGE_SUFFIX)) { }
-                val moduleName = publicClassName.substring(simpleNameDelimiterIndex)
+                val moduleName = publicClassName.substring(simpleNameDelimiterIndex + 1)
                 val packageName = publicPackageName.removeSuffix(MODULE_PUBLIC_PACKAGE_SUFFIX)
                 val implClassName = "${packageName}${MODULE_IMPL_PACKAGE_SUFFIX}._${moduleName}"
                 val implClass = Class.forName(implClassName, true, classLoader) as Class<out Module<*>>
@@ -32,7 +32,7 @@ internal data class ModuleInfo(
                     logI("find external module: $it")
                 }
             }catch (t: Throwable) {
-                throw P2MException("$publicClassName must conform to the naming convention of public module class, public module class name ex:PACKAGE_NAME.api.MODULE_NAME, impl module class name ex:PACKAGE_NAME.impl._MODULE_NAME", t)
+                throw P2MException("$publicClassName must conform to the naming convention of public module class, public module class name ex:PACKAGE_NAME${MODULE_PUBLIC_PACKAGE_SUFFIX}.MODULE_NAME, impl module class name ex:PACKAGE_NAME${MODULE_IMPL_PACKAGE_SUFFIX}._MODULE_NAME", t)
             }
         }
     }

@@ -13,7 +13,12 @@ class MyBApp: Application() {
         P2M.config {
             logger = object : ILogger {
                 override fun log(level: Level, msg: String, throwable: Throwable?) {
-                    Log.e("P2M", msg)
+                    when(level) {
+                        Level.INFO -> Log.i("P2M", msg, throwable)
+                        Level.DEBUG -> Log.d("P2M", msg, throwable)
+                        Level.WARNING -> Log.w("P2M", msg, throwable)
+                        Level.ERROR -> Log.e("P2M", msg, throwable)
+                    }
                 }
             }
         }

@@ -3,7 +3,6 @@ package com.p2m.example.app
 import android.app.Application
 import android.util.Log
 import com.p2m.core.P2M
-import com.p2m.core.app.App
 import com.p2m.core.log.ILogger
 import com.p2m.core.log.Level
 
@@ -14,10 +13,32 @@ class MyApp: Application() {
         P2M.config {
             logger = object : ILogger {
                 override fun log(level: Level, msg: String, throwable: Throwable?) {
-                    Log.e("P2M", msg)
+                    when(level) {
+                        Level.INFO -> Log.i("P2M", msg, throwable)
+                        Level.DEBUG -> Log.d("P2M", msg, throwable)
+                        Level.WARNING -> Log.w("P2M", msg, throwable)
+                        Level.ERROR -> Log.e("P2M", msg, throwable)
+                    }
                 }
             }
         }
-        P2M.init(this)
+
+        // P2M.init()将阻塞主线程，直到所有模块初始化完毕。
+        P2M.init(
+            context = this,
+            externalModuleClassLoader = classLoader,
+            "com.p2m.example.external.im.p2m.api.IM"
+        ) {
+            // 1.一定会执行这里，当初始化空闲时在工作线程中执行；
+            // 2.如果这里运行过长，也影响阻塞主线程的时长；
+            // 3.此代码块的运行最佳时长 = 所有模块初始化总耗时；
+            // 4.如果超时将打印信息。
+
+            // 示例:
+            Thread.sleep(1000L)
+            // log:
+            // running `onIdea` too long, it is recommended to shorten to 30 ms.
+            // `onIdea` was ran for too long, timeout: 970 ms.
+        }
     }
 }
