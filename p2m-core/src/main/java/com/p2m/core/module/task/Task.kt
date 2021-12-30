@@ -21,7 +21,7 @@ import com.p2m.core.module.ModuleInit
  *     override fun onEvaluate(context: Context, taskRegister: TaskRegister) {
  *         val userDiskCache = UserDiskCache(context)
  *         // register task.
- *         taskRegister.register(LoadLoginStateTask::class.java, userDiskCache)
+ *         taskRegister.register(LoadLoginStateTask::class.java, input = userDiskCache)
  *     }
  *
  *     override fun onExecuted(context: Context, taskOutputProvider: TaskOutputProvider) {
@@ -33,9 +33,8 @@ import com.p2m.core.module.ModuleInit
  * }
  *
  * class LoadLastUserTask: Task<UserDiskCache, Boolean>() {
- *     override fun onExecute(context: Context, taskOutputProvider: TaskOutputProvider): Boolean {
- *         val userDiskCache = input
- *         return userDiskCache?.readLoginState() ?: false
+ *     override fun onExecute(context: Context, input: UserDiskCache, taskOutputProvider: TaskOutputProvider): Boolean {
+ *         return input.readLoginState()
  *     }
  * }
  * ```
@@ -46,14 +45,13 @@ import com.p2m.core.module.ModuleInit
 abstract class Task<INPUT, OUTPUT> {
     internal var inputObj: Any? = NULL
 
-    @Suppress("UNCHECKED_CAST")
-    protected val input: INPUT
-        get() = NULL.unbox(inputObj)
-
     internal var outputObj : Any? = NULL
 
     internal val output: OUTPUT
         get() = NULL.unbox(outputObj)
+
+    internal fun onExecute(context: Context, taskOutputProvider: TaskOutputProvider): OUTPUT =
+        onExecute(context, NULL.unbox(inputObj), taskOutputProvider)
 
     /**
      * The task executing, called after [ModuleInit.onEvaluate] and before [ModuleInit.onExecuted].
@@ -61,6 +59,7 @@ abstract class Task<INPUT, OUTPUT> {
      * Note:
      *  * Running in alone work thread.
      *
+     * @param input input passed in during registration, see [TaskRegister.register].
      * @param taskOutputProvider task output provider, call `taskOutputProvider.outputOf`
      * can get output of dependency.
      *
@@ -68,7 +67,7 @@ abstract class Task<INPUT, OUTPUT> {
      *
      * @see TaskOutputProvider TaskOutputProvider - get output of dependency.
      */
-    abstract fun onExecute(context: Context, taskOutputProvider: TaskOutputProvider): OUTPUT
+    abstract fun onExecute(context: Context, input: INPUT, taskOutputProvider: TaskOutputProvider): OUTPUT
 
     override fun toString(): String {
         return this::class.java.simpleName

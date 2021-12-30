@@ -330,7 +330,7 @@ class AccountModuleInit : ModuleInit {
         // 用户本地缓存
         val userDiskCache = UserDiskCache(context)
         // 注册读取登录状态的任务
-        taskRegister.register(LoadLoginStateTask::class.java, userDiskCache)
+        taskRegister.register(LoadLoginStateTask::class.java, input = userDiskCache)
 
         taskRegister.register(ATask::class.java)    // 注册A任务
         taskRegister.register(BTask::class.java)    // 注册B任务
