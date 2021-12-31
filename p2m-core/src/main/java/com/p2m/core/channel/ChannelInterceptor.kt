@@ -1,14 +1,12 @@
 package com.p2m.core.channel
 
 import android.content.Context
-import androidx.annotation.MainThread
-import androidx.annotation.WorkerThread
 import com.p2m.core.exception.P2MException
 
 interface InterceptorService {
     fun doInterceptions(
         channel: Channel,
-        interceptors: Array<Interceptor>,
+        interceptors: Array<IInterceptor>,
         callback: InterceptorCallback
     )
 }
@@ -17,7 +15,7 @@ internal class InterceptorServiceDefault : InterceptorService {
 
     override fun doInterceptions(
         channel: Channel,
-        interceptors: Array<Interceptor>,
+        interceptors: Array<IInterceptor>,
         callback: InterceptorCallback
     ) {
         val interceptorIterator = interceptors.iterator()
@@ -35,7 +33,7 @@ internal class InterceptorServiceDefault : InterceptorService {
     }
 
     private fun doInterception(
-        interceptorIterator: Iterator<Interceptor>, channel: Channel,
+        interceptorIterator: Iterator<IInterceptor>, channel: Channel,
         onContinue: () -> Unit,
         onRedirect: (redirectChannel: Channel) -> Unit,
         onInterrupted: (e: Throwable) -> Unit
@@ -72,10 +70,8 @@ interface InterceptorCallback {
     fun onInterrupt(e: Throwable? = null)
 }
 
-interface Interceptor {
-    @MainThread
+interface IInterceptor {
     fun init(context: Context)
 
-    @WorkerThread
     fun process(channel: Channel, callback: InterceptorCallback)
 }

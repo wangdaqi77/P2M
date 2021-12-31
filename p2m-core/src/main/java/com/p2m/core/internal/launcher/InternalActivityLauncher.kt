@@ -29,7 +29,7 @@ internal class InternalActivityLauncher<I, O>(
 
     override fun launchChannel(launchBlock: LaunchActivityBlock): LaunchActivityChannel {
         val intent = createIntent()
-        return Channel.launchActivity(this, _P2M.interceptorService) { channel ->
+        return Channel.launchActivity(this) { channel ->
             _P2M.onLaunchActivityNavigationCompleted(intent, channel)
             launchBlock(intent)
         }

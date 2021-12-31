@@ -2,6 +2,7 @@ package com.p2m.core.channel
 
 import com.p2m.core.exception.ChannelClosedException
 import com.p2m.core.exception.P2MException
+import com.p2m.core.internal._P2M
 import com.p2m.core.internal.log.logW
 import com.p2m.core.launcher.ActivityLauncher
 import com.p2m.core.launcher.LaunchActivityChannel
@@ -98,7 +99,7 @@ open class Channel internal constructor(
     companion object {
         private const val DEFAULT_TIMEOUT = 10_000L
         private const val DEFAULT_CHANNEL_INTERCEPT = true
-        private val EMPTY_INTERCEPTORS = arrayOf<Interceptor>()
+        private val EMPTY_INTERCEPTORS = arrayOf<IInterceptor>()
         private val EMPTY_BLOCK = { _: Channel -> }
 
         internal fun green(owner: Any, channelBlock: ChannelBlock) =
@@ -107,10 +108,10 @@ open class Channel internal constructor(
         internal fun interruptible(owner: Any, interceptorService: InterceptorService, channelBlock: ChannelBlock) =
             InterruptibleChannel(owner, interceptorService, channelBlock)
 
-        internal fun launchActivity(activityLauncher: ActivityLauncher<*, *>, interceptorService: InterceptorService, channelBlock: (channel: LaunchActivityChannel) -> Unit) =
-            LaunchActivityChannel(activityLauncher, interceptorService) {
+        internal fun launchActivity(activityLauncher: ActivityLauncher<*, *>, channelBlock: (channel: LaunchActivityChannel) -> Unit) =
+            LaunchActivityChannel(activityLauncher, _P2M.launchActivityHelper.interceptorService) {
                 channelBlock(it as LaunchActivityChannel)
-            }
+            }.interceptors(arrayOf())
 
         internal fun launchGreen(launcher: Launcher, channelBlock: ChannelBlock) =
             LaunchGreenChannel(launcher, channelBlock)
@@ -123,7 +124,7 @@ open class Channel internal constructor(
     private var onInterrupt : ((channel: Channel, e: Throwable?) -> Unit)? = null
     private var timeout :Long = DEFAULT_TIMEOUT
     private var isGreenChannel: Boolean = !DEFAULT_CHANNEL_INTERCEPT
-    private var interceptors: Array<Interceptor>? = null
+    private var interceptors: Array<IInterceptor>? = null
     @Volatile
     private var isCompleted = false
     @Volatile
@@ -199,7 +200,7 @@ open class Channel internal constructor(
         return this
     }
 
-    internal open fun interceptors(interceptors: Array<Interceptor>): Channel {
+    internal open fun interceptors(interceptors: Array<IInterceptor>): Channel {
         this.interceptors = interceptors
         return this
     }

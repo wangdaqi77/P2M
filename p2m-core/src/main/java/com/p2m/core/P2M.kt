@@ -48,7 +48,4 @@ object P2M : ModuleApiProvider {
     override fun <MODULE_API : ModuleApi<*, *, *>> apiOf(clazz: Class<out Module<MODULE_API>>): MODULE_API {
         return _P2M.apiOf(clazz)
     }
-
-    fun findRecoverableLaunchActivityChannel(activity: Activity) =
-        _P2M.launchActivityHelper.findRecoverableChannel(activity)
 }

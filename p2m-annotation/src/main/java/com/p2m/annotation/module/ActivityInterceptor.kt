@@ -1,5 +1,7 @@
 package com.p2m.annotation.module
 
+import com.p2m.annotation.module.api.ApiUse
+
 /**
  * A class uses this annotation for a module initialization of `Module init` area.
  *
@@ -7,16 +9,9 @@ package com.p2m.annotation.module
  *
  * The annotation can only be used once within same module scope.
  */
+@ApiUse
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
-annotation class Interceptor(
-    val type: Type,
-) {
-    enum class Type {
-        GLOBAL_BEFORE,
-        GLOBAL_AFTER,
-        LAUNCHER,
-    }
-}
+annotation class ActivityInterceptor
 
 

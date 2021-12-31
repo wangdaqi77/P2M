@@ -9,7 +9,7 @@ import com.p2m.core.app.App
 import com.p2m.core.channel.InterceptorServiceDefault
 import com.p2m.core.launcher.LaunchActivityChannel
 import com.p2m.core.config.P2MConfigManager
-import com.p2m.core.internal.channel.LaunchActivityHelper
+import com.p2m.core.internal.launcher.LaunchActivityHelper
 import com.p2m.core.internal.config.InternalP2MConfigManager
 import com.p2m.core.internal.execution.Executor
 import com.p2m.core.internal.execution.InternalExecutor

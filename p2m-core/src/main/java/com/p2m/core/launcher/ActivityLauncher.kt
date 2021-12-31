@@ -12,7 +12,7 @@ import androidx.fragment.app.Fragment
 import com.p2m.annotation.module.api.ApiLauncher
 import com.p2m.annotation.module.api.ApiLauncherActivityResultContractFor
 import com.p2m.core.channel.Channel
-import com.p2m.core.channel.Interceptor
+import com.p2m.core.channel.IInterceptor
 import com.p2m.core.internal._P2M
 import com.p2m.core.internal.launcher.InternalActivityLauncher
 import com.p2m.core.internal.launcher.InternalSafeIntent
@@ -60,7 +60,7 @@ interface ActivityLauncher<I, O> : Launcher{
      *
      * @see ApiLauncher
      * @see LaunchActivityChannel.navigation
-     * @see Interceptor
+     * @see IInterceptor
      */
     fun launchChannel(launchBlock: LaunchActivityBlock) : LaunchActivityChannel
 
@@ -130,7 +130,7 @@ interface ActivityResultLauncherCompat<I, O> {
      *
      * @see ActivityLauncher.registerResultLauncher
      * @see LaunchActivityChannel.navigation
-     * @see Interceptor
+     * @see IInterceptor
      */
     fun launchChannel(options: ActivityOptionsCompat? = null, inputBlock: () -> I) : LaunchActivityChannel
 
@@ -146,7 +146,7 @@ internal class InternalActivityResultLauncherCompat<I, O>(
 ) : ActivityResultLauncherCompat<I, O> {
 
     override fun launchChannel(options: ActivityOptionsCompat?, inputBlock: () -> I) =
-        Channel.launchActivity(activityLauncher, _P2M.interceptorService) { channel ->
+        Channel.launchActivity(activityLauncher) { channel ->
             getContract().onCreateIntent { intent: Intent->
                 // after `activityResultLauncher.launch(inputBlock(), options)`
                 _P2M.onLaunchActivityNavigationCompleted(intent, channel)

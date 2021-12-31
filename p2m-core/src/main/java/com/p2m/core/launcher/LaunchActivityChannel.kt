@@ -1,7 +1,6 @@
 package com.p2m.core.launcher
 
 import android.content.Context
-import androidx.annotation.CallSuper
 import androidx.annotation.WorkerThread
 import com.p2m.core.channel.*
 import com.p2m.core.internal.log.logW
@@ -12,6 +11,7 @@ class LaunchActivityChannel internal constructor(
     channelBlock: ChannelBlock
 ) : InterruptibleChannel(launcher, interceptorService, channelBlock) {
     internal var recoverableChannel: RecoverableLaunchActivityChannel? = null
+    internal var allowRestore = true
 
     init {
         _onRedirect =  { redirectChannel ->
@@ -21,6 +21,11 @@ class LaunchActivityChannel internal constructor(
                 logW("Not support type: ${redirectChannel::class.java.name}")
             }
         }
+    }
+
+    fun disallowRestoreAfterRedirect(): LaunchActivityChannel {
+        this.allowRestore = false
+        return this
     }
 
     override fun navigationCallback(navigationCallback: NavigationCallback): LaunchActivityChannel {
@@ -45,6 +50,10 @@ class LaunchActivityChannel internal constructor(
 
     override fun onInterrupt(onInterrupt: (channel: Channel, e: Throwable?) -> Unit): LaunchActivityChannel {
         return super.onInterrupt(onInterrupt) as LaunchActivityChannel
+    }
+
+    internal override fun interceptors(interceptors: Array<IInterceptor>): LaunchActivityChannel {
+        return super.interceptors(interceptors) as LaunchActivityChannel
     }
 
     override fun timeout(timeout: Long): LaunchActivityChannel {
@@ -73,12 +82,26 @@ interface LaunchActivityInterceptorCallback {
     fun onInterrupt(e: Throwable? = null)
 }
 
-abstract class LaunchActivityInterceptor : Interceptor {
+interface ILaunchActivityIInterceptor {
+    @WorkerThread
+    fun init(context: Context)
+
+    @WorkerThread
+    fun process(callback: LaunchActivityInterceptorCallback)
+}
+
+class LaunchActivityInterceptor(private val real: ILaunchActivityIInterceptor) : IInterceptor {
+
     private lateinit var context: Context
 
-    final override fun process(channel: Channel, callback: InterceptorCallback) {
+    override fun init(context: Context) {
+        this.context = context.applicationContext
+        real.init(context)
+    }
+
+    override fun process(channel: Channel, callback: InterceptorCallback) {
         if (channel is LaunchActivityChannel) {
-            process(object : LaunchActivityInterceptorCallback {
+            real.process(object : LaunchActivityInterceptorCallback {
                 override fun onContinue() {
                     callback.onContinue()
                 }
@@ -95,19 +118,11 @@ abstract class LaunchActivityInterceptor : Interceptor {
             callback.onContinue()
         }
     }
-
-    @CallSuper
-    override fun init(context: Context) {
-        this.context = context.applicationContext
-    }
-
-    @WorkerThread
-    abstract fun process(callback: LaunchActivityInterceptorCallback)
 }
 
 class RecoverableLaunchActivityChannel internal constructor(private val channel: LaunchActivityChannel) {
     private var restored = false
-    fun restore() {
+    fun tryRestore() {
         if (restored) {
             logW("restored for ${channel}.")
             return
