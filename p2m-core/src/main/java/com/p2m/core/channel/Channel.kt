@@ -3,10 +3,11 @@ package com.p2m.core.channel
 import com.p2m.core.exception.ChannelClosedException
 import com.p2m.core.exception.P2MException
 import com.p2m.core.internal.log.logW
+import com.p2m.core.launcher.ActivityLauncher
+import com.p2m.core.launcher.LaunchActivityChannel
 import com.p2m.core.launcher.Launcher
-import kotlin.properties.Delegates
 
-typealias ChannelBlock = () -> Unit
+typealias ChannelBlock = (channel: Channel) -> Unit
 
 interface NavigationCallback {
     fun onStarted(channel: Channel)
@@ -15,9 +16,9 @@ interface NavigationCallback {
 
     fun onCompleted(channel: Channel)
 
-    fun onInterrupt(channel: Channel)
+    fun onRedirect(redirectChannel: Channel)
 
-    fun onChanged(newChannel: Channel)
+    fun onInterrupt(channel: Channel, e: Throwable?)
 }
 
 open class GreenChannel internal constructor(owner: Any, channelBlock: ChannelBlock) :
@@ -44,13 +45,6 @@ open class GreenChannel internal constructor(owner: Any, channelBlock: ChannelBl
     }
 }
 
-
-class LaunchChannel internal constructor(
-    val launcher: Launcher,
-    interceptorService: InterceptorService,
-    channelBlock: ChannelBlock
-) : InterruptibleChannel(launcher, interceptorService, channelBlock)
-
 class LaunchGreenChannel internal constructor(
     val launcher: Launcher,
     channelBlock: ChannelBlock
@@ -62,28 +56,12 @@ open class InterruptibleChannel internal constructor(
     channelBlock: ChannelBlock
 ) :
     Channel(owner = owner, interceptorService = interceptorService, channelBlock = channelBlock) {
-    private var onProduceRecoverableChannel: ((RecoverableChannel) -> Unit)? = null
-    internal var recoverableChannel by Delegates.observable<RecoverableChannel?>(null) { _, _, newValue ->
-        newValue?.also {
-            onProduceRecoverableChannel?.invoke(it)
-        }
+
+    public override fun navigationCallback(navigationCallback: NavigationCallback): InterruptibleChannel {
+        return super.navigationCallback(navigationCallback) as InterruptibleChannel
     }
 
-    init {
-        _onChanged =  { newChannel ->
-            if (newChannel is InterruptibleChannel) {
-                newChannel.recoverableChannel = RecoverableChannel(this)
-            } else {
-                logW("Not support type: ${newChannel::class.java.name}")
-            }
-        }
-    }
-
-    internal fun onProduceRecoverableChannel(onProduceRecoverableChannel: (RecoverableChannel) -> Unit) {
-        this.onProduceRecoverableChannel = onProduceRecoverableChannel
-    }
-
-    override fun onStarted(onStarted: (channel: Channel) -> Unit): InterruptibleChannel {
+    public override fun onStarted(onStarted: (channel: Channel) -> Unit): InterruptibleChannel {
         return super.onStarted(onStarted) as InterruptibleChannel
     }
 
@@ -91,16 +69,16 @@ open class InterruptibleChannel internal constructor(
         return super.onFailure(onFailure) as InterruptibleChannel
     }
 
-    public override fun onInterrupt(onInterrupt: (channel: Channel) -> Unit): InterruptibleChannel {
-        return super.onInterrupt(onInterrupt) as InterruptibleChannel
-    }
-
-    override fun onCompleted(onCompleted: (channel: Channel) -> Unit): InterruptibleChannel {
+    public override fun onCompleted(onCompleted: (channel: Channel) -> Unit): InterruptibleChannel {
         return super.onCompleted(onCompleted) as InterruptibleChannel
     }
 
-    override fun onChanged(onChanged: (newChannel: Channel) -> Unit): InterruptibleChannel {
-        return super.onChanged(onChanged) as InterruptibleChannel
+    public override fun onRedirect(onRedirect: (newChannel: Channel) -> Unit): InterruptibleChannel {
+        return super.onRedirect(onRedirect) as InterruptibleChannel
+    }
+
+    public override fun onInterrupt(onInterrupt: (channel: Channel, e: Throwable?) -> Unit): InterruptibleChannel {
+        return super.onInterrupt(onInterrupt) as InterruptibleChannel
     }
 
     public override fun timeout(timeout: Long): InterruptibleChannel {
@@ -120,8 +98,8 @@ open class Channel internal constructor(
     companion object {
         private const val DEFAULT_TIMEOUT = 10_000L
         private const val DEFAULT_CHANNEL_INTERCEPT = true
-        private val EMPTY_INTERCEPTORS = arrayOf<IInterceptor>()
-        private val EMPTY_BLOCK = { }
+        private val EMPTY_INTERCEPTORS = arrayOf<Interceptor>()
+        private val EMPTY_BLOCK = { _: Channel -> }
 
         internal fun green(owner: Any, channelBlock: ChannelBlock) =
             GreenChannel(owner, channelBlock)
@@ -129,22 +107,23 @@ open class Channel internal constructor(
         internal fun interruptible(owner: Any, interceptorService: InterceptorService, channelBlock: ChannelBlock) =
             InterruptibleChannel(owner, interceptorService, channelBlock)
 
-        internal fun launch(launcher: Launcher, interceptorService: InterceptorService, channelBlock: ChannelBlock) =
-            LaunchChannel(launcher, interceptorService, channelBlock)
+        internal fun launchActivity(activityLauncher: ActivityLauncher<*, *>, interceptorService: InterceptorService, channelBlock: (channel: LaunchActivityChannel) -> Unit) =
+            LaunchActivityChannel(activityLauncher, interceptorService) {
+                channelBlock(it as LaunchActivityChannel)
+            }
 
         internal fun launchGreen(launcher: Launcher, channelBlock: ChannelBlock) =
             LaunchGreenChannel(launcher, channelBlock)
     }
 
-    protected var _onChanged : ((newChannel: Channel) -> Unit)? = null
-    private var onChanged : ((newChannel: Channel) -> Unit)? = null
     private var onStarted : ((channel: Channel) -> Unit)? = null
     private var onFailure : ((channel: Channel) -> Unit)? = null
     private var onCompleted : ((channel: Channel) -> Unit)? = null
-    private var onInterrupt : ((channel: Channel) -> Unit)? = null
+    private var onRedirect : ((newChannel: Channel) -> Unit)? = null
+    private var onInterrupt : ((channel: Channel, e: Throwable?) -> Unit)? = null
     private var timeout :Long = DEFAULT_TIMEOUT
     private var isGreenChannel: Boolean = !DEFAULT_CHANNEL_INTERCEPT
-    private var interceptors: Array<IInterceptor>? = null
+    private var interceptors: Array<Interceptor>? = null
     @Volatile
     private var isCompleted = false
     @Volatile
@@ -152,6 +131,8 @@ open class Channel internal constructor(
     private var closedException : ChannelClosedException? = null
     private val lock = Any()
     private var navigationCallback: NavigationCallback? = null
+    protected var _onRedirect : ((redirectChannel: Channel) -> Unit)? = null
+    internal var isRedirect = false
     private val _navigationCallback: NavigationCallback by lazy(LazyThreadSafetyMode.NONE) {
         object : NavigationCallback {
             override fun onStarted(channel: Channel) {
@@ -166,12 +147,12 @@ open class Channel internal constructor(
                 onCompleted?.invoke(channel)
             }
 
-            override fun onInterrupt(channel: Channel) {
-                onInterrupt?.invoke(channel)
+            override fun onRedirect(redirectChannel: Channel) {
+                onRedirect?.invoke(redirectChannel)
             }
 
-            override fun onChanged(newChannel: Channel) {
-                onChanged?.invoke(newChannel)
+            override fun onInterrupt(channel: Channel, e: Throwable?) {
+                onInterrupt?.invoke(channel, e)
             }
         }
     }
@@ -181,6 +162,11 @@ open class Channel internal constructor(
             logW("Called `callback(NavigationCallback)` already.")
         }
         this.navigationCallback = this._navigationCallback
+    }
+
+    protected open fun navigationCallback(navigationCallback: NavigationCallback): Channel {
+        this.navigationCallback = navigationCallback
+        return this
     }
 
     protected open fun onStarted(onStarted: (channel: Channel) -> Unit): Channel {
@@ -201,19 +187,19 @@ open class Channel internal constructor(
         return this
     }
 
-    protected open fun onInterrupt(onInterrupt: (channel: Channel) -> Unit): Channel {
+    protected open fun onInterrupt(onInterrupt: (channel: Channel, e: Throwable?) -> Unit): Channel {
         setNavigationCallbackIfNull()
         this.onInterrupt = onInterrupt
         return this
     }
 
-    protected open fun onChanged(onChanged: (newChannel: Channel) -> Unit): Channel {
+    protected open fun onRedirect(onRedirect: (newChannel: Channel) -> Unit): Channel {
         setNavigationCallbackIfNull()
-        this.onChanged = onChanged
+        this.onRedirect = onRedirect
         return this
     }
 
-    internal open fun interceptors(interceptors: Array<IInterceptor>): Channel {
+    internal open fun interceptors(interceptors: Array<Interceptor>): Channel {
         this.interceptors = interceptors
         return this
     }
@@ -250,13 +236,13 @@ open class Channel internal constructor(
             }
 
             if (navigationCallback != null) {
-                if (this.navigationCallback === _navigationCallback) {
+                if (this@Channel.navigationCallback === _navigationCallback) {
                     logW("Called `onStarted { }` or `onFailure { }` or `onCompleted { }` or `onInterrupt { }` already.")
                 }
-                this.navigationCallback = navigationCallback
+                this@Channel.navigationCallback = navigationCallback
             }
 
-            navigationCallback?.onStarted(this)
+            this@Channel.navigationCallback?.onStarted(this)
 
             if (!isGreenChannel) {
                 if (interceptorService == null) {
@@ -266,16 +252,19 @@ open class Channel internal constructor(
                     channel = this,
                     interceptors = interceptors ?: EMPTY_INTERCEPTORS,
                     callback = object : InterceptorCallback {
-                        override fun onContinue(channel: Channel) {
-                            if (channel !== this@Channel) {
-                                _onChanged?.invoke(/*newChannel = */channel)
-                                navigationCallback?.onChanged(newChannel = channel)
-                            }
-                            channel._navigation()
+                        override fun onContinue() {
+                            _navigation()
+                        }
+
+                        override fun onRedirect(redirectChannel: Channel) {
+                            _onRedirect?.invoke(/*redirectChannel = */redirectChannel)
+                            redirectChannel.isRedirect = true
+                            this@Channel.navigationCallback?.onRedirect(redirectChannel = redirectChannel)
+                            redirectChannel.navigation()
                         }
 
                         override fun onInterrupt(e: Throwable?) {
-                            navigationCallback?.onInterrupt(this@Channel)
+                            this@Channel.navigationCallback?.onInterrupt(this@Channel, e)
                         }
 
                     })
@@ -289,14 +278,14 @@ open class Channel internal constructor(
         synchronized(lock) {
             try {
                 if (isClosed) {
-                    navigationCallback?.onFailure(this, closedException!!)
+                    this@Channel.navigationCallback?.onFailure(this, closedException!!)
                     return
                 }
-                channelBlock()
+                channelBlock(this)
                 isCompleted = true
-                navigationCallback?.onCompleted(this)
+                this@Channel.navigationCallback?.onCompleted(this)
             } catch (e: Throwable) {
-                navigationCallback?.onFailure(this, e)
+                this@Channel.navigationCallback?.onFailure(this, e)
             } finally {
                 close()
             }

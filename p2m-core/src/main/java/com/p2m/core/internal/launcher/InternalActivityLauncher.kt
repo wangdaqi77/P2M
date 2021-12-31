@@ -7,7 +7,7 @@ import androidx.activity.result.ActivityResultRegistry
 import androidx.fragment.app.Fragment
 import com.p2m.annotation.module.api.ApiLauncher
 import com.p2m.core.channel.Channel
-import com.p2m.core.channel.LaunchChannel
+import com.p2m.core.launcher.LaunchActivityChannel
 import com.p2m.core.internal._P2M
 import com.p2m.core.launcher.*
 
@@ -27,14 +27,11 @@ internal class InternalActivityLauncher<I, O>(
         return InternalSafeIntent(clazz)
     }
 
-    override fun launchChannel(launchBlock: LaunchActivityBlock): LaunchChannel {
+    override fun launchChannel(launchBlock: LaunchActivityBlock): LaunchActivityChannel {
         val intent = createIntent()
-        return Channel.launch(this, _P2M.interceptorService) {
+        return Channel.launchActivity(this, _P2M.interceptorService) { channel ->
+            _P2M.onLaunchActivityNavigationCompleted(intent, channel)
             launchBlock(intent)
-        }.apply {
-            onProduceRecoverableChannel { recoverableChannel ->
-                _P2M.saveRecoverableChannel(intent, recoverableChannel)
-            }
         }
     }
 

@@ -12,13 +12,10 @@ import androidx.fragment.app.Fragment
 import com.p2m.annotation.module.api.ApiLauncher
 import com.p2m.annotation.module.api.ApiLauncherActivityResultContractFor
 import com.p2m.core.channel.Channel
-import com.p2m.core.channel.IInterceptor
-import com.p2m.core.channel.LaunchChannel
-import com.p2m.core.channel.RecoverableChannel
+import com.p2m.core.channel.Interceptor
 import com.p2m.core.internal._P2M
 import com.p2m.core.internal.launcher.InternalActivityLauncher
 import com.p2m.core.internal.launcher.InternalSafeIntent
-import java.lang.ref.WeakReference
 import kotlin.reflect.KProperty
 
 /**
@@ -59,13 +56,13 @@ interface ActivityLauncher<I, O> : Launcher{
      * as input param, all other fields (action, data, type) are null, they can
      * be modified later in [launchBlock].
      *
-     * @return [LaunchChannel] - call `navigation` to launch.
+     * @return [LaunchActivityChannel] - call `navigation` to launch.
      *
      * @see ApiLauncher
-     * @see LaunchChannel.navigation
-     * @see IInterceptor
+     * @see LaunchActivityChannel.navigation
+     * @see Interceptor
      */
-    fun launchChannel(launchBlock: LaunchActivityBlock) : LaunchChannel
+    fun launchChannel(launchBlock: LaunchActivityBlock) : LaunchActivityChannel
 
     /**
      * Register a activity result for that [Activity] class annotated by [ApiLauncher].
@@ -129,13 +126,13 @@ interface ActivityResultLauncherCompat<I, O> {
      * Will launch activity result if there is no interruption, and at same
      * time call [inputBlock] get input as launch input param.
      *
-     * @return [LaunchChannel] - call `navigation` to launch.
+     * @return [LaunchActivityChannel] - call `navigation` to launch.
      *
      * @see ActivityLauncher.registerResultLauncher
-     * @see LaunchChannel.navigation
-     * @see IInterceptor
+     * @see LaunchActivityChannel.navigation
+     * @see Interceptor
      */
-    fun launchChannel(options: ActivityOptionsCompat? = null, inputBlock: () -> I) : LaunchChannel
+    fun launchChannel(options: ActivityOptionsCompat? = null, inputBlock: () -> I) : LaunchActivityChannel
 
     fun unregister()
 
@@ -149,12 +146,12 @@ internal class InternalActivityResultLauncherCompat<I, O>(
 ) : ActivityResultLauncherCompat<I, O> {
 
     override fun launchChannel(options: ActivityOptionsCompat?, inputBlock: () -> I) =
-        Channel.launch(activityLauncher, _P2M.interceptorService) {
-            activityResultLauncher.launch(inputBlock(), options)
-        }.apply {
-            onProduceRecoverableChannel { recoverableChannel ->
-                getContract().waitSaveRecoverableChannel = WeakReference(recoverableChannel)
+        Channel.launchActivity(activityLauncher, _P2M.interceptorService) { channel ->
+            getContract().onCreateIntent { intent: Intent->
+                // after `activityResultLauncher.launch(inputBlock(), options)`
+                _P2M.onLaunchActivityNavigationCompleted(intent, channel)
             }
+            activityResultLauncher.launch(inputBlock(), options)
         }
 
     override fun unregister() = activityResultLauncher.unregister()
@@ -168,7 +165,7 @@ abstract class ActivityResultContractCompat<I, O> :
     ActivityResultContract<I, ActivityResultCompat<O>>() {
 
     internal lateinit var activityClazz: Class<*>
-    internal var waitSaveRecoverableChannel: WeakReference<RecoverableChannel?>? = null
+    internal var onCreateIntent: ((Intent) -> Unit)? = null
 
     /**
      * Fill input into created intent.
@@ -193,14 +190,16 @@ abstract class ActivityResultContractCompat<I, O> :
     final override fun createIntent(context: Context, input: I): Intent {
         val intent = if (input is Intent) InternalSafeIntent(input as Intent) else InternalSafeIntent()
         intent.setClassInternal(activityClazz)
-        waitSaveRecoverableChannel?.get()?.also { recoverableChannel ->
-            _P2M.saveRecoverableChannel(intent, recoverableChannel)
-        }
+        onCreateIntent?.invoke(intent)
         return intent.also { inputIntoCreatedIntent(input, it) }
     }
 
     final override fun parseResult(resultCode: Int, intent: Intent?): ActivityResultCompat<O> =
         ActivityResultCompat(resultCode, outputFromResultIntent(resultCode, intent))
+
+    internal fun onCreateIntent(onCreateIntent: (Intent) -> Unit) {
+        this.onCreateIntent = onCreateIntent
+    }
 }
 
 class DefaultActivityResultContractCompat : ActivityResultContractCompat<Intent, Intent>() {

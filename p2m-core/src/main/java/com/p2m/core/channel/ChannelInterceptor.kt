@@ -1,11 +1,14 @@
 package com.p2m.core.channel
 
+import android.content.Context
+import androidx.annotation.MainThread
+import androidx.annotation.WorkerThread
 import com.p2m.core.exception.P2MException
 
 interface InterceptorService {
     fun doInterceptions(
         channel: Channel,
-        interceptors: Array<IInterceptor>,
+        interceptors: Array<Interceptor>,
         callback: InterceptorCallback
     )
 }
@@ -14,37 +17,46 @@ internal class InterceptorServiceDefault : InterceptorService {
 
     override fun doInterceptions(
         channel: Channel,
-        interceptors: Array<IInterceptor>,
+        interceptors: Array<Interceptor>,
         callback: InterceptorCallback
     ) {
-        // before interceptors -> owner interceptors -> after interceptors
-        @Suppress("UNCHECKED_CAST")
         val interceptorIterator = interceptors.iterator()
         try {
-            doInterception(interceptorIterator, channel) { e ->
-                callback.onInterrupt(e)
-            }
-
-            if (!interceptorIterator.hasNext()) {
-                callback.onContinue(channel)
-            }
+            doInterception(
+                interceptorIterator = interceptorIterator,
+                channel = channel,
+                onContinue = { callback.onContinue() },
+                onRedirect = { callback.onRedirect(it) },
+                onInterrupted = { e -> callback.onInterrupt(e) }
+            )
         } catch (e : Throwable) {
             callback.onInterrupt(e)
         }
     }
 
-    private fun doInterception(interceptorIterator: Iterator<IInterceptor>, channel: Channel, onInterrupted: (e: Throwable) -> Unit) {
+    private fun doInterception(
+        interceptorIterator: Iterator<Interceptor>, channel: Channel,
+        onContinue: () -> Unit,
+        onRedirect: (redirectChannel: Channel) -> Unit,
+        onInterrupted: (e: Throwable) -> Unit
+    ) {
         if (interceptorIterator.hasNext()) {
             val interceptor = interceptorIterator.next()
             interceptor.process(channel, object : InterceptorCallback {
-                override fun onContinue(channel: Channel) {
-                    doInterception(interceptorIterator, channel, onInterrupted)
+                override fun onContinue() {
+                    doInterception(interceptorIterator, channel, onContinue, onRedirect, onInterrupted)
+                }
+
+                override fun onRedirect(redirectChannel: Channel) {
+                    onRedirect(redirectChannel)
                 }
 
                 override fun onInterrupt(e: Throwable?) {
                     onInterrupted(e ?: P2MException("No message."))
                 }
             })
+        } else {
+            onContinue()
         }
     }
 }
@@ -53,11 +65,17 @@ internal class InterceptorServiceDefault : InterceptorService {
  * A callback when launch been intercepted.
  */
 interface InterceptorCallback {
-    fun onContinue(channel: Channel)
+    fun onContinue()
+
+    fun onRedirect(redirectChannel: Channel)
 
     fun onInterrupt(e: Throwable? = null)
 }
 
-interface IInterceptor {
+interface Interceptor {
+    @MainThread
+    fun init(context: Context)
+
+    @WorkerThread
     fun process(channel: Channel, callback: InterceptorCallback)
 }

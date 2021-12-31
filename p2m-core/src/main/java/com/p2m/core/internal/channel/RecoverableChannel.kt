@@ -6,14 +6,15 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.SparseArray
-import com.p2m.core.channel.RecoverableChannel
+import com.p2m.core.launcher.LaunchActivityChannel
+import com.p2m.core.launcher.RecoverableLaunchActivityChannel
 import com.p2m.core.internal.execution.Executor
 import com.p2m.core.internal.execution.TagRunnable
 import com.p2m.core.internal.log.logE
 import com.p2m.core.internal.log.logW
 import java.util.concurrent.atomic.AtomicInteger
 
-internal class RecoverableChannelHelper : Application.ActivityLifecycleCallbacks {
+internal class LaunchActivityHelper : Application.ActivityLifecycleCallbacks {
     companion object {
         private const val EXT_ID = "Key_RecoverableChannelHelper_RecoverableChannel"
         private const val DISCARD_TIMEOUT = 10_000L
@@ -22,7 +23,7 @@ internal class RecoverableChannelHelper : Application.ActivityLifecycleCallbacks
 
     private var initialized = false
     private val idFactory = AtomicInteger(ID_NO_SET)
-    private val table = SparseArray<RecoverableChannel>()
+    private val table = SparseArray<RecoverableLaunchActivityChannel>()
     private val timeoutRunnable = SparseArray<TagRunnable>()
     private lateinit var executor: Executor
 
@@ -33,7 +34,14 @@ internal class RecoverableChannelHelper : Application.ActivityLifecycleCallbacks
         initialized = true
     }
 
-    fun saveRecoverableChannel(intent: Intent, recoverableChannel: RecoverableChannel) {
+    internal fun onLaunchActivityNavigationCompleted(intent: Intent, channel: LaunchActivityChannel) {
+        if (channel.isRedirect) {
+            channel.recoverableChannel?.also { saveRecoverableChannel(intent, it) }
+                ?: logE("unknown error.")
+        }
+    }
+
+    private fun saveRecoverableChannel(intent: Intent, recoverableChannel: RecoverableLaunchActivityChannel) {
         if (!initialized) {
             logE("please call `init()` before.")
             return
@@ -48,7 +56,7 @@ internal class RecoverableChannelHelper : Application.ActivityLifecycleCallbacks
         }.also { timeoutRunnable.put(id, it) })
     }
 
-    fun findRecoverableChannel(activity: Activity): RecoverableChannel? {
+    fun findRecoverableChannel(activity: Activity): RecoverableLaunchActivityChannel? {
         activity.recoverableChannelIdIfFind { id ->
             return table[id]
         }

@@ -7,14 +7,13 @@ import android.os.SystemClock
 import androidx.annotation.WorkerThread
 import com.p2m.core.app.App
 import com.p2m.core.channel.InterceptorServiceDefault
-import com.p2m.core.channel.RecoverableChannel
+import com.p2m.core.launcher.LaunchActivityChannel
 import com.p2m.core.config.P2MConfigManager
-import com.p2m.core.internal.channel.RecoverableChannelHelper
+import com.p2m.core.internal.channel.LaunchActivityHelper
 import com.p2m.core.internal.config.InternalP2MConfigManager
 import com.p2m.core.internal.execution.Executor
 import com.p2m.core.internal.execution.InternalExecutor
 import com.p2m.core.internal.log.logE
-import com.p2m.core.internal.log.logW
 import com.p2m.core.internal.module.*
 import com.p2m.core.internal.module.DefaultModuleFactory
 import com.p2m.core.internal.module.DefaultModuleNameCollectorFactory
@@ -31,7 +30,7 @@ internal object _P2M : ModuleApiProvider {
     internal val executor: Executor by lazy { InternalExecutor() }
     internal val interceptorService = InterceptorServiceDefault()
     internal val configManager: P2MConfigManager = InternalP2MConfigManager()
-    internal val recoverableChannelHelper by lazy { RecoverableChannelHelper() }
+    internal val launchActivityHelper by lazy { LaunchActivityHelper() }
     private val moduleContainer = ModuleContainerDefault()
     private lateinit var driver: InternalDriver
 
@@ -49,7 +48,7 @@ internal object _P2M : ModuleApiProvider {
         var ideaStartTime = 0L
         val app = App()
             .onEvaluate {
-                recoverableChannelHelper.init(context, executor)
+                launchActivityHelper.init(context, executor)
                 ideaStartTime = SystemClock.uptimeMillis()
                 onIdea?.invoke()
             }
@@ -59,7 +58,6 @@ internal object _P2M : ModuleApiProvider {
             .onEvaluateTooLongEnd {
                 logE("`onIdea` was ran for too long, timeout: ${SystemClock.uptimeMillis() - ideaStartTime} ms.")
             }
-
 
         val externalModules = externalPublicModuleClassName.mapTo(ArrayList(externalPublicModuleClassName.size)) { className ->
                 ModuleInfo.fromExternal(
@@ -99,8 +97,8 @@ internal object _P2M : ModuleApiProvider {
         return module.api as MODULE_API
     }
 
-    internal fun saveRecoverableChannel(intent: Intent, recoverableChannel: RecoverableChannel){
-        recoverableChannelHelper.saveRecoverableChannel(intent, recoverableChannel)
+    internal fun onLaunchActivityNavigationCompleted(intent: Intent, channel: LaunchActivityChannel) {
+        launchActivityHelper.onLaunchActivityNavigationCompleted(intent, channel)
     }
 
 }

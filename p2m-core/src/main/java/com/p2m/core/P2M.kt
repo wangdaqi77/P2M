@@ -49,6 +49,6 @@ object P2M : ModuleApiProvider {
         return _P2M.apiOf(clazz)
     }
 
-    fun findRecoverableChannel(activity: Activity) =
-        _P2M.recoverableChannelHelper.findRecoverableChannel(activity)
+    fun findRecoverableLaunchActivityChannel(activity: Activity) =
+        _P2M.launchActivityHelper.findRecoverableChannel(activity)
 }
