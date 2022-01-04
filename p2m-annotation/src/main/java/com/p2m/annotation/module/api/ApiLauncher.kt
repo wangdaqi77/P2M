@@ -65,3 +65,9 @@ annotation class ApiLauncher(val launcherName: String, vararg val interceptorCla
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
 annotation class ApiLauncherActivityResultContractFor(vararg val launcherName: String)
+
+
+@ApiUse
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.BINARY)
+annotation class ApiLauncherInterceptor

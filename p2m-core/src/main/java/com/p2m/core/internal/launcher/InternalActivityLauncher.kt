@@ -10,9 +10,11 @@ import com.p2m.core.channel.Channel
 import com.p2m.core.launcher.LaunchActivityChannel
 import com.p2m.core.internal._P2M
 import com.p2m.core.launcher.*
+import kotlin.reflect.KClass
 
 internal class InternalActivityLauncher<I, O>(
     private val clazz: Class<*>,
+    internal val annotatedInterceptorClasses: Array<out KClass<ILaunchActivityInterceptor>>,
     private val createActivityResultContractBlock: () -> ActivityResultContractCompat<I, O>
 ) : ActivityLauncher<I, O> {
 
@@ -32,7 +34,7 @@ internal class InternalActivityLauncher<I, O>(
         return Channel.launchActivity(this) { channel ->
             _P2M.onLaunchActivityNavigationCompleted(intent, channel)
             launchBlock(intent)
-        }
+        }.also(::addAnnotatedInterceptor)
     }
 
     override fun registerResultLauncher(activity: ComponentActivity, callback: ActivityResultCallbackCompat<O>): ActivityResultLauncherCompat<I, O> {
@@ -55,6 +57,10 @@ internal class InternalActivityLauncher<I, O>(
 
     private fun createActivityResultContract(): ActivityResultContractCompat<I, O> {
         return createActivityResultContractBlock.invoke().also { it.activityClazz = clazz }
+    }
+
+    internal fun addAnnotatedInterceptor(channel: LaunchActivityChannel){
+        annotatedInterceptorClasses.forEach(channel::addInterceptorAfter)
     }
 
     private fun ActivityResultLauncher<I>.compat(): InternalActivityResultLauncherCompat<I, O> =

@@ -6,9 +6,9 @@ import android.content.Intent
 import android.os.SystemClock
 import androidx.annotation.WorkerThread
 import com.p2m.core.app.App
-import com.p2m.core.channel.InterceptorServiceDefault
 import com.p2m.core.launcher.LaunchActivityChannel
 import com.p2m.core.config.P2MConfigManager
+import com.p2m.core.internal.channel.ChannelInterceptorContainer
 import com.p2m.core.internal.launcher.LaunchActivityHelper
 import com.p2m.core.internal.config.InternalP2MConfigManager
 import com.p2m.core.internal.execution.Executor
@@ -25,12 +25,12 @@ import com.p2m.core.module.*
 import kotlin.collections.ArrayList
 
 @SuppressLint("StaticFieldLeak")
-internal object _P2M : ModuleApiProvider {
+internal object _P2M : ModuleApiProvider, ModuleVisitor {
     internal lateinit var internalContext : Context
     internal val executor: Executor by lazy { InternalExecutor() }
-    internal val interceptorService = InterceptorServiceDefault()
     internal val configManager: P2MConfigManager = InternalP2MConfigManager()
     internal val launchActivityHelper by lazy { LaunchActivityHelper() }
+    internal val interceptorContainer = ChannelInterceptorContainer()
     private val moduleContainer = ModuleContainerDefault()
     private lateinit var driver: InternalDriver
 
@@ -73,7 +73,7 @@ internal object _P2M : ModuleApiProvider {
             ManifestModuleInfoFinder(applicationContext)
         )
         val moduleFactory: ModuleFactory = DefaultModuleFactory()
-        moduleContainer.register(app, moduleNameCollector, moduleInfoFinder, moduleFactory)
+        moduleContainer.registerAll(app, moduleNameCollector, moduleInfoFinder, moduleFactory, this)
 
         this.driver = InternalDriver(applicationContext, app, this.moduleContainer)
         this.driver.considerOpenAwait()
@@ -99,6 +99,11 @@ internal object _P2M : ModuleApiProvider {
 
     internal fun onLaunchActivityNavigationCompleted(intent: Intent, channel: LaunchActivityChannel) {
         launchActivityHelper.onLaunchActivityNavigationCompleted(intent, channel)
+    }
+
+    override fun visit(module: Module<*>) {
+        module.interceptorContainer = interceptorContainer
+        module.initLazy()
     }
 
 }

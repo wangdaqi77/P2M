@@ -16,6 +16,7 @@ import com.p2m.core.channel.IInterceptor
 import com.p2m.core.internal._P2M
 import com.p2m.core.internal.launcher.InternalActivityLauncher
 import com.p2m.core.internal.launcher.InternalSafeIntent
+import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
 /**
@@ -40,9 +41,9 @@ import kotlin.reflect.KProperty
  */
 interface ActivityLauncher<I, O> : Launcher{
 
-    class Delegate<I, O>(clazz: Class<*>, createActivityResultContractBlock: () -> ActivityResultContractCompat<I, O>) {
+    class Delegate<I, O>(clazz: Class<*>, vararg annotatedInterceptorClass: KClass<ILaunchActivityInterceptor>, createActivityResultContractBlock: () -> ActivityResultContractCompat<I, O>) {
         private val real by lazy(LazyThreadSafetyMode.NONE) {
-            InternalActivityLauncher<I, O>(clazz, createActivityResultContractBlock)
+            InternalActivityLauncher<I, O>(clazz, annotatedInterceptorClass, createActivityResultContractBlock)
         }
 
         operator fun getValue(thisRef: Any?, property: KProperty<*>): ActivityLauncher<I, O> = real
@@ -141,7 +142,7 @@ interface ActivityResultLauncherCompat<I, O> {
 
 
 internal class InternalActivityResultLauncherCompat<I, O>(
-    private val activityLauncher: ActivityLauncher<I, O>,
+    private val activityLauncher: InternalActivityLauncher<I, O>,
     private val activityResultLauncher: ActivityResultLauncher<I>
 ) : ActivityResultLauncherCompat<I, O> {
 
@@ -152,7 +153,7 @@ internal class InternalActivityResultLauncherCompat<I, O>(
                 _P2M.onLaunchActivityNavigationCompleted(intent, channel)
             }
             activityResultLauncher.launch(inputBlock(), options)
-        }
+        }.also(activityLauncher::addAnnotatedInterceptor)
 
     override fun unregister() = activityResultLauncher.unregister()
 

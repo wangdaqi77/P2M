@@ -1,6 +1,7 @@
 package com.p2m.core.module.task
 
 import android.content.Context
+import androidx.annotation.WorkerThread
 import com.p2m.core.internal.NULL
 import com.p2m.core.module.ModuleInit
 
@@ -50,6 +51,7 @@ abstract class Task<INPUT, OUTPUT> {
     internal val output: OUTPUT
         get() = NULL.unbox(outputObj)
 
+    @WorkerThread
     internal fun onExecute(context: Context, taskOutputProvider: TaskOutputProvider): OUTPUT =
         onExecute(context, NULL.unbox(inputObj), taskOutputProvider)
 
@@ -67,6 +69,7 @@ abstract class Task<INPUT, OUTPUT> {
      *
      * @see TaskOutputProvider TaskOutputProvider - get output of dependency.
      */
+    @WorkerThread
     abstract fun onExecute(context: Context, input: INPUT, taskOutputProvider: TaskOutputProvider): OUTPUT
 
     override fun toString(): String {

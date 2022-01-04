@@ -16,17 +16,18 @@ internal interface ModuleContainer{
 }
 
 
-internal class ModuleContainerDefault : ModuleRegister, ModuleContainer, ModuleVisitor {
+internal class ModuleContainerDefault() : ModuleRegister, ModuleContainer {
     // K:impl V:ModuleUnitImpl
     private val container = HashMap<Class<out Module<*>>, Module<*>>()
     // K:public api V:impl
     private val clazzMap = HashMap<Class<out Module<*>>, Class<out Module<*>>>()
 
-    internal fun register(
+    internal fun registerAll(
         topModule: Module<*>,
         moduleNameCollector: ModuleNameCollector,
         moduleInfoFinder: ModuleInfoFinder,
-        moduleFactory: ModuleFactory
+        moduleFactory: ModuleFactory,
+        vararg visitor: ModuleVisitor
     ) {
         register(topModule)
 
@@ -34,6 +35,12 @@ internal class ModuleContainerDefault : ModuleRegister, ModuleContainer, ModuleV
             loopCreateModule(moduleName, moduleNameCollector, moduleInfoFinder, moduleFactory) { module ->
                 register(module)
                 topModule.internalModuleUnit.dependOn(module.internalModuleUnit.moduleImplClass)
+            }
+        }
+
+        container.values.forEach{ module ->
+            visitor.forEach {  visitor ->
+                visitor.visit(module)
             }
         }
     }
@@ -66,10 +73,6 @@ internal class ModuleContainerDefault : ModuleRegister, ModuleContainer, ModuleV
         if (container.containsKey(moduleUnit.moduleImplClass)) return
         clazzMap[moduleUnit.modulePublicClass] = moduleUnit.moduleImplClass
         container[moduleUnit.moduleImplClass] = module
-    }
-
-    override fun visit(module: Module<*>) {
-        register(module)
     }
 
     override fun find(clazz: Class<out Module<*>>): Module<*>? = container[clazzMap[clazz]] ?: container[clazz]

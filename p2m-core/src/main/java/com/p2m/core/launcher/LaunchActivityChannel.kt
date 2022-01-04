@@ -1,17 +1,23 @@
 package com.p2m.core.launcher
 
 import android.content.Context
+import androidx.annotation.MainThread
 import androidx.annotation.WorkerThread
 import com.p2m.core.channel.*
+import com.p2m.core.exception.P2MException
+import com.p2m.core.internal._P2M
 import com.p2m.core.internal.log.logW
+import kotlin.reflect.KClass
 
 class LaunchActivityChannel internal constructor(
     val launcher: Launcher,
     interceptorService: InterceptorService,
     channelBlock: ChannelBlock
 ) : InterruptibleChannel(launcher, interceptorService, channelBlock) {
+    private val interceptors = arrayListOf<IInterceptor>()
     internal var recoverableChannel: RecoverableLaunchActivityChannel? = null
     internal var allowRestore = true
+    private var mutable = true
 
     init {
         _onRedirect =  { redirectChannel ->
@@ -23,7 +29,11 @@ class LaunchActivityChannel internal constructor(
         }
     }
 
-    fun disallowRestoreAfterRedirect(): LaunchActivityChannel {
+    /**
+     * Disallow restore when redirect activity finishing, default allow.
+     */
+    fun disallowRestoreWhenRedirectActivityFinishing(): LaunchActivityChannel {
+        checkImmutable()
         this.allowRestore = false
         return this
     }
@@ -52,8 +62,30 @@ class LaunchActivityChannel internal constructor(
         return super.onInterrupt(onInterrupt) as LaunchActivityChannel
     }
 
-    internal override fun interceptors(interceptors: Array<IInterceptor>): LaunchActivityChannel {
-        return super.interceptors(interceptors) as LaunchActivityChannel
+    internal fun addInterceptorBefore(interceptorClass: KClass<ILaunchActivityInterceptor>): LaunchActivityChannel {
+        checkImmutable()
+        val interceptor = _P2M.interceptorContainer.get(interceptorClass)
+        interceptors.add(0, interceptor)
+        return this
+    }
+
+    internal fun addInterceptorAfter(interceptorClass: KClass<ILaunchActivityInterceptor>): LaunchActivityChannel {
+        checkImmutable()
+        val interceptor = _P2M.interceptorContainer.get(interceptorClass)
+        interceptors.add(interceptor)
+        return this
+    }
+
+    fun addInterceptorBefore(interceptor: ILaunchActivityInterceptor): LaunchActivityChannel {
+        checkImmutable()
+        interceptors.add(0, ILaunchActivityInterceptor.delegate(interceptor))
+        return this
+    }
+
+    fun addInterceptorAfter(interceptor: ILaunchActivityInterceptor): LaunchActivityChannel {
+        checkImmutable()
+        interceptors.add(ILaunchActivityInterceptor.delegate(interceptor))
+        return this
     }
 
     override fun timeout(timeout: Long): LaunchActivityChannel {
@@ -61,6 +93,10 @@ class LaunchActivityChannel internal constructor(
     }
 
     override fun navigation(navigationCallback: NavigationCallback?) {
+        if (immutable) {
+            @Suppress("UNCHECKED_CAST")
+            interceptors(interceptors.toArray() as Array<IInterceptor>)
+        }
         super.navigation(navigationCallback)
     }
 }
@@ -82,20 +118,22 @@ interface LaunchActivityInterceptorCallback {
     fun onInterrupt(e: Throwable? = null)
 }
 
-interface ILaunchActivityIInterceptor {
-    @WorkerThread
+interface ILaunchActivityInterceptor {
+    companion object {
+        internal fun delegate(real: ILaunchActivityInterceptor): IInterceptor =
+            LaunchActivityInterceptorDelegate(real)
+    }
+
+    @MainThread
     fun init(context: Context)
 
     @WorkerThread
     fun process(callback: LaunchActivityInterceptorCallback)
 }
 
-class LaunchActivityInterceptor(private val real: ILaunchActivityIInterceptor) : IInterceptor {
-
-    private lateinit var context: Context
+private class LaunchActivityInterceptorDelegate(private val real: ILaunchActivityInterceptor) : IInterceptor {
 
     override fun init(context: Context) {
-        this.context = context.applicationContext
         real.init(context)
     }
 

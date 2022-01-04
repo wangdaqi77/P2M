@@ -111,12 +111,14 @@ open class Channel internal constructor(
         internal fun launchActivity(activityLauncher: ActivityLauncher<*, *>, channelBlock: (channel: LaunchActivityChannel) -> Unit) =
             LaunchActivityChannel(activityLauncher, _P2M.launchActivityHelper.interceptorService) {
                 channelBlock(it as LaunchActivityChannel)
-            }.interceptors(arrayOf())
+            }
 
         internal fun launchGreen(launcher: Launcher, channelBlock: ChannelBlock) =
             LaunchGreenChannel(launcher, channelBlock)
     }
 
+    @Volatile
+    protected var immutable = false
     private var onStarted : ((channel: Channel) -> Unit)? = null
     private var onFailure : ((channel: Channel) -> Unit)? = null
     private var onCompleted : ((channel: Channel) -> Unit)? = null
@@ -166,51 +168,60 @@ open class Channel internal constructor(
     }
 
     protected open fun navigationCallback(navigationCallback: NavigationCallback): Channel {
+        checkImmutable()
         this.navigationCallback = navigationCallback
         return this
     }
 
     protected open fun onStarted(onStarted: (channel: Channel) -> Unit): Channel {
+        checkImmutable()
         setNavigationCallbackIfNull()
         this.onStarted = onStarted
         return this
     }
 
     protected open fun onFailure(onFailure: (channel: Channel) -> Unit): Channel {
+        checkImmutable()
         setNavigationCallbackIfNull()
         this.onFailure = onFailure
         return this
     }
 
     protected open fun onCompleted(onCompleted: (channel: Channel) -> Unit): Channel {
+        checkImmutable()
         setNavigationCallbackIfNull()
         this.onCompleted = onCompleted
         return this
     }
 
     protected open fun onInterrupt(onInterrupt: (channel: Channel, e: Throwable?) -> Unit): Channel {
+        checkImmutable()
         setNavigationCallbackIfNull()
         this.onInterrupt = onInterrupt
         return this
     }
 
     protected open fun onRedirect(onRedirect: (newChannel: Channel) -> Unit): Channel {
+        checkImmutable()
         setNavigationCallbackIfNull()
         this.onRedirect = onRedirect
         return this
     }
 
     internal open fun interceptors(interceptors: Array<IInterceptor>): Channel {
+        checkImmutable()
         this.interceptors = interceptors
         return this
     }
 
     protected open fun timeout(timeout: Long): Channel {
+        checkImmutable()
         this.timeout = timeout
         return this
     }
 
     protected fun greenChannel(): Channel{
+        checkImmutable()
         this.isGreenChannel = true
         return this
     }
@@ -229,9 +240,13 @@ open class Channel internal constructor(
         }
     }
 
-    protected open fun navigation(navigationCallback: NavigationCallback? = null) {
+    protected fun checkImmutable() {
+        if (immutable) throw P2MException("It been immutable, please set before call `navigation`.")
+    }
 
+    protected open fun navigation(navigationCallback: NavigationCallback? = null) {
         synchronized(lock) {
+            immutable = true
             if (isCompleted) {
                 throw P2MException("Navigation be completed already, not allowed to again.")
             }

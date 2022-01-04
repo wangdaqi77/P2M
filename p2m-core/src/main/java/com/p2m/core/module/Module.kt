@@ -1,8 +1,16 @@
 package com.p2m.core.module
 
+import android.content.Context
+import com.p2m.core.channel.ChannelInterceptorFactory
+import com.p2m.core.channel.IInterceptor
+import com.p2m.core.internal.channel.ChannelInterceptorContainer
 import com.p2m.core.internal.moduleName
 import com.p2m.core.internal.module.ModuleUnitImpl
 import com.p2m.core.internal.module.ModuleVisitor
+import com.p2m.core.launcher.ILaunchActivityInterceptor
+import com.p2m.core.module.task.TaskOutputProvider
+import com.p2m.core.module.task.TaskRegister
+import kotlin.reflect.KClass
 
 /**
  * Each module has one and only one [Module] on runtime, it has a `init` for
@@ -49,11 +57,28 @@ abstract class Module<MODULE_API : ModuleApi<*, *, *>> {
     protected abstract val init: ModuleInit
     @Suppress("UNCHECKED_CAST")
     protected open val publicClass: Class<out Module<*>> = this.javaClass.superclass as Class<out Module<*>>
+    internal lateinit var interceptorContainer: ChannelInterceptorContainer
     internal val dependencies = hashSetOf<String>()
-    internal val internalInit: ModuleInit
-        get() = init
-    internal val internalModuleUnit by lazy(LazyThreadSafetyMode.NONE) {
+    internal val interceptors = mutableListOf<IInterceptor>()
+    private val interceptorClassesForLaunchActivity = hashSetOf<KClass<ILaunchActivityInterceptor>>()
+    internal val internalInit: ModuleInit = object : ModuleInit {
+        override fun onEvaluate(context: Context, taskRegister: TaskRegister) {
+            init.onEvaluate(context, taskRegister)
+        }
+
+        override fun onExecuted(context: Context, taskOutputProvider: TaskOutputProvider) {
+            init.onExecuted(context, taskOutputProvider)
+            interceptors.forEach{ it.init(context) }
+        }
+    }
+    internal val internalModuleUnit by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         ModuleUnitImpl(this, this.javaClass, publicClass)
+    }
+
+    internal fun initLazy() {
+        interceptorClassesForLaunchActivity.forEach { interceptorClass ->
+            interceptors.add(interceptorContainer.register(interceptorClass))
+        }
     }
 
     internal fun accept(visitor: ModuleVisitor){
@@ -62,6 +87,20 @@ abstract class Module<MODULE_API : ModuleApi<*, *, *>> {
 
     protected fun dependOn(moduleName: String) {
         dependencies.add(moduleName)
+    }
+
+    protected fun collectLaunchActivityInterceptor(interceptorClass: KClass<ILaunchActivityInterceptor>) {
+        interceptorClassesForLaunchActivity.add(interceptorClass)
+    }
+
+    override fun hashCode(): Int {
+        return publicClass.moduleName.hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (other == null) return false
+        if (other !is Module<*>) return false
+        return publicClass.moduleName == other.publicClass.moduleName
     }
 
     override fun toString(): String {

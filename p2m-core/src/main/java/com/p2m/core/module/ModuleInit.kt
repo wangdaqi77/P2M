@@ -1,6 +1,8 @@
 package com.p2m.core.module
 
 import android.content.Context
+import androidx.annotation.MainThread
+import androidx.annotation.WorkerThread
 import com.p2m.core.module.task.TaskOutputProvider
 import com.p2m.core.module.task.TaskRegister
 import com.p2m.core.module.task.Task
@@ -54,6 +56,7 @@ interface OnEvaluateListener{
      * @see TaskRegister TaskRegister - register some task.
      * @see Task Task - is the smallest unit in a module to perform initialization.
      */
+    @WorkerThread
     fun onEvaluate(context: Context, taskRegister: TaskRegister)
 }
 
@@ -74,6 +77,7 @@ interface OnExecutedListener{
      *
      * @see TaskOutputProvider TaskOutputProvider - get some task output.
      */
+    @MainThread
     fun onExecuted(context: Context, taskOutputProvider: TaskOutputProvider)
 }
 
