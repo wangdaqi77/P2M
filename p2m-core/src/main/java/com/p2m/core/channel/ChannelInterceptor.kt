@@ -9,7 +9,7 @@ import kotlin.reflect.KClass
 interface InterceptorService {
     fun doInterceptions(
         channel: Channel,
-        interceptors: Array<IInterceptor>,
+        interceptors: Collection<IInterceptor>,
         callback: InterceptorCallback
     )
 }
@@ -18,7 +18,7 @@ internal class InterceptorServiceDefault : InterceptorService {
 
     override fun doInterceptions(
         channel: Channel,
-        interceptors: Array<IInterceptor>,
+        interceptors: Collection<IInterceptor>,
         callback: InterceptorCallback
     ) {
         val interceptorIterator = interceptors.iterator()

@@ -99,7 +99,7 @@ open class Channel internal constructor(
     companion object {
         private const val DEFAULT_TIMEOUT = 10_000L
         private const val DEFAULT_CHANNEL_INTERCEPT = true
-        private val EMPTY_INTERCEPTORS = arrayOf<IInterceptor>()
+        private val EMPTY_INTERCEPTORS = emptyList<IInterceptor>()
         private val EMPTY_BLOCK = { _: Channel -> }
 
         internal fun green(owner: Any, channelBlock: ChannelBlock) =
@@ -126,7 +126,7 @@ open class Channel internal constructor(
     private var onInterrupt : ((channel: Channel, e: Throwable?) -> Unit)? = null
     private var timeout :Long = DEFAULT_TIMEOUT
     private var isGreenChannel: Boolean = !DEFAULT_CHANNEL_INTERCEPT
-    private var interceptors: Array<IInterceptor>? = null
+    private var interceptors: Collection<IInterceptor>? = null
     @Volatile
     private var isCompleted = false
     @Volatile
@@ -208,7 +208,7 @@ open class Channel internal constructor(
         return this
     }
 
-    internal open fun interceptors(interceptors: Array<IInterceptor>): Channel {
+    internal open fun interceptors(interceptors: Collection<IInterceptor>): Channel {
         checkImmutable()
         this.interceptors = interceptors
         return this

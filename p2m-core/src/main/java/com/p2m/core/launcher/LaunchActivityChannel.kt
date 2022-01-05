@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.annotation.MainThread
 import androidx.annotation.WorkerThread
 import com.p2m.core.channel.*
-import com.p2m.core.exception.P2MException
 import com.p2m.core.internal._P2M
 import com.p2m.core.internal.log.logW
 import kotlin.reflect.KClass
@@ -17,7 +16,6 @@ class LaunchActivityChannel internal constructor(
     private val interceptors = arrayListOf<IInterceptor>()
     internal var recoverableChannel: RecoverableLaunchActivityChannel? = null
     internal var allowRestore = true
-    private var mutable = true
 
     init {
         _onRedirect =  { redirectChannel ->
@@ -93,9 +91,9 @@ class LaunchActivityChannel internal constructor(
     }
 
     override fun navigation(navigationCallback: NavigationCallback?) {
-        if (immutable) {
+        if (!immutable) {
             @Suppress("UNCHECKED_CAST")
-            interceptors(interceptors.toArray() as Array<IInterceptor>)
+            interceptors(interceptors)
         }
         super.navigation(navigationCallback)
     }

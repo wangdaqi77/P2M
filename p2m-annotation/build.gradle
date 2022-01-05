@@ -2,6 +2,16 @@ apply plugin: 'java-library'
 apply plugin: 'kotlin'
 apply from: '../publish-jitpack.gradle'
 
+sourceSets{
+    main {
+        java.srcDirs += "src/ignore/java"
+    }
+}
+
+tasks.named("jar").configure{ Jar jar ->
+    jar.exclude("**/ILaunchActivityInterceptor.*")
+}
+
 dependencies {
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compileOnly "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"

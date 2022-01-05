@@ -1,7 +1,7 @@
 package com.p2m.annotation.module.api
 
+import com.p2m.core.launcher.ILaunchActivityInterceptor
 import kotlin.reflect.KClass
-import kotlin.reflect.jvm.internal.impl.resolve.constants.KClassValue
 
 /**
  * A class uses this annotation will generate a launch property for launcher of `Api` area.
@@ -42,7 +42,7 @@ import kotlin.reflect.jvm.internal.impl.resolve.constants.KClassValue
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
-annotation class ApiLauncher(val launcherName: String, vararg val interceptorClasses: KClass<*>) {
+annotation class ApiLauncher(val launcherName: String, vararg val launchActivityInterceptor: KClass<out ILaunchActivityInterceptor>) {
     companion object{
         private val NAME_REGEX = Regex( "^[A-Z][A-Za-z0-9]*$")
 

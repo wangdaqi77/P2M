@@ -1,7 +1,6 @@
 package com.p2m.core.module
 
 import android.content.Context
-import com.p2m.core.channel.ChannelInterceptorFactory
 import com.p2m.core.channel.IInterceptor
 import com.p2m.core.internal.channel.ChannelInterceptorContainer
 import com.p2m.core.internal.moduleName
