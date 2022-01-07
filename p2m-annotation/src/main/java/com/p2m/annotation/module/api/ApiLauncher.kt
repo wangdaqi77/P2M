@@ -1,6 +1,7 @@
 package com.p2m.annotation.module.api
 
-import com.p2m.core.launcher.ILaunchActivityInterceptor
+import android.app.Activity
+import com.p2m.core.launcher.*
 import kotlin.reflect.KClass
 
 /**
@@ -11,9 +12,9 @@ import kotlin.reflect.KClass
  *
  * Supports:
  *  * Activity - will generate a property for launch activity,
- *  that property name is activityOf[launcherName], at the same time can use
- *  [ApiLauncherActivityResultContractFor] specify a activity result contract
- *  for this activity.
+ *  that property name is activityOf[launcherName], also can use
+ *  [activityResultContract] specify a result contract, also can
+ *  use [launchActivityInterceptor] specify some interceptors.
  *  * Fragment - will generate a property for create fragment,
  *  that property name is fragmentOf[launcherName].
  *  * Service  - will generate a property for launch service,
@@ -34,15 +35,14 @@ import kotlin.reflect.KClass
  *      .navigation()
  * ```
  *
- * @property launcherName - used to generate property names, it follows the hump nomenclature.
- * @property interceptorClasses - set interceptors for this launcher.
+ * @property launcherName used to generate property names, it follows the hump nomenclature.
+ * @property activityResultContract specify a activity result contract for activity.
+ * @property launchActivityInterceptor specify interceptors for activity.
  *
- * @see ApiLauncherActivityResultContractFor - specify a activity result contract for this
- * activity.
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
-annotation class ApiLauncher(val launcherName: String, vararg val launchActivityInterceptor: KClass<out ILaunchActivityInterceptor>) {
+annotation class ApiLauncher(val launcherName: String, val activityResultContract: KClass<out ActivityResultContractCompat<*,*>> = DefaultActivityResultContractCompat::class, vararg val launchActivityInterceptor: KClass<out ILaunchActivityInterceptor>) {
     companion object{
         private val NAME_REGEX = Regex( "^[A-Z][A-Za-z0-9]*$")
 
@@ -53,19 +53,6 @@ annotation class ApiLauncher(val launcherName: String, vararg val launchActivity
         }
     }
 }
-
-/**
- * Uses this annotation specify a activity result contract for a activity of used [ApiLauncher].
- *
- * It is matched when the [launcherName] is the same as that [ApiLauncher.launcherName]
- * of a activity.
- *
- * @see ApiLauncher
- */
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.BINARY)
-annotation class ApiLauncherActivityResultContractFor(vararg val launcherName: String)
-
 
 @ApiUse
 @Target(AnnotationTarget.CLASS)

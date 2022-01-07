@@ -2,14 +2,29 @@ apply plugin: 'java-library'
 apply plugin: 'kotlin'
 apply from: '../publish-jitpack.gradle'
 
+def ignores = [
+        "ILaunchActivityInterceptor",
+        "ActivityResultContractCompat",
+        "DefaultActivityResultContractCompat",
+        "Activity",
+        "Intent",
+]
+
 sourceSets{
     main {
         java.srcDirs += "src/ignore/java"
+//        if (rootProject.name == "P2M-Example") {
+//            ignores.forEach { name ->
+//                java.exclude("**/${name}.*")
+//            }
+//        }
     }
 }
 
 tasks.named("jar").configure{ Jar jar ->
-    jar.exclude("**/ILaunchActivityInterceptor.*")
+    ignores.forEach { name ->
+        jar.exclude("**/${name}.*")
+    }
 }
 
 dependencies {

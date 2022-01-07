@@ -85,8 +85,10 @@ class P2MProcessor : BaseProcessor() {
         }.apply {
             if (isFailure) {
                 val throwable = exceptionOrNull()
-                if (throwable is IllegalStateException || throwable is IllegalArgumentException) {
+                if (throwable != null) {
                     mLogger.error(throwable)
+                } else {
+                    mLogger.error("${toString()}\r\n")
                 }
             }
         }
@@ -365,7 +367,7 @@ class P2MProcessor : BaseProcessor() {
             implFileSpecBuilder.build().writeTo(mFiler)
 
             // copy source to provide for external module
-            // mLogger.info("apiSrcDir:$apiSrcDir")
+            // mLogger.info("apiSrcDir:$apiSrcDir\r\n")
             // if (!apiSrcDir.exists()) apiSrcDir.mkdirs()
             // apiFileSpecBuilder.build().writeTo(apiSrcDir)
         }
@@ -555,6 +557,8 @@ class P2MProcessor : BaseProcessor() {
         val fragmentTm = elementUtils.getTypeElement(CLASS_FRAGMENT).asType()
         val fragmentTmV4 = elementUtils.getTypeElement(CLASS_FRAGMENT_V4).asType()
         val fragmentTmAndroidX = elementUtils.getTypeElement(CLASS_FRAGMENT_ANDROID_X).asType()
+        val defaultActivityResultContractP2MCompatTm = elementUtils.getTypeElement("${PACKAGE_NAME_LAUNCHER}.${CLASS_DefaultActivityResultContractP2MCompat}").asType()
+        val Intent = ClassName.bestGuess(CLASS_INTENT)
 
         val ActivityLauncher = ClassName(PACKAGE_NAME_LAUNCHER, CLASS_ActivityLauncher)
         val ServiceLauncher = ClassName(PACKAGE_NAME_LAUNCHER, CLASS_ServiceLauncher)
@@ -565,40 +569,9 @@ class P2MProcessor : BaseProcessor() {
         val DefaultActivityResultContractCompat = ClassName(PACKAGE_NAME_LAUNCHER, CLASS_DefaultActivityResultContractP2MCompat)
         val ActivityResultContractP2MCompat = ClassName(PACKAGE_NAME_LAUNCHER, CLASS_ActivityResultContractCompat)
 
-        // 收集ActivityResultContract - 支持ResultApi
-        val activityResultContractMap = mutableMapOf<String, TypeElement>()
-        val typeArgumentsMap = mutableMapOf<String, List<TypeName>>()
-        roundEnv.getElementsAnnotatedWith(ApiLauncherActivityResultContractFor::class.java).forEach{ element ->
-            element as TypeElement
-            element.checkKotlinClass()
-            val typeSpec = element.toTypeSpec()
-            check(typeSpec.superclass.toString().startsWith(ActivityResultContractP2MCompat.canonicalName)) {
-                "The super class of ${element.qualifiedName.toString()} must is ${ActivityResultContractP2MCompat.canonicalName}, current: ${typeSpec.superclass}."
-            }
-            val annotation = element.getAnnotation(ApiLauncherActivityResultContractFor::class.java)
-            annotation.launcherName.forEach { launcherName->
-                check(!activityResultContractMap.containsKey(launcherName)) {
-                    "Not allow definite multiple `ActivityResultContract` for $launcherName."
-                }
-                activityResultContractMap[launcherName] = element
-            }
-        }
 
-        val defaultTypeArguments = listOf<TypeName>(ClassName.bestGuess(CLASS_INTENT), ClassName.bestGuess(CLASS_INTENT))
-        elements.forEach { element ->
-            val tm = element.asType()
-            var typeArguments = defaultTypeArguments
-            if (typeUtils.isSubtype(tm, activityTm)) {
-                val launcherAnnotation = element.getAnnotation(ApiLauncher::class.java)
-                val launcherName = launcherAnnotation.launcherName
-                activityResultContractMap[launcherName]?.let {
-                    val activityResultContractElement = it as TypeElement
-                    val parameterizedTypeName = activityResultContractElement.toTypeSpec().superclass as ParameterizedTypeName
-                    typeArguments = parameterizedTypeName.typeArguments
-                }
-                typeArgumentsMap[launcherName] = typeArguments
-            }
-        }
+        val activityResultContractTypeArgumentsCache = mutableMapOf<String, List<TypeName>>()
+        val activityResultContractTypeCache = mutableMapOf<String, String>()
 
         // 接口
         val apiPropertySpecs = elements.map { element ->
@@ -606,9 +579,39 @@ class P2MProcessor : BaseProcessor() {
             val tm = element.asType()
             val launcherAnnotation = element.getAnnotation(ApiLauncher::class.java)
             val className = element.className()
-
-            val classSimpleName = className.simpleName
             val launcherName = launcherAnnotation.launcherName
+
+
+            // activityResultContract
+            try {
+                val activityResultContract = launcherAnnotation.activityResultContract
+                val activityResultContractSpec = activityResultContract.toImmutableKmClass().toTypeSpec(null)
+                activityResultContractTypeCache[launcherName] = activityResultContract.qualifiedName!!
+                activityResultContractTypeArgumentsCache[launcherName] = (activityResultContractSpec.superclass as ParameterizedTypeName).typeArguments
+            }catch (e: Throwable) {
+                // Attempt to access Class object for TypeMirror com.p2m.core.launcher.DefaultActivityResultContractCompat
+                val allowErrorPrefix = "Attempt to access Class object for TypeMirror "
+                e.message?.let { message ->
+                    if (message.startsWith(allowErrorPrefix)) {
+                        mLogger.info("allow error: $message\r\n")
+                        val activityResultContractName = message.removePrefix(allowErrorPrefix)
+                        if (activityResultContractName == defaultActivityResultContractP2MCompatTm.toString()) {
+                            activityResultContractTypeCache[launcherName] = activityResultContractName
+                            activityResultContractTypeArgumentsCache[launcherName] = listOf(Intent, Intent)
+                        }else {
+                            val customActivityResultContractElement = elementUtils.getTypeElement(activityResultContractName)
+                            val customTypeSpec = customActivityResultContractElement.toTypeSpec()
+                            check(customTypeSpec.superclass.toString().startsWith(ActivityResultContractP2MCompat.canonicalName)) {
+                                "The super class of ${customActivityResultContractElement.qualifiedName} must is ${ActivityResultContractP2MCompat.canonicalName}, current: ${customTypeSpec.superclass}."
+                            }
+                            val parameterizedTypeName = customActivityResultContractElement.toTypeSpec().superclass as ParameterizedTypeName
+                            activityResultContractTypeCache[launcherName] = activityResultContractName
+                            activityResultContractTypeArgumentsCache[launcherName] = parameterizedTypeName.typeArguments
+                        }
+                    }
+                }
+            }
+
             ApiLauncher.checkName(launcherAnnotation, className.canonicalName)
             val builder =  when {
                 typeUtils.isSubtype(element.asType(), activityTm) -> { // Activity
@@ -617,13 +620,13 @@ class P2MProcessor : BaseProcessor() {
                      */
                     PropertySpec.builder(
                         name = "activityOf$launcherName",
-                        type = ActivityLauncher.parameterizedBy(typeArgumentsMap[launcherName]!!)
+                        type = ActivityLauncher.parameterizedBy(activityResultContractTypeArgumentsCache[launcherName]!!)
                     )
                         .mutable(false)
                         .apply {
                             elementUtils.getKDoc(element)?.apply { addKdoc(this) }
                             addKdoc("@see %T - origin.\n", className)
-                            addKdoc("@see %T - activity result contract.", activityResultContractMap[launcherName]?.className() ?: DefaultActivityResultContractCompat)
+                            addKdoc("@see %L - activity result contract.", activityResultContractTypeCache[launcherName]!!)
                         }
                 }
                 typeUtils.isSubtype(tm, fragmentTm)
@@ -686,15 +689,18 @@ class P2MProcessor : BaseProcessor() {
                      */
                     PropertySpec.builder(
                         name = "activityOf$launcherName",
-                        type = ActivityLauncher.parameterizedBy(typeArgumentsMap[launcherName]!!)
+//                        type = ActivityLauncher.parameterizedBy(typeArgumentsMap[launcherName]!!)
+                        type = ActivityLauncher.parameterizedBy(
+                            activityResultContractTypeArgumentsCache[launcherName]!!
+                        )
                     )
                         .addModifiers(KModifier.OVERRIDE)
                         .mutable(false)
                         .delegate(
-                            "%T(%T::class.java) { %T() }",
+                            "%T(%T::class.java) { %L() }",
                             ActivityLauncherDelegate,
                             className,
-                            activityResultContractMap[launcherName]?.className() ?: DefaultActivityResultContractCompat
+                            activityResultContractTypeCache[launcherName]!!
                         )
                 }
                 typeUtils.isSubtype(tm, fragmentTm)

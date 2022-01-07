@@ -383,9 +383,7 @@ P2M支持增量编译，这大大提高了编译速度。
 
 Activity启动器如何支持ResultApi？
 -------------------------------
-需要使用相关的注解支持：
- * 使用`@ApiLauncher`为Activity声明Activity启动器，可参考示例工程中[Account模块的ModifyAccountNameActivity](./example/module-account/src/main/java/com/p2m/example/account/pre_api/ModifyAccountNameActivity.kt)；
- * 使用`@ApiLauncherActivityResultContractFor`指定一个ActivityResult合约，该注解的`launcherName`与Activity的`launcherName`一致才能匹配关联到Activity，可参考示例工程中[Account模块的ModifyUserNameActivityResultContract](./example/module-account/src/main/java/com/p2m/example/account/pre_api/ModifyUserNameActivityResultContract.kt)；
+使用`@ApiLauncher`为Activity声明Activity启动器，并使用`activityResultContract`指定一个结果协议，可参考示例工程中[Account模块的ModifyAccountNameActivity](./example/module-account/src/main/java/com/p2m/example/account/pre_api/ModifyAccountNameActivity.kt)；
 
 在[编译Api区](#如何编译Api区)后外部模块就可以使用了，可参考示例工程中[Main模块的MainActivity](./example/module-main/src/main/java/com/p2m/example/main/pre_api/MainActivity.kt)；：
 ```kotlin

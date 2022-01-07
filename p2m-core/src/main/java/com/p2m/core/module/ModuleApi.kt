@@ -7,9 +7,9 @@ import com.p2m.annotation.module.api.*
  *
  * It is like a window of a [Module].
  *
- * @property launcher - launch Activity、Fragment、Service, link to [ApiLauncher].
- * @property service  - call some feature, link to [ApiService].
- * @property event    - observe some event, related to [ApiEvent].
+ * @property launcher launch Activity、Fragment、Service, link to [ApiLauncher].
+ * @property service call some feature, link to [ApiService].
+ * @property event observe some event, related to [ApiEvent].
  */
 interface ModuleApi<LAUNCHER : ModuleLauncher, SERVICE : ModuleService, EVENT : ModuleEvent> {
      val launcher: LAUNCHER

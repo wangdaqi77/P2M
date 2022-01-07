@@ -10,7 +10,6 @@ import androidx.activity.result.contract.ActivityResultContract
 import androidx.core.app.ActivityOptionsCompat
 import androidx.fragment.app.Fragment
 import com.p2m.annotation.module.api.ApiLauncher
-import com.p2m.annotation.module.api.ApiLauncherActivityResultContractFor
 import com.p2m.core.channel.Channel
 import com.p2m.core.channel.IInterceptor
 import com.p2m.core.internal._P2M
@@ -69,14 +68,11 @@ interface ActivityLauncher<I, O> : Launcher{
      * Register a activity result for that [Activity] class annotated by [ApiLauncher].
      *
      * No need to explicitly pass in a instance of activity result contract during registration,
-     * that instance will auto create. that type is use [ApiLauncherActivityResultContractFor]
-     * annotated implement class of [ActivityResultContractCompat], that must has a empty
-     * constructor.
+     * that instance will auto create.
      *
      * @return a instance of ActivityResultLauncher.
      *
      * @see ApiLauncher
-     * @see ApiLauncherActivityResultContractFor
      * @see ActivityResultContractCompat
      */
     fun registerResultLauncher(activity: ComponentActivity, callback: ActivityResultCallbackCompat<O>): ActivityResultLauncherCompat<I, O>
@@ -85,14 +81,11 @@ interface ActivityLauncher<I, O> : Launcher{
      * Register a activity result for that [Activity] class annotated by [ApiLauncher].
      *
      * No need to explicitly pass in a instance of activity result contract during registration,
-     * that instance will auto create. that type is use [ApiLauncherActivityResultContractFor]
-     * annotated implement class of [ActivityResultContractCompat], that must has a empty
-     * constructor.
+     * that instance will auto create.
      *
      * @return a instance of ActivityResultLauncher.
      *
      * @see ApiLauncher
-     * @see ApiLauncherActivityResultContractFor
      * @see ActivityResultContractCompat
      */
     fun registerResultLauncher(fragment: Fragment, callback: ActivityResultCallbackCompat<O>): ActivityResultLauncherCompat<I, O>
@@ -101,14 +94,11 @@ interface ActivityLauncher<I, O> : Launcher{
      * Register a activity result for that [Activity] class annotated by [ApiLauncher].
      *
      * No need to explicitly pass in a instance of activity result contract during registration,
-     * that instance will auto create. that type is use [ApiLauncherActivityResultContractFor]
-     * annotated implement class of [ActivityResultContractCompat], that must has a empty
-     * constructor.
+     * that instance will auto create.
      *
      * @return a instance of ActivityResultLauncher.
      *
      * @see ApiLauncher
-     * @see ApiLauncherActivityResultContractFor
      * @see ActivityResultContractCompat
      */
     fun registerResultLauncher(activityResultRegistry: ActivityResultRegistry, key: String, callback: ActivityResultCallbackCompat<O>): ActivityResultLauncherCompat<I, O>

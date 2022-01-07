@@ -9,7 +9,7 @@ sourceSets {
 }
 
 dependencies {
-    compileOnly("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"){
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"){
         force(true)
     }
     compileOnly("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.3.0") {
