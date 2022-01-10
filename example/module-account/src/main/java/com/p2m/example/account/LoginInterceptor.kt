@@ -1,17 +1,44 @@
 package com.p2m.example.account
 
 import android.content.Context
-import com.p2m.annotation.module.api.ApiLauncherInterceptor
+import com.p2m.annotation.module.api.LaunchActivityInterceptor
+import com.p2m.core.P2M
 import com.p2m.core.launcher.ILaunchActivityInterceptor
 import com.p2m.core.launcher.LaunchActivityInterceptorCallback
+import com.p2m.example.account.p2m.api.Account
 
-@ApiLauncherInterceptor
+/**
+ * 登录拦截器
+ *
+ * 如果未登录则会重定向到登录界面
+ */
+@LaunchActivityInterceptor("Login")
 class LoginInterceptor : ILaunchActivityInterceptor {
-    override fun init(context: Context) {
+    private lateinit var context: Context
 
+    override fun init(context: Context) {
+        this.context = context
     }
 
     override fun process(callback: LaunchActivityInterceptorCallback) {
-        callback.onContinue()
+        try {
+            val account = P2M.apiOf(Account::class.java)
+            val loginState = account.event.loginState.getValue()
+            when(loginState) {
+                true -> callback.onContinue()
+                false -> {
+                    callback.onRedirect(
+                        redirectChannel = account.launcher
+                            .activityOfLogin
+                            .launchChannel {
+                                context.startActivity(it)
+                            }
+                    )
+                }
+                null -> callback.onInterrupt(IllegalStateException("unknown login state!"))
+            }
+        } catch (e: Throwable) {
+            callback.onInterrupt(e)
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.p2m.core.channel
 
 import android.content.Context
 import androidx.annotation.MainThread
+import androidx.annotation.WorkerThread
 import com.p2m.core.exception.P2MException
 import com.p2m.core.launcher.ILaunchActivityInterceptor
 import kotlin.reflect.KClass
@@ -74,9 +75,10 @@ interface InterceptorCallback {
 }
 
 interface IInterceptor {
-    @MainThread
+    @WorkerThread
     fun init(context: Context)
 
+    @WorkerThread
     fun process(channel: Channel, callback: InterceptorCallback)
 }
 

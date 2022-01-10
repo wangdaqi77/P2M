@@ -62,6 +62,7 @@ internal class ModuleGraphExecutor(
             val taskGraphExecution = TaskGraphExecutor(taskGraph, executor, executingModuleProvider, BeginDirection.TAIL)
             taskGraphExecution.loop()
         }
+        module.internalInit.onExecute(context)
     }
 
     private fun ModuleNode.evaluating() {

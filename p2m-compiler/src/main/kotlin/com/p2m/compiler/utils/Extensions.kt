@@ -215,7 +215,7 @@ inline fun <reified T : Annotation> RoundEnvironment.getSingleTypeElementAnnotat
     if (elements.size > 1) {
         logger.error(
             IllegalStateException("""
-                This ${clazz.canonicalName} can only annotate one class in $moduleName.
+                Only one class use ${clazz.canonicalName} is allowed in $moduleName.
             """.trimIndent())
         )
     }

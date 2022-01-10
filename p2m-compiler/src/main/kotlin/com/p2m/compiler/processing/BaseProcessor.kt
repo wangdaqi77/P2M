@@ -43,6 +43,7 @@ abstract class BaseProcessor : AbstractProcessor() {
         const val CLASS_FragmentLauncher = "FragmentLauncher"
         const val CLASS_ServiceLauncher = "ServiceLauncher"
         const val CLASS_LAUNCHER_DELEGATE = "Delegate"
+        const val CLASS_ILaunchActivityInterceptor = "ILaunchActivityInterceptor"
     }
 
     lateinit var options: Map<String, String>

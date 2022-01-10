@@ -1,6 +1,5 @@
 package com.p2m.annotation.module.api
 
-import android.app.Activity
 import com.p2m.core.launcher.*
 import kotlin.reflect.KClass
 
@@ -48,13 +47,21 @@ annotation class ApiLauncher(val launcherName: String, val activityResultContrac
 
         fun checkName(launch: ApiLauncher, clazzName: String){
             check(launch.launcherName.isEmpty() || launch.launcherName.matches(NAME_REGEX)) {
-                "The ApiLauncher(name = \"${launch.launcherName}\") at class $clazzName, that name must matches ${NAME_REGEX.pattern}, "
+                "The ApiLauncher(name = \"${launch.launcherName}\") at $clazzName, that name must matches ${NAME_REGEX.pattern}"
             }
         }
     }
 }
 
-@ApiUse
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
-annotation class ApiLauncherInterceptor
+annotation class LaunchActivityInterceptor(val interceptorName: String) {
+    companion object {
+        private val NAME_REGEX = Regex("^[A-Z][A-Za-z0-9]*$")
+        fun checkName(interceptor: LaunchActivityInterceptor, clazzName: String) {
+            check(interceptor.interceptorName.isEmpty() || interceptor.interceptorName.matches(NAME_REGEX)) {
+                "The LaunchActivityInterceptor(name = \"${interceptor.interceptorName}\") at $clazzName, that name must matches ${NAME_REGEX.pattern}"
+            }
+        }
+    }
+}

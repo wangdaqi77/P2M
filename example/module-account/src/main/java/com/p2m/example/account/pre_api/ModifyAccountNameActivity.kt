@@ -13,6 +13,7 @@ import com.p2m.example.account.UserDiskCache
 import com.p2m.example.account.R
 import com.p2m.example.http.Http
 import com.p2m.example.account.p2m.api.Account
+import com.p2m.example.account.p2m.api.AccountLaunchActivityInterceptorForLogin
 import com.p2m.example.account.p2m.impl.mutable
 
 import java.util.*
@@ -20,7 +21,11 @@ import java.util.*
 /**
  * 修改帐号名Activity
  */
-@ApiLauncher(launcherName = "ModifyAccountName", activityResultContract = ModifyUserNameActivityResultContract::class)
+@ApiLauncher(
+    launcherName = "ModifyAccountName",
+    activityResultContract = ModifyUserNameActivityResultContract::class,
+    AccountLaunchActivityInterceptorForLogin::class
+)
 class ModifyAccountNameActivity : AppCompatActivity() {
     private var loading: ProgressBar? = null
     private var confirm: Button? = null

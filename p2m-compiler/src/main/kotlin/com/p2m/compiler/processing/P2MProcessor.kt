@@ -34,6 +34,7 @@ import javax.tools.StandardLocation
     "com.p2m.annotation.module.api.ApiService",
     "com.p2m.annotation.module.api.ApiEvent",
     "com.p2m.annotation.module.api.ApiUse",
+    "com.p2m.annotation.module.api.LaunchActivityInterceptor",
     "com.p2m.annotation.module.ModuleInitializer"
 )
 @SupportedOptions(
@@ -74,10 +75,14 @@ class P2MProcessor : BaseProcessor() {
                 exportApiClassPath.add(it.apiClassName)
             }
 
+            // collect interceptor
+            val interceptorsResult = collectInterceptors(roundEnv)
+
             // gen module
-            genModule(moduleApiResult, moduleInitResult).also {
+            genModule(moduleApiResult, moduleInitResult, interceptorsResult).also {
                 exportApiClassPath.add(it.apiClassName)
             }
+
 
             // collect and provide annotated ApiUse classes for external module
             collectClassesForAnnotatedApiUse(roundEnv)
@@ -125,7 +130,8 @@ class P2MProcessor : BaseProcessor() {
 
     private fun genModule(
         moduleApiResult: GenResult,
-        moduleInitResult: GenResult
+        moduleInitResult: GenResult,
+        interceptorsResult: List<GenResult>
     ): GenResult {
         val ModuleClassName = ClassName.bestGuess("$PACKAGE_NAME_CORE_MODULE.$CLASS_MODULE")
         val apiPackageName = packageNameApi
@@ -145,6 +151,7 @@ class P2MProcessor : BaseProcessor() {
         return genModuleClassForKotlin(
             moduleApiResult,
             moduleInitResult,
+            interceptorsResult,
             ModuleClassName,
             apiPackageName,
             apiFileName,
@@ -161,6 +168,7 @@ class P2MProcessor : BaseProcessor() {
     private fun genModuleClassForKotlin(
         moduleApiResult: GenResult,
         moduleInitResult: GenResult,
+        interceptorsResult: List<GenResult>,
         moduleClassName: ClassName,
         apiPackageName: String,
         apiName: String,
@@ -216,6 +224,16 @@ class P2MProcessor : BaseProcessor() {
                         CodeBlock.of(
                             "dependOn(\"%L\")",
                             it
+                        )
+                    )
+                }
+
+                interceptorsResult.forEach {
+                    addInitializerBlock(
+                        CodeBlock.of(
+                            "collectInterceptorForLaunchActivity(%T::class, %T())",
+                            it.apiClassName,
+                            it.implClassName,
                         )
                     )
                 }
@@ -283,10 +301,50 @@ class P2MProcessor : BaseProcessor() {
             ModuleInitClassName,
             apiFileSpecBuilder,
             implFileSpecBuilder
-        ).apply {
+        ).also {
             apiFileSpecBuilder.build().writeTo(mFiler)
             implFileSpecBuilder.build().writeTo(mFiler)
             genModuleInitSource = true
+        }
+    }
+
+    private fun collectInterceptors(roundEnv: RoundEnvironment): List<GenResult> {
+        val ILaunchActivityInterceptorName = ClassName.bestGuess("$PACKAGE_NAME_LAUNCHER.$CLASS_ILaunchActivityInterceptor")
+        val apiPackageName = packageNameApi
+        val apiFileName = "${optionModuleName}Interceptors"
+        val implPackageName = packageNameImpl
+        val implFileName = "_${apiFileName}"
+
+        val elements = roundEnv.getElementsAnnotatedWith(LaunchActivityInterceptor::class.java)
+        if (elements.isEmpty()) return emptyList()
+
+        val apiFileSpecBuilder = FileSpec
+            .builder(apiPackageName, apiFileName)
+            .addFileComment()
+        exportApiSourcePath.add(ClassName(apiPackageName, apiFileName))
+
+        val implFileSpecBuilder = FileSpec
+            .builder(implPackageName, implFileName)
+            .addFileComment()
+
+        return elements.map { element ->
+            element as TypeElement
+            val annotation = element.getAnnotation(LaunchActivityInterceptor::class.java)
+            LaunchActivityInterceptor.checkName(annotation, element.qualifiedName.toString())
+            val apiName = "${optionModuleName}LaunchActivityInterceptorFor${annotation.interceptorName}"
+            genInterceptorClassForKotlin(
+                element,
+                apiPackageName,
+                apiName,
+                implPackageName,
+                "_${apiName}",
+                ILaunchActivityInterceptorName,
+                apiFileSpecBuilder,
+                implFileSpecBuilder
+            )
+        }.also {
+            apiFileSpecBuilder.build().writeTo(mFiler)
+            implFileSpecBuilder.build().writeTo(mFiler)
         }
     }
 
@@ -361,7 +419,7 @@ class P2MProcessor : BaseProcessor() {
             genEventResult,
             apiFileSpecBuilder,
             implFileSpecBuilder
-        ).apply {
+        ).also {
             // write for api
             apiFileSpecBuilder.build().writeTo(mFiler)
             implFileSpecBuilder.build().writeTo(mFiler)
@@ -404,9 +462,9 @@ class P2MProcessor : BaseProcessor() {
 
         val moduleInitClassNameOrigin = ClassName(moduleInitElement.packageName(), moduleInitElement.simpleName.toString())
 
-        check(moduleInitElement.interfaces.size != 0) { "${moduleInitElement.qualifiedName} must extends ${ModuleInitClassName.canonicalName}" }
-        check(moduleInitElement.interfaces.size == 1) { "${moduleInitElement.qualifiedName} must extends ${ModuleInitClassName.canonicalName} only." }
-        check(moduleInitElement.interfaces[0].toString() == ModuleInitClassName.canonicalName) { "${moduleInitElement.qualifiedName} must extends ${ModuleInitClassName.canonicalName}" }
+        check(moduleInitElement.interfaces.size != 0) { "${moduleInitElement.qualifiedName} must implement ${ModuleInitClassName.canonicalName}" }
+        check(moduleInitElement.interfaces.size == 1) { "${moduleInitElement.qualifiedName} implement ${ModuleInitClassName.canonicalName} only is allowed." }
+        check(moduleInitElement.interfaces[0].toString() == ModuleInitClassName.canonicalName) { "${moduleInitElement.qualifiedName} must implement ${ModuleInitClassName.canonicalName}" }
 
         //接口
         val moduleInitApiClassName = ClassName(apiPackageName, apiName)
@@ -417,24 +475,52 @@ class P2MProcessor : BaseProcessor() {
 
         // 服务代理类，代理被注解的类
         val moduleInitImplClassName = ClassName(implPackageName, implName)
-        val moduleInitRealRefName = "moduleInitReal"
         TypeSpec.classBuilder(moduleInitImplClassName)
             .addSuperinterface(moduleInitApiClassName)
-            .addSuperinterface(ModuleInitClassName, delegate = CodeBlock.of(moduleInitRealRefName))
-            .primaryConstructor(
-                FunSpec
-                    .constructorBuilder()
-                    .addParameter(
-                        ParameterSpec.builder(moduleInitRealRefName, ModuleInitClassName)
-                            .defaultValue("%T()", moduleInitClassNameOrigin)
-                            .build()
-                    )
-                    .build()
-            )
+            .addSuperinterface(ModuleInitClassName, delegate = CodeBlock.of("%T()", moduleInitClassNameOrigin))
             .build()
             .run(implFileSpecBuilder::addType)
 
         return GenResult(moduleInitApiClassName, moduleInitImplClassName)
+    }
+
+    private fun genInterceptorClassForKotlin(
+        element: TypeElement,
+        apiPackageName: String,
+        apiName: String,
+        implPackageName: String,
+        implName: String,
+        ILaunchActivityInterceptorName: ClassName,
+        apiFileSpecBuilder: FileSpec.Builder,
+        implFileSpecBuilder: FileSpec.Builder
+    ): GenResult {
+
+        val interceptorClassNameOrigin = ClassName(element.packageName(), element.simpleName.toString())
+
+        check(element.interfaces.size != 0) { "${element.qualifiedName} must implement ${ILaunchActivityInterceptorName.canonicalName}" }
+        check(element.interfaces.size == 1) { "${element.qualifiedName} implement ${ILaunchActivityInterceptorName.canonicalName} only is allowed." }
+        check(element.interfaces[0].toString() == ILaunchActivityInterceptorName.canonicalName) { "${element.qualifiedName} must implement ${ILaunchActivityInterceptorName.canonicalName}" }
+        val kdoc = elementUtils.getKDoc(element)
+        //接口
+        val interceptorApiClassName = ClassName(apiPackageName, apiName)
+        TypeSpec.interfaceBuilder(interceptorApiClassName)
+            .addSuperinterface(ILaunchActivityInterceptorName)
+            .apply {
+                kdoc?.run(::addKdoc)
+                addKdoc("@see %T - origin.", interceptorClassNameOrigin)
+            }
+            .build()
+            .run(apiFileSpecBuilder::addType)
+
+        // 服务代理类，代理被注解的类
+        val interceptorImplClassName = ClassName(implPackageName, implName)
+        TypeSpec.classBuilder(interceptorImplClassName)
+            .addSuperinterface(interceptorApiClassName)
+            .addSuperinterface(ILaunchActivityInterceptorName, delegate = CodeBlock.of("%T()", interceptorClassNameOrigin))
+            .build()
+            .run(implFileSpecBuilder::addType)
+
+        return GenResult(interceptorApiClassName, interceptorImplClassName)
     }
 
     private fun genModuleApiClassForKotlin(
@@ -593,7 +679,7 @@ class P2MProcessor : BaseProcessor() {
                 val allowErrorPrefix = "Attempt to access Class object for TypeMirror "
                 e.message?.let { message ->
                     if (message.startsWith(allowErrorPrefix)) {
-                        mLogger.info("allow error: $message\r\n")
+//                        mLogger.info("allow error: $message\r\n")
                         val activityResultContractName = message.removePrefix(allowErrorPrefix)
                         if (activityResultContractName == defaultActivityResultContractP2MCompatTm.toString()) {
                             activityResultContractTypeCache[launcherName] = activityResultContractName
@@ -858,7 +944,7 @@ class P2MProcessor : BaseProcessor() {
                 clearBody().addModifiers(KModifier.ABSTRACT)
                 val sign = funSpec.name + funSpec.parameters.map { it.name }.toString()
                 val kDoc =  methodDocMap[sign]
-                kDoc?.let(::addKdoc)
+                kDoc?.run(::addKdoc)
                 addKdoc("@see %T.%L - origin.", serviceClassNameOrigin, funSpec.name)
                 build()
             }
@@ -1034,7 +1120,7 @@ class P2MProcessor : BaseProcessor() {
             PropertySpec.builder(it.name, eventClassName.parameterizedBy(it.type)).apply {
                 mutable(false)
                 annotations.clear()
-                eventDoc?.let(::addKdoc)
+                eventDoc?.run(::addKdoc)
                 addKdoc("@see %T.%L - origin.", eventClassNameOrigin, it.name)
                 addKdoc("\n")
             }

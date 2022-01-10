@@ -15,7 +15,7 @@ class LaunchActivityChannel internal constructor(
 ) : InterruptibleChannel(launcher, interceptorService, channelBlock) {
     private val interceptors = arrayListOf<IInterceptor>()
     internal var recoverableChannel: RecoverableLaunchActivityChannel? = null
-    internal var allowRestore = true
+    private var allowRestore = true
 
     init {
         _onRedirect =  { redirectChannel ->
@@ -60,14 +60,14 @@ class LaunchActivityChannel internal constructor(
         return super.onInterrupt(onInterrupt) as LaunchActivityChannel
     }
 
-    internal fun addInterceptorBefore(interceptorClass: KClass<ILaunchActivityInterceptor>): LaunchActivityChannel {
+    internal fun addInterceptorBefore(interceptorClass: KClass<out ILaunchActivityInterceptor>): LaunchActivityChannel {
         checkImmutable()
         val interceptor = _P2M.interceptorContainer.get(interceptorClass)
         interceptors.add(0, interceptor)
         return this
     }
 
-    internal fun addInterceptorAfter(interceptorClass: KClass<ILaunchActivityInterceptor>): LaunchActivityChannel {
+    internal fun addInterceptorAfter(interceptorClass: KClass<out ILaunchActivityInterceptor>): LaunchActivityChannel {
         checkImmutable()
         val interceptor = _P2M.interceptorContainer.get(interceptorClass)
         interceptors.add(interceptor)
@@ -122,7 +122,7 @@ interface ILaunchActivityInterceptor {
             LaunchActivityInterceptorDelegate(real)
     }
 
-    @MainThread
+    @WorkerThread
     fun init(context: Context)
 
     @WorkerThread
