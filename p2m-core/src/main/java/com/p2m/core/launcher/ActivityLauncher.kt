@@ -140,7 +140,7 @@ internal class InternalActivityResultLauncherCompat<I, O>(
         Channel.launchActivity(activityLauncher) { channel ->
             getContract().onCreateIntent { intent: Intent->
                 // after `activityResultLauncher.launch(inputBlock(), options)`
-                _P2M.onLaunchActivityNavigationCompleted(intent, channel)
+                _P2M.onLaunchActivityNavigationCompleted(channel, intent)
             }
             activityResultLauncher.launch(inputBlock(), options)
         }.also(activityLauncher::addAnnotatedInterceptor)

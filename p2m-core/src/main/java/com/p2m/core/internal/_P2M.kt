@@ -97,8 +97,8 @@ internal object _P2M : ModuleApiProvider, ModuleVisitor {
         return module.api as MODULE_API
     }
 
-    internal fun onLaunchActivityNavigationCompleted(intent: Intent, channel: LaunchActivityChannel) {
-        launchActivityHelper.onLaunchActivityNavigationCompleted(intent, channel)
+    internal fun onLaunchActivityNavigationCompleted(channel: LaunchActivityChannel, intent: Intent) {
+        launchActivityHelper.onLaunchActivityNavigationCompleted(channel, intent)
     }
 
     override fun visit(module: Module<*>) {

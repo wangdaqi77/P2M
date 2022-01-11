@@ -28,7 +28,7 @@ internal class InterceptorServiceDefault : InterceptorService {
                 interceptorIterator = interceptorIterator,
                 channel = channel,
                 onContinue = { callback.onContinue() },
-                onRedirect = { callback.onRedirect(it) },
+                onRedirect = { redirectChannel ->  callback.onRedirect(channel, redirectChannel) },
                 onInterrupted = { e -> callback.onInterrupt(e) }
             )
         } catch (e : Throwable) {
@@ -49,7 +49,7 @@ internal class InterceptorServiceDefault : InterceptorService {
                     doInterception(interceptorIterator, channel, onContinue, onRedirect, onInterrupted)
                 }
 
-                override fun onRedirect(redirectChannel: Channel) {
+                override fun onRedirect(channel: Channel, redirectChannel: Channel) {
                     onRedirect(redirectChannel)
                 }
 
@@ -69,7 +69,7 @@ internal class InterceptorServiceDefault : InterceptorService {
 interface InterceptorCallback {
     fun onContinue()
 
-    fun onRedirect(redirectChannel: Channel)
+    fun onRedirect(channel: Channel, redirectChannel: Channel)
 
     fun onInterrupt(e: Throwable? = null)
 }

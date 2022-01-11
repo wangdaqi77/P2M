@@ -17,7 +17,7 @@ interface NavigationCallback {
 
     fun onCompleted(channel: Channel)
 
-    fun onRedirect(redirectChannel: Channel)
+    fun onRedirect(channel: Channel, redirectChannel: Channel)
 
     fun onInterrupt(channel: Channel, e: Throwable?)
 }
@@ -134,7 +134,7 @@ open class Channel internal constructor(
     private var closedException : ChannelClosedException? = null
     private val lock = Any()
     private var navigationCallback: NavigationCallback? = null
-    protected var _onRedirect : ((redirectChannel: Channel) -> Unit)? = null
+    protected var _onRedirect : ((channel: Channel, redirectChannel: Channel) -> Unit)? = null
     internal var isRedirect = false
     private val _navigationCallback: NavigationCallback by lazy(LazyThreadSafetyMode.NONE) {
         object : NavigationCallback {
@@ -150,7 +150,7 @@ open class Channel internal constructor(
                 onCompleted?.invoke(channel)
             }
 
-            override fun onRedirect(redirectChannel: Channel) {
+            override fun onRedirect(channel: Channel, redirectChannel: Channel) {
                 onRedirect?.invoke(redirectChannel)
             }
 
@@ -272,10 +272,10 @@ open class Channel internal constructor(
                             _navigation()
                         }
 
-                        override fun onRedirect(redirectChannel: Channel) {
-                            _onRedirect?.invoke(/*redirectChannel = */redirectChannel)
+                        override fun onRedirect(channel: Channel, redirectChannel: Channel) {
+                            _onRedirect?.invoke(/*channel = */channel, /*redirectChannel = */redirectChannel)
                             redirectChannel.isRedirect = true
-                            this@Channel.navigationCallback?.onRedirect(redirectChannel = redirectChannel)
+                            this@Channel.navigationCallback?.onRedirect(channel = channel, redirectChannel = redirectChannel)
                             redirectChannel.navigation()
                         }
 

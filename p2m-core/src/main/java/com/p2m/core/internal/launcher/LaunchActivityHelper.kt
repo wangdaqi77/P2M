@@ -38,7 +38,7 @@ internal class LaunchActivityHelper : Application.ActivityLifecycleCallbacks {
         initialized = true
     }
 
-    internal fun onLaunchActivityNavigationCompleted(intent: Intent, channel: LaunchActivityChannel) {
+    internal fun onLaunchActivityNavigationCompleted(channel: LaunchActivityChannel, intent: Intent) {
         if (channel.isRedirect) {
             channel.recoverableChannel?.also { saveRecoverableChannel(intent, it) }
                 ?: logE("unknown error.")
