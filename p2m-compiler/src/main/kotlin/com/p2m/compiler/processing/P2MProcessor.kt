@@ -66,21 +66,25 @@ class P2MProcessor : BaseProcessor() {
         kotlin.runCatching {
 
             // collect interceptor
-            val interceptorsResultMap = collectInterceptors(roundEnv)
+            val interceptorsResultMap = collectInterceptors(roundEnv).also {
+                for ((_, genResult) in it) {
+                    exportApiClassPath.add(genResult.apiClassName)
+                }
+            }
 
             // gen module api
-            val moduleApiResult = genModuleApi(roundEnv, interceptorsResultMap).also {
-                exportApiClassPath.add(it.apiClassName)
+            val moduleApiResult = genModuleApi(roundEnv, interceptorsResultMap).also { genResult ->
+                exportApiClassPath.add(genResult.apiClassName)
             }
 
             // gen module init
-            val moduleInitResult = genModuleInit(roundEnv).also {
-                exportApiClassPath.add(it.apiClassName)
+            val moduleInitResult = genModuleInit(roundEnv).also { genResult ->
+                exportApiClassPath.add(genResult.apiClassName)
             }
 
             // gen module
-            genModule(moduleApiResult, moduleInitResult, interceptorsResultMap.values).also {
-                exportApiClassPath.add(it.apiClassName)
+            genModule(moduleApiResult, moduleInitResult, interceptorsResultMap.values).also { genResult ->
+                exportApiClassPath.add(genResult.apiClassName)
             }
 
             // collect and provide annotated ApiUse classes for external module
