@@ -65,8 +65,11 @@ class P2MProcessor : BaseProcessor() {
 
         kotlin.runCatching {
 
+            // collect interceptor
+            val interceptorsResultMap = collectInterceptors(roundEnv)
+
             // gen module api
-            val moduleApiResult = genModuleApi(roundEnv).also {
+            val moduleApiResult = genModuleApi(roundEnv, interceptorsResultMap).also {
                 exportApiClassPath.add(it.apiClassName)
             }
 
@@ -75,14 +78,10 @@ class P2MProcessor : BaseProcessor() {
                 exportApiClassPath.add(it.apiClassName)
             }
 
-            // collect interceptor
-            val interceptorsResult = collectInterceptors(roundEnv)
-
             // gen module
-            genModule(moduleApiResult, moduleInitResult, interceptorsResult).also {
+            genModule(moduleApiResult, moduleInitResult, interceptorsResultMap.values).also {
                 exportApiClassPath.add(it.apiClassName)
             }
-
 
             // collect and provide annotated ApiUse classes for external module
             collectClassesForAnnotatedApiUse(roundEnv)
@@ -131,7 +130,7 @@ class P2MProcessor : BaseProcessor() {
     private fun genModule(
         moduleApiResult: GenResult,
         moduleInitResult: GenResult,
-        interceptorsResult: List<GenResult>
+        interceptorsResult: Collection<GenResult>
     ): GenResult {
         val ModuleClassName = ClassName.bestGuess("$PACKAGE_NAME_CORE_MODULE.$CLASS_MODULE")
         val apiPackageName = packageNameApi
@@ -168,7 +167,7 @@ class P2MProcessor : BaseProcessor() {
     private fun genModuleClassForKotlin(
         moduleApiResult: GenResult,
         moduleInitResult: GenResult,
-        interceptorsResult: List<GenResult>,
+        interceptorsResult: Collection<GenResult>,
         moduleClassName: ClassName,
         apiPackageName: String,
         apiName: String,
@@ -233,7 +232,7 @@ class P2MProcessor : BaseProcessor() {
                         CodeBlock.of(
                             "collectInterceptorForLaunchActivity(%T::class, %T())",
                             it.apiClassName,
-                            it.implClassName,
+                            it.implClassName
                         )
                     )
                 }
@@ -308,7 +307,7 @@ class P2MProcessor : BaseProcessor() {
         }
     }
 
-    private fun collectInterceptors(roundEnv: RoundEnvironment): List<GenResult> {
+    private fun collectInterceptors(roundEnv: RoundEnvironment): Map<TypeElement, GenResult> {
         val ILaunchActivityInterceptorName = ClassName.bestGuess("$PACKAGE_NAME_LAUNCHER.$CLASS_ILaunchActivityInterceptor")
         val apiPackageName = packageNameApi
         val apiFileName = "${optionModuleName}Interceptors"
@@ -316,7 +315,7 @@ class P2MProcessor : BaseProcessor() {
         val implFileName = "_${apiFileName}"
 
         val elements = roundEnv.getElementsAnnotatedWith(LaunchActivityInterceptor::class.java)
-        if (elements.isEmpty()) return emptyList()
+        if (elements.isEmpty()) return emptyMap()
 
         val apiFileSpecBuilder = FileSpec
             .builder(apiPackageName, apiFileName)
@@ -327,12 +326,14 @@ class P2MProcessor : BaseProcessor() {
             .builder(implPackageName, implFileName)
             .addFileComment()
 
-        return elements.map { element ->
+        return elements.map{ element ->
             element as TypeElement
+            element.checkKotlinClass()
+
             val annotation = element.getAnnotation(LaunchActivityInterceptor::class.java)
             LaunchActivityInterceptor.checkName(annotation, element.qualifiedName.toString())
             val apiName = "${optionModuleName}LaunchActivityInterceptorFor${annotation.interceptorName}"
-            genInterceptorClassForKotlin(
+            element to genInterceptorClassForKotlin(
                 element,
                 apiPackageName,
                 apiName,
@@ -342,13 +343,18 @@ class P2MProcessor : BaseProcessor() {
                 apiFileSpecBuilder,
                 implFileSpecBuilder
             )
-        }.also {
+        }
+            .let { mapOf(*it.toTypedArray()) }
+            .also {
             apiFileSpecBuilder.build().writeTo(mFiler)
             implFileSpecBuilder.build().writeTo(mFiler)
         }
     }
 
-    private fun genModuleApi(roundEnv: RoundEnvironment): GenResult {
+    private fun genModuleApi(
+        roundEnv: RoundEnvironment,
+        interceptorsResultMap: Map<TypeElement, GenResult>
+    ): GenResult {
         // of p2m-core
         val ModuleApiClassName = ClassName.bestGuess("$PACKAGE_NAME_CORE_MODULE.$CLASS_MODULE_API")
         val ModuleLauncherClassName = ClassName.bestGuess("$PACKAGE_NAME_CORE_MODULE.$CLASS_API_LAUNCHER")
@@ -378,6 +384,7 @@ class P2MProcessor : BaseProcessor() {
         // gen launcher
         val genLauncherResult: GenResult = genLauncherClassForKotlin(
             roundEnv,
+            interceptorsResultMap,
             EmptyLauncherClassName,
             ModuleLauncherClassName,
             apiPackageName,
@@ -596,6 +603,7 @@ class P2MProcessor : BaseProcessor() {
 
     private fun genLauncherClassForKotlin(
         roundEnv: RoundEnvironment,
+        interceptorsResultMap: Map<TypeElement, GenResult>,
         EmptyLauncherClassName: ClassName,
         ModuleLauncherClassName: ClassName,
         apiPackageName: String,
@@ -613,7 +621,7 @@ class P2MProcessor : BaseProcessor() {
             )
         } else {
             genLauncherClassForKotlin(
-                roundEnv,
+                interceptorsResultMap,
                 elements,
                 ModuleLauncherClassName,
                 apiName,
@@ -629,7 +637,7 @@ class P2MProcessor : BaseProcessor() {
     }
 
     private fun genLauncherClassForKotlin(
-        roundEnv: RoundEnvironment,
+        interceptorsResultMap: Map<TypeElement, GenResult>,
         elements: Set<Element>,
         ModuleLauncherClassName: ClassName,
         apiName: String,
@@ -652,22 +660,41 @@ class P2MProcessor : BaseProcessor() {
         val ActivityLauncherDelegate = ClassName.bestGuess("$ActivityLauncher.$CLASS_LAUNCHER_DELEGATE")
         val ServiceLauncherDelegate = ClassName.bestGuess("$ServiceLauncher.$CLASS_LAUNCHER_DELEGATE")
         val FragmentLauncherDelegate = ClassName.bestGuess("$FragmentLauncher.$CLASS_LAUNCHER_DELEGATE")
-        val DefaultActivityResultContractCompat = ClassName(PACKAGE_NAME_LAUNCHER, CLASS_DefaultActivityResultContractP2MCompat)
         val ActivityResultContractP2MCompat = ClassName(PACKAGE_NAME_LAUNCHER, CLASS_ActivityResultContractCompat)
 
 
         val activityResultContractTypeArgumentsCache = mutableMapOf<String, List<TypeName>>()
         val activityResultContractTypeCache = mutableMapOf<String, String>()
+        // 模块内部拦截器映射 key: originInterceptor  value: genResult
+        val moduleInternalActivityInterceptorsCache = mutableMapOf<ClassName, GenResult>()
 
         // 接口
         val apiPropertySpecs = elements.map { element ->
             element as TypeElement
+            element.checkKotlinClass()
+
             val tm = element.asType()
-            val launcherAnnotation = element.getAnnotation(ApiLauncher::class.java)
             val className = element.className()
+            findAnnotationValue(
+                element = element,
+                annotationClass = ApiLauncher::class.qualifiedName!!,
+                valueName = "launchActivityInterceptor",
+                expectedType = com.sun.tools.javac.util.List::class.java,
+            )?.takeIf { it.nonEmpty() }?.forEach {
+                if (it.toString() == "<error>") {
+                    throw IllegalArgumentException("Please use the interceptor declared inside the module, see @ApiLauncher(launchActivityInterceptor = ...) in $className")
+                }
+
+                val interceptorClassName = ClassName.bestGuess(it.toString().removeSuffix(".class"))
+                interceptorsResultMap.keys.find { it.className() == interceptorClassName }
+                    ?.let { internalActivityInterceptorElement ->
+                        moduleInternalActivityInterceptorsCache[interceptorClassName] =
+                            interceptorsResultMap[internalActivityInterceptorElement]!!
+                    }
+            }
+
+            val launcherAnnotation = element.getAnnotation(ApiLauncher::class.java)
             val launcherName = launcherAnnotation.launcherName
-
-
             // activityResultContract
             try {
                 val activityResultContract = launcherAnnotation.activityResultContract
@@ -677,24 +704,23 @@ class P2MProcessor : BaseProcessor() {
             }catch (e: Throwable) {
                 // Attempt to access Class object for TypeMirror com.p2m.core.launcher.DefaultActivityResultContractCompat
                 val allowErrorPrefix = "Attempt to access Class object for TypeMirror "
-                e.message?.let { message ->
-                    if (message.startsWith(allowErrorPrefix)) {
+
+                val message = e.message ?: throw e
+                if (!message.startsWith(allowErrorPrefix)) throw e
 //                        mLogger.info("allow error: $message\r\n")
-                        val activityResultContractName = message.removePrefix(allowErrorPrefix)
-                        if (activityResultContractName == defaultActivityResultContractP2MCompatTm.toString()) {
-                            activityResultContractTypeCache[launcherName] = activityResultContractName
-                            activityResultContractTypeArgumentsCache[launcherName] = listOf(Intent, Intent)
-                        }else {
-                            val customActivityResultContractElement = elementUtils.getTypeElement(activityResultContractName)
-                            val customTypeSpec = customActivityResultContractElement.toTypeSpec()
-                            check(customTypeSpec.superclass.toString().startsWith(ActivityResultContractP2MCompat.canonicalName)) {
-                                "The super class of ${customActivityResultContractElement.qualifiedName} must is ${ActivityResultContractP2MCompat.canonicalName}, current: ${customTypeSpec.superclass}."
-                            }
-                            val parameterizedTypeName = customActivityResultContractElement.toTypeSpec().superclass as ParameterizedTypeName
-                            activityResultContractTypeCache[launcherName] = activityResultContractName
-                            activityResultContractTypeArgumentsCache[launcherName] = parameterizedTypeName.typeArguments
-                        }
+                val activityResultContractName = message.removePrefix(allowErrorPrefix)
+                if (activityResultContractName == defaultActivityResultContractP2MCompatTm.toString()) {
+                    activityResultContractTypeCache[launcherName] = activityResultContractName
+                    activityResultContractTypeArgumentsCache[launcherName] = listOf(Intent, Intent)
+                } else {
+                    val customActivityResultContractElement = elementUtils.getTypeElement(activityResultContractName)
+                    val customTypeSpec = customActivityResultContractElement.toTypeSpec()
+                    check(customTypeSpec.superclass.toString().startsWith(ActivityResultContractP2MCompat.canonicalName)) {
+                        "The super class of ${customActivityResultContractElement.qualifiedName} must is ${ActivityResultContractP2MCompat.canonicalName}, current: ${customTypeSpec.superclass}."
                     }
+                    val parameterizedTypeName = customActivityResultContractElement.toTypeSpec().superclass as ParameterizedTypeName
+                    activityResultContractTypeCache[launcherName] = activityResultContractName
+                    activityResultContractTypeArgumentsCache[launcherName] = parameterizedTypeName.typeArguments
                 }
             }
 
@@ -765,7 +791,6 @@ class P2MProcessor : BaseProcessor() {
             val tm = element.asType()
             val launcherAnnotation = element.getAnnotation(ApiLauncher::class.java)
             val className = element.className()
-            val classSimpleName = className.simpleName
             val launcherName = launcherAnnotation.launcherName
             ApiLauncher.checkName(launcherAnnotation, className.canonicalName)
             val builder =  when {
@@ -773,21 +798,59 @@ class P2MProcessor : BaseProcessor() {
                     /*
                      * val activityOf$launcherName: ActivityLauncher<I, O> by lazy(ActivityLauncher.Delegate(XX::class.java, XX::class.java))
                      */
-                    PropertySpec.builder(
-                        name = "activityOf$launcherName",
-//                        type = ActivityLauncher.parameterizedBy(typeArgumentsMap[launcherName]!!)
-                        type = ActivityLauncher.parameterizedBy(
-                            activityResultContractTypeArgumentsCache[launcherName]!!
+                    try {
+                        val launchActivityInterceptors = launcherAnnotation.launchActivityInterceptor
+                        val launchActivityInterceptorsStr = launchActivityInterceptors
+                            .takeIf { it.isNotEmpty() }
+                            ?.map { kClass -> kClass.asClassName() }
+                            ?.map { moduleInternalActivityInterceptorsCache[it]?.apiClassName ?: it }
+                            ?.joinToString { ", ${it.canonicalName}::class" }
+                            ?: ""
+                        PropertySpec.builder(
+                            name = "activityOf$launcherName",
+                            type = ActivityLauncher.parameterizedBy(
+                                activityResultContractTypeArgumentsCache[launcherName]!!
+                            )
                         )
-                    )
-                        .addModifiers(KModifier.OVERRIDE)
-                        .mutable(false)
-                        .delegate(
-                            "%T(%T::class.java) { %L() }",
-                            ActivityLauncherDelegate,
-                            className,
-                            activityResultContractTypeCache[launcherName]!!
+                            .addModifiers(KModifier.OVERRIDE)
+                            .mutable(false)
+                            .delegate(
+                                "%T(%T::class.java%L) { %L() }",
+                                ActivityLauncherDelegate,
+                                className,
+                                launchActivityInterceptorsStr,
+                                activityResultContractTypeCache[launcherName]!!
+                            )
+                    }catch (e: Throwable) {
+                        // Attempt to access Class objects for TypeMirrors []
+                        val allowErrorPrefix = "Attempt to access Class objects for TypeMirrors "
+                        val message = e.message ?: throw e
+                        if (!message.startsWith(allowErrorPrefix)) throw e
+//                        mLogger.info("allow error: $message\r\n")
+                        val launchActivityInterceptorsStr = message.removePrefix(allowErrorPrefix)
+                            .removePrefix("[").removeSuffix("]")
+                            .takeIf { it.isNotEmpty() }
+                            ?.split(",")
+                            ?.map { name -> ClassName.bestGuess(name.trim()) }
+                            ?.map { moduleInternalActivityInterceptorsCache[it]?.apiClassName ?: it }
+                            ?.joinToString { ", ${it.canonicalName}::class" }
+                            ?: ""
+                        PropertySpec.builder(
+                            name = "activityOf$launcherName",
+                            type = ActivityLauncher.parameterizedBy(
+                                activityResultContractTypeArgumentsCache[launcherName]!!
+                            )
                         )
+                            .addModifiers(KModifier.OVERRIDE)
+                            .mutable(false)
+                            .delegate(
+                                "%T(%T::class.java%L) { %L() }",
+                                ActivityLauncherDelegate,
+                                className,
+                                launchActivityInterceptorsStr,
+                                activityResultContractTypeCache[launcherName]!!
+                            )
+                    }
                 }
                 typeUtils.isSubtype(tm, fragmentTm)
                         || typeUtils.isSubtype(tm, fragmentTmV4)

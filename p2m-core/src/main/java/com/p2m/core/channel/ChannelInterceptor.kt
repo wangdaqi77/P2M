@@ -1,7 +1,6 @@
 package com.p2m.core.channel
 
 import android.content.Context
-import androidx.annotation.MainThread
 import androidx.annotation.WorkerThread
 import com.p2m.core.exception.P2MException
 import com.p2m.core.launcher.ILaunchActivityInterceptor
@@ -28,7 +27,7 @@ internal class InterceptorServiceDefault : InterceptorService {
                 interceptorIterator = interceptorIterator,
                 channel = channel,
                 onContinue = { callback.onContinue() },
-                onRedirect = { redirectChannel ->  callback.onRedirect(channel, redirectChannel) },
+                onRedirect = { redirectChannel ->  callback.onRedirect(redirectChannel) },
                 onInterrupted = { e -> callback.onInterrupt(e) }
             )
         } catch (e : Throwable) {
@@ -49,7 +48,7 @@ internal class InterceptorServiceDefault : InterceptorService {
                     doInterception(interceptorIterator, channel, onContinue, onRedirect, onInterrupted)
                 }
 
-                override fun onRedirect(channel: Channel, redirectChannel: Channel) {
+                override fun onRedirect(redirectChannel: Channel) {
                     onRedirect(redirectChannel)
                 }
 
@@ -69,7 +68,7 @@ internal class InterceptorServiceDefault : InterceptorService {
 interface InterceptorCallback {
     fun onContinue()
 
-    fun onRedirect(channel: Channel, redirectChannel: Channel)
+    fun onRedirect(redirectChannel: Channel)
 
     fun onInterrupt(e: Throwable? = null)
 }

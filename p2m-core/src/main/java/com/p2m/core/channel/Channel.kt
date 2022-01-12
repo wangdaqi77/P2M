@@ -134,7 +134,7 @@ open class Channel internal constructor(
     private var closedException : ChannelClosedException? = null
     private val lock = Any()
     private var navigationCallback: NavigationCallback? = null
-    protected var _onRedirect : ((channel: Channel, redirectChannel: Channel) -> Unit)? = null
+    protected var _onRedirect : ((redirectChannel: Channel) -> Unit)? = null
     internal var isRedirect = false
     private val _navigationCallback: NavigationCallback by lazy(LazyThreadSafetyMode.NONE) {
         object : NavigationCallback {
@@ -244,6 +244,16 @@ open class Channel internal constructor(
         if (immutable) throw P2MException("It been immutable, please set before call `navigation`.")
     }
 
+    /**
+     * Call [channelBlock] when the channel is not interrupted and redirected.
+     *
+     * The entire navigation process will be called back:
+     *  - Call [NavigationCallback.onStarted] when `navigation` is started.
+     *  - Call [NavigationCallback.onFailure] when [channelBlock] is failure.
+     *  - Call [NavigationCallback.onCompleted] when [channelBlock] is finished.
+     *  - Call [NavigationCallback.onRedirect] when redirected by a interceptor.
+     *  - Call [NavigationCallback.onInterrupt] when interrupted by a interceptor.
+     */
     protected open fun navigation(navigationCallback: NavigationCallback? = null) {
         synchronized(lock) {
             immutable = true
@@ -272,10 +282,10 @@ open class Channel internal constructor(
                             _navigation()
                         }
 
-                        override fun onRedirect(channel: Channel, redirectChannel: Channel) {
-                            _onRedirect?.invoke(/*channel = */channel, /*redirectChannel = */redirectChannel)
+                        override fun onRedirect(redirectChannel: Channel) {
+                            _onRedirect?.invoke(/*redirectChannel = */redirectChannel)
                             redirectChannel.isRedirect = true
-                            this@Channel.navigationCallback?.onRedirect(channel = channel, redirectChannel = redirectChannel)
+                            this@Channel.navigationCallback?.onRedirect(channel = this@Channel, redirectChannel = redirectChannel)
                             redirectChannel.navigation()
                         }
 

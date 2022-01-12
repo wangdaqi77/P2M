@@ -9,6 +9,7 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import com.p2m.core.P2M
 import com.p2m.annotation.module.api.ApiLauncher
+import com.p2m.example.account.LoginInterceptor
 import com.p2m.example.account.UserDiskCache
 import com.p2m.example.account.R
 import com.p2m.example.http.Http
@@ -24,7 +25,8 @@ import java.util.*
 @ApiLauncher(
     launcherName = "ModifyAccountName",
     activityResultContract = ModifyUserNameActivityResultContract::class,
-    AccountLaunchActivityInterceptorForLogin::class
+//    launchActivityInterceptor = [AccountLaunchActivityInterceptorForLogin::class]  error
+    launchActivityInterceptor = [LoginInterceptor::class]
 )
 class ModifyAccountNameActivity : AppCompatActivity() {
     private var loading: ProgressBar? = null

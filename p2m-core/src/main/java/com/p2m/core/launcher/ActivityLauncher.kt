@@ -40,7 +40,7 @@ import kotlin.reflect.KProperty
  */
 interface ActivityLauncher<I, O> : Launcher{
 
-    class Delegate<I, O>(clazz: Class<*>, vararg annotatedInterceptorClass: KClass<ILaunchActivityInterceptor>, createActivityResultContractBlock: () -> ActivityResultContractCompat<I, O>) {
+    class Delegate<I, O>(clazz: Class<*>, vararg annotatedInterceptorClass: KClass<out ILaunchActivityInterceptor>, createActivityResultContractBlock: () -> ActivityResultContractCompat<I, O>) {
         private val real by lazy(LazyThreadSafetyMode.NONE) {
             InternalActivityLauncher<I, O>(clazz, annotatedInterceptorClass, createActivityResultContractBlock)
         }

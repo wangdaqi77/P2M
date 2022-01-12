@@ -1,10 +1,10 @@
 package com.p2m.core.launcher
 
 import android.content.Context
-import androidx.annotation.MainThread
 import androidx.annotation.WorkerThread
 import com.p2m.core.channel.*
 import com.p2m.core.internal._P2M
+import com.p2m.core.internal.log.logD
 import com.p2m.core.internal.log.logW
 import kotlin.reflect.KClass
 
@@ -15,7 +15,9 @@ class LaunchActivityChannel internal constructor(
 ) : InterruptibleChannel(launcher, interceptorService, channelBlock) {
     private val interceptors = arrayListOf<IInterceptor>()
     internal var recoverableChannel: RecoverableLaunchActivityChannel? = null
-    private var allowRestore = true
+    internal var allowRestore = true
+    var recovering = false  // true when redirected `activity` is closed and restart `navigation`.
+        internal set
 
     init {
         _onRedirect =  { redirectChannel ->
@@ -60,29 +62,17 @@ class LaunchActivityChannel internal constructor(
         return super.onInterrupt(onInterrupt) as LaunchActivityChannel
     }
 
-    internal fun addInterceptorBefore(interceptorClass: KClass<out ILaunchActivityInterceptor>): LaunchActivityChannel {
+    fun addInterceptorBefore(interceptorClass: KClass<out ILaunchActivityInterceptor>): LaunchActivityChannel {
         checkImmutable()
         val interceptor = _P2M.interceptorContainer.get(interceptorClass)
         interceptors.add(0, interceptor)
         return this
     }
 
-    internal fun addInterceptorAfter(interceptorClass: KClass<out ILaunchActivityInterceptor>): LaunchActivityChannel {
+    fun addInterceptorAfter(interceptorClass: KClass<out ILaunchActivityInterceptor>): LaunchActivityChannel {
         checkImmutable()
         val interceptor = _P2M.interceptorContainer.get(interceptorClass)
         interceptors.add(interceptor)
-        return this
-    }
-
-    fun addInterceptorBefore(interceptor: ILaunchActivityInterceptor): LaunchActivityChannel {
-        checkImmutable()
-        interceptors.add(0, ILaunchActivityInterceptor.delegate(interceptor))
-        return this
-    }
-
-    fun addInterceptorAfter(interceptor: ILaunchActivityInterceptor): LaunchActivityChannel {
-        checkImmutable()
-        interceptors.add(ILaunchActivityInterceptor.delegate(interceptor))
         return this
     }
 
@@ -90,9 +80,15 @@ class LaunchActivityChannel internal constructor(
         return super.timeout(timeout) as LaunchActivityChannel
     }
 
+    /**
+     * Call [channelBlock] if the channel is not interrupt.
+     *
+     * If redirected, will wait for the redirected `activity` to close
+     * and restart the [navigation], you also can disable this feature
+     * by calling [disallowRestoreWhenRedirectActivityFinishing].
+     */
     override fun navigation(navigationCallback: NavigationCallback?) {
         if (!immutable) {
-            @Suppress("UNCHECKED_CAST")
             interceptors(interceptors)
         }
         super.navigation(navigationCallback)
@@ -143,7 +139,7 @@ private class LaunchActivityInterceptorDelegate(private val real: ILaunchActivit
                 }
 
                 override fun onRedirect(redirectChannel: LaunchActivityChannel) {
-                    onRedirect(redirectChannel)
+                    callback.onRedirect(redirectChannel)
                 }
 
                 override fun onInterrupt(e: Throwable?) {
@@ -159,11 +155,18 @@ private class LaunchActivityInterceptorDelegate(private val real: ILaunchActivit
 class RecoverableLaunchActivityChannel internal constructor(private val channel: LaunchActivityChannel) {
     private var restored = false
     fun tryRestore() {
+        if (!channel.allowRestore) {
+            logD("cannot be recovered, the feature is disable.")
+            return
+        }
+
         if (restored) {
             logW("restored for ${channel}.")
             return
         }
         restored = true
+        channel.recovering = true
         channel.navigation()
+        channel.recovering = false
     }
 }

@@ -14,7 +14,7 @@ import kotlin.reflect.KClass
 
 internal class InternalActivityLauncher<I, O>(
     private val clazz: Class<*>,
-    internal val annotatedInterceptorClasses: Array<out KClass<ILaunchActivityInterceptor>>,
+    internal val annotatedInterceptorClasses: Array<out KClass<out ILaunchActivityInterceptor>>,
     private val createActivityResultContractBlock: () -> ActivityResultContractCompat<I, O>
 ) : ActivityLauncher<I, O> {
 

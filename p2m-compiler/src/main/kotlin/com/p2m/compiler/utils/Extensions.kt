@@ -10,6 +10,16 @@ import javax.lang.model.element.*
 import javax.lang.model.type.TypeMirror
 import javax.lang.model.util.Elements
 import kotlin.reflect.KClass
+import javax.lang.model.element.ExecutableElement
+
+import javax.lang.model.element.AnnotationMirror
+
+import javax.lang.model.element.TypeElement
+
+import javax.lang.model.type.DeclaredType
+
+
+
 
 /**
  * Returns the package name of a TypeElement.
@@ -221,4 +231,37 @@ inline fun <reified T : Annotation> RoundEnvironment.getSingleTypeElementAnnotat
     }
     if (elements.isEmpty()) return null
     return elements.first()
+}
+
+fun <T> findAnnotationValue(
+    element: Element,
+    annotationClass: String,
+    valueName: String,
+    expectedType: Class<T>
+): T? {
+    var ret: T? = null
+    for (annotationMirror in element.annotationMirrors) {
+        val annotationType = annotationMirror.annotationType
+        val annotationElement = annotationType.asElement() as TypeElement
+        if (annotationElement.qualifiedName.contentEquals(annotationClass)) {
+            ret = extractValue(annotationMirror, valueName, expectedType)
+            break
+        }
+    }
+    return ret
+}
+
+private fun <T> extractValue(
+    annotationMirror: AnnotationMirror,
+    valueName: String,
+    expectedType: Class<T>
+): T? {
+    val elementValues: Map<ExecutableElement, AnnotationValue> = HashMap(annotationMirror.elementValues)
+    for ((executableElement, annotationValue) in elementValues) {
+        if (executableElement.simpleName.contentEquals(valueName)) {
+            val value = annotationValue.value
+            return expectedType.cast(value)
+        }
+    }
+    return null
 }
