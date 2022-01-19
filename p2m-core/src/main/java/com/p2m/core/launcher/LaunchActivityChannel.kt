@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.annotation.WorkerThread
 import com.p2m.core.channel.*
 import com.p2m.core.internal._P2M
-import com.p2m.core.internal.log.logD
 import com.p2m.core.internal.log.logW
 import kotlin.reflect.KClass
 
@@ -15,27 +14,21 @@ class LaunchActivityChannel internal constructor(
 ) : InterruptibleChannel(launcher, interceptorService, channelBlock) {
     private val interceptors = arrayListOf<IInterceptor>()
     internal var recoverableChannel: RecoverableLaunchActivityChannel? = null
-    internal var allowRestore = true
-    var recovering = false  // true when redirected `activity` is closed and restart `navigation`.
-        internal set
 
     init {
-        _onRedirect =  { redirectChannel ->
+        onPrepareRedirect =  { redirectChannel, processingInterceptor, unprocessedInterceptors ->
             if (redirectChannel is LaunchActivityChannel) {
-                redirectChannel.recoverableChannel = RecoverableLaunchActivityChannel(this)
+                redirectChannel.recoverableChannel =
+                    RecoverableLaunchActivityChannel(
+                        this,
+                        redirectChannel,
+                        processingInterceptor,
+                        unprocessedInterceptors
+                    )
             } else {
                 logW("Not support type: ${redirectChannel::class.java.name}")
             }
         }
-    }
-
-    /**
-     * Disallow restore when redirect activity finishing, default allow.
-     */
-    fun disallowRestoreWhenRedirectActivityFinishing(): LaunchActivityChannel {
-        checkImmutable()
-        this.allowRestore = false
-        return this
     }
 
     override fun navigationCallback(navigationCallback: NavigationCallback): LaunchActivityChannel {
@@ -80,12 +73,16 @@ class LaunchActivityChannel internal constructor(
         return super.timeout(timeout) as LaunchActivityChannel
     }
 
+    override fun redirectionMode(mode: ChannelRedirectionMode): LaunchActivityChannel {
+        return super.redirectionMode(mode) as LaunchActivityChannel
+    }
+
     /**
-     * Call [channelBlock] if the channel is not interrupt.
+     * Call [channelBlock] when the channel is not interrupted and redirected.
      *
-     * If redirected, will wait for the redirected `activity` to close
+     * If it is redirected, will wait for the redirected `activity` to close
      * and restart the [navigation], you also can disable this feature
-     * by calling [disallowRestoreWhenRedirectActivityFinishing].
+     * by calling [restoreMode].
      */
     override fun navigation(navigationCallback: NavigationCallback?) {
         if (!immutable) {
@@ -152,21 +149,13 @@ private class LaunchActivityInterceptorDelegate(private val real: ILaunchActivit
     }
 }
 
-class RecoverableLaunchActivityChannel internal constructor(private val channel: LaunchActivityChannel) {
-    private var restored = false
-    fun tryRestore() {
-        if (!channel.allowRestore) {
-            logD("cannot be recovered, the feature is disable.")
-            return
-        }
-
-        if (restored) {
-            logW("restored for ${channel}.")
-            return
-        }
-        restored = true
-        channel.recovering = true
-        channel.navigation()
-        channel.recovering = false
+class RecoverableLaunchActivityChannel internal constructor(
+    private val channel: LaunchActivityChannel,
+    private val redirectChannel: LaunchActivityChannel,
+    private val processingInterceptor: IInterceptor,
+    private val unprocessedInterceptors: ArrayList<IInterceptor>
+) {
+    fun tryRestoreNavigation() {
+        channel.recoverNavigation(redirectChannel, processingInterceptor, unprocessedInterceptors)
     }
 }

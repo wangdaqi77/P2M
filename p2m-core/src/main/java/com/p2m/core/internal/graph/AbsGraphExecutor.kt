@@ -47,7 +47,7 @@ internal abstract class AbsGraphExecutor<KEY, NODE : Node<NODE>, GRAPH : Graph<K
         // nothing
     }
 
-    override fun removeTask(runnable: Runnable) {
+    override fun cancelTask(runnable: Runnable) {
         // nothing
     }
 

@@ -15,6 +15,12 @@
         <activity
             android:name=".pre_api.ModifyAccountNameActivity">
         </activity>
+        <activity
+            android:name=".pre_api.BindPhoneActivity">
+        </activity>
+        <activity
+            android:name=".pre_api.AddAddressActivity">
+        </activity>
     </application>
 
 </manifest>

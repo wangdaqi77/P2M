@@ -10,15 +10,26 @@
     android:paddingRight="@dimen/login_activity_horizontal_margin"
     android:paddingBottom="@dimen/login_activity_vertical_margin">
 
+    <Button
+        android:id="@+id/tv_back"
+        android:layout_marginStart="24dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="返回" />
+
+
     <EditText
-        android:id="@+id/username"
+        android:id="@+id/et_phone"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="96dp"
         android:layout_marginEnd="24dp"
-        android:hint="输入新的用户名"
-        android:inputType="textEmailAddress"
+        android:hint="输入手机号"
+        android:inputType="phone"
         android:selectAllOnFocus="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -34,8 +45,8 @@
         android:layout_marginEnd="48dp"
         android:layout_marginBottom="64dp"
         android:enabled="false"
-        android:text="修改"
-        app:layout_constraintTop_toBottomOf="@+id/username"
+        android:text="绑定"
+        app:layout_constraintTop_toBottomOf="@+id/et_phone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintVertical_bias="0.2" />

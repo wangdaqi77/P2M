@@ -9,8 +9,10 @@ import android.widget.Toast
 import androidx.lifecycle.Observer
 import com.p2m.core.P2M
 import com.p2m.annotation.module.api.ApiLauncher
+import com.p2m.core.channel.ChannelRedirectionMode
 import com.p2m.example.main.R
 import com.p2m.example.account.p2m.api.Account
+import com.p2m.example.main.p2m.api.Main
 
 @ApiLauncher("Main")
 class MainActivity : AppCompatActivity() {
@@ -45,10 +47,23 @@ class MainActivity : AppCompatActivity() {
                 }
             })
 
-        // 修改用户名
+        // Result Api示例：修改用户名
         findViewById<Button>(R.id.main_btn_modify).setOnClickListener {
+            val userName = P2M.apiOf(Account::class.java).event.loginInfo.getValue()?.userName?:return@setOnClickListener
             modifyAccountNameLauncherForActivityResult
-                .launchChannel { }
+                .launchChannel { userName }
+                .navigation()
+        }
+
+        // 拦截器示例
+        findViewById<Button>(R.id.main_btn_mall).setOnClickListener {
+            P2M.apiOf(Main::class.java)
+                .launcher
+                .activityOfMall
+                .launchChannel { intent ->
+                    startActivity(intent)
+                }
+                .redirectionMode(ChannelRedirectionMode.CONTINUOUS_AND_RECOVER_TRY)
                 .navigation()
         }
 

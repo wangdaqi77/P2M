@@ -1,6 +1,5 @@
 package com.p2m.core
 
-import android.app.Activity
 import android.content.Context
 import android.os.Looper
 import androidx.annotation.MainThread

@@ -8,7 +8,7 @@ internal interface Executor{
 
     fun postTaskDelay(ms:Long, runnable: Runnable)
 
-    fun removeTask(runnable: Runnable)
+    fun cancelTask(runnable: Runnable)
 
     fun quitLoop(runnable: Runnable? = null)
 }

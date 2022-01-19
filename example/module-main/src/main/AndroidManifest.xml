@@ -6,8 +6,9 @@
         <activity
             android:name="com.p2m.example.main.pre_api.MainActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
-            android:launchMode="singleTask"
-            />
+            android:launchMode="singleTask" />
+        <activity
+            android:name="com.p2m.example.main.pre_api.MallActivity"/>
     </application>
 
 </manifest>

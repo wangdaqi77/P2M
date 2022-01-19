@@ -10,7 +10,7 @@ interface InterceptorService {
     fun doInterceptions(
         channel: Channel,
         interceptors: Collection<IInterceptor>,
-        callback: InterceptorCallback
+        callback: InterceptorServiceCallback
     )
 }
 
@@ -19,15 +19,16 @@ internal class InterceptorServiceDefault : InterceptorService {
     override fun doInterceptions(
         channel: Channel,
         interceptors: Collection<IInterceptor>,
-        callback: InterceptorCallback
+        callback: InterceptorServiceCallback
     ) {
         val interceptorIterator = interceptors.iterator()
         try {
             doInterception(
                 interceptorIterator = interceptorIterator,
                 channel = channel,
+                onInterceptorProcessing = { interceptor -> callback.onInterceptorProcessing(interceptor) },
                 onContinue = { callback.onContinue() },
-                onRedirect = { redirectChannel ->  callback.onRedirect(redirectChannel) },
+                onRedirect = { redirectChannel -> callback.onRedirect(redirectChannel) },
                 onInterrupted = { e -> callback.onInterrupt(e) }
             )
         } catch (e : Throwable) {
@@ -36,16 +37,19 @@ internal class InterceptorServiceDefault : InterceptorService {
     }
 
     private fun doInterception(
-        interceptorIterator: Iterator<IInterceptor>, channel: Channel,
+        interceptorIterator: Iterator<IInterceptor>,
+        channel: Channel,
+        onInterceptorProcessing: (interceptor: IInterceptor) -> Unit,
         onContinue: () -> Unit,
         onRedirect: (redirectChannel: Channel) -> Unit,
         onInterrupted: (e: Throwable) -> Unit
     ) {
         if (interceptorIterator.hasNext()) {
             val interceptor = interceptorIterator.next()
+            onInterceptorProcessing(interceptor)
             interceptor.process(channel, object : InterceptorCallback {
                 override fun onContinue() {
-                    doInterception(interceptorIterator, channel, onContinue, onRedirect, onInterrupted)
+                    doInterception(interceptorIterator, channel, onInterceptorProcessing, onContinue, onRedirect, onInterrupted)
                 }
 
                 override fun onRedirect(redirectChannel: Channel) {
@@ -71,6 +75,10 @@ interface InterceptorCallback {
     fun onRedirect(redirectChannel: Channel)
 
     fun onInterrupt(e: Throwable? = null)
+}
+
+interface InterceptorServiceCallback: InterceptorCallback {
+    fun onInterceptorProcessing(interceptor: IInterceptor)
 }
 
 interface IInterceptor {

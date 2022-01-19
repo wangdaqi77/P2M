@@ -22,6 +22,8 @@ class UserDiskCache(private val context: Context) {
         val sp = context.getSharedPreferences("login_user", Context.MODE_PRIVATE)
         sp.edit().putString("login_user_name", info?.userName).apply()
         sp.edit().putString("login_user_id", info?.userId).apply()
+        sp.edit().putString("login_user_phone", info?.phone).apply()
+        sp.edit().putString("login_user_address", info?.address).apply()
     }
 
     // 读取登录用户信息
@@ -29,9 +31,15 @@ class UserDiskCache(private val context: Context) {
         val sp = context.getSharedPreferences("login_user", Context.MODE_PRIVATE)
         val userName = sp.getString("login_user_name", null)
         val userId = sp.getString("login_user_id", null)
+        val phone = sp.getString("login_user_phone", null)
+        val address = sp.getString("login_user_address", null)
         return if (userId != null) {
-            LoginUserInfo()
-                .apply { this.userId = userId; this.userName = userName }
+            LoginUserInfo().apply {
+                this.userId = userId
+                this.userName = userName
+                this.phone = phone
+                this.address = address
+            }
         }else {
             null
         }

@@ -13,6 +13,7 @@ import com.p2m.core.internal.launcher.LaunchActivityHelper
 import com.p2m.core.internal.config.InternalP2MConfigManager
 import com.p2m.core.internal.execution.Executor
 import com.p2m.core.internal.execution.InternalExecutor
+import com.p2m.core.internal.execution.InternalMainExecutor
 import com.p2m.core.internal.log.logE
 import com.p2m.core.internal.module.*
 import com.p2m.core.internal.module.DefaultModuleFactory
@@ -27,9 +28,10 @@ import kotlin.collections.ArrayList
 @SuppressLint("StaticFieldLeak")
 internal object _P2M : ModuleApiProvider, ModuleVisitor {
     internal lateinit var internalContext : Context
-    internal val executor: Executor by lazy { InternalExecutor() }
+    internal val executor: Executor = InternalExecutor()
+    internal val mainExecutor: Executor = InternalMainExecutor()
     internal val configManager: P2MConfigManager = InternalP2MConfigManager()
-    internal val launchActivityHelper by lazy { LaunchActivityHelper() }
+    internal val launchActivityHelper = LaunchActivityHelper()
     internal val interceptorContainer = ChannelInterceptorContainer()
     private val moduleContainer = ModuleContainerDefault()
     private lateinit var driver: InternalDriver
@@ -97,8 +99,8 @@ internal object _P2M : ModuleApiProvider, ModuleVisitor {
         return module.api as MODULE_API
     }
 
-    internal fun onLaunchActivityNavigationCompleted(channel: LaunchActivityChannel, intent: Intent) {
-        launchActivityHelper.onLaunchActivityNavigationCompleted(channel, intent)
+    internal fun onLaunchActivityNavigationWillCompleted(channel: LaunchActivityChannel, intent: Intent) {
+        launchActivityHelper.onLaunchActivityNavigationWillCompleted(channel, intent)
     }
 
     override fun visit(module: Module<*>) {

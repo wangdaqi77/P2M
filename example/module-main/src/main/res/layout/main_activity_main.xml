@@ -6,7 +6,6 @@
     android:background="#0099cc"
     tools:context="com.p2m.example.main.pre_api.MainActivity">
 
-
     <TextView
         android:id="@+id/main_content"
         android:layout_width="match_parent"
@@ -35,7 +34,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:text="更改用户名" />
+                android:text="Result Api示例：更改用户名" />
+
+            <Button
+                android:id="@+id/main_btn_mall"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:text="拦截器示例" />
 
             <Button
                 android:id="@+id/main_btn_logout"

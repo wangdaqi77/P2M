@@ -12,3 +12,8 @@ const val CLASS_SERVICE = "android.app.Service"
 const val CLASS_CONTEXT = "android.content.Context"
 const val CLASS_INTENT = "android.content.Intent"
 const val CLASS_ACTIVITY_RESULT = "androidx.activity.result.ActivityResult"
+
+// P2M
+const val MODULE_API_FIELD_LAUNCHER= "launcher"
+const val MODULE_API_FIELD_SERVICE= "service"
+const val MODULE_API_FIELD_EVENT= "event"

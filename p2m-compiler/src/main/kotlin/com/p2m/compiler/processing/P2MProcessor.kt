@@ -554,9 +554,9 @@ class P2MProcessor : BaseProcessor() {
             genModuleEventResult.apiClassName
         )
 
-        val launcherVarName = "launcher"
-        val serviceVarName = "service"
-        val eventVarName = "event"
+        val launcherVarName = MODULE_API_FIELD_LAUNCHER
+        val serviceVarName = MODULE_API_FIELD_SERVICE
+        val eventVarName = MODULE_API_FIELD_EVENT
 
         val apiTypeSpecBuilder = TypeSpec
             .interfaceBuilder(apiClassName)
@@ -683,17 +683,17 @@ class P2MProcessor : BaseProcessor() {
                 element = element,
                 annotationClass = ApiLauncher::class.qualifiedName!!,
                 valueName = "launchActivityInterceptor",
-                expectedType = com.sun.tools.javac.util.List::class.java,
+                expectedType = com.sun.tools.javac.util.List::class.java
             )?.takeIf { it.nonEmpty() }?.forEach {
                 if (it.toString() == "<error>") {
                     throw IllegalArgumentException("Please use the interceptor declared inside the module, see @ApiLauncher(launchActivityInterceptor = ...) in $className")
                 }
 
                 val interceptorClassName = ClassName.bestGuess(it.toString().removeSuffix(".class"))
-                interceptorsResultMap.keys.find { it.className() == interceptorClassName }
-                    ?.let { internalActivityInterceptorElement ->
+                interceptorsResultMap.keys.find { interceptorOriginTypeElement -> interceptorOriginTypeElement.className() == interceptorClassName }
+                    ?.let { interceptorOriginTypeElement ->
                         moduleInternalActivityInterceptorsCache[interceptorClassName] =
-                            interceptorsResultMap[internalActivityInterceptorElement]!!
+                            interceptorsResultMap[interceptorOriginTypeElement]!!
                     }
             }
 
@@ -808,7 +808,7 @@ class P2MProcessor : BaseProcessor() {
                             .takeIf { it.isNotEmpty() }
                             ?.map { kClass -> kClass.asClassName() }
                             ?.map { moduleInternalActivityInterceptorsCache[it]?.apiClassName ?: it }
-                            ?.joinToString { ", ${it.canonicalName}::class" }
+                            ?.joinToString(", ") { "${it.canonicalName}::class" }
                             ?: ""
                         PropertySpec.builder(
                             name = "activityOf$launcherName",
@@ -819,7 +819,7 @@ class P2MProcessor : BaseProcessor() {
                             .addModifiers(KModifier.OVERRIDE)
                             .mutable(false)
                             .delegate(
-                                "%T(%T::class.java%L) { %L() }",
+                                "%T(%T::class.java, %L) { %L() }",
                                 ActivityLauncherDelegate,
                                 className,
                                 launchActivityInterceptorsStr,
@@ -837,7 +837,7 @@ class P2MProcessor : BaseProcessor() {
                             ?.split(",")
                             ?.map { name -> ClassName.bestGuess(name.trim()) }
                             ?.map { moduleInternalActivityInterceptorsCache[it]?.apiClassName ?: it }
-                            ?.joinToString { ", ${it.canonicalName}::class" }
+                            ?.joinToString(", ") { "${it.canonicalName}::class" }
                             ?: ""
                         PropertySpec.builder(
                             name = "activityOf$launcherName",
@@ -848,7 +848,7 @@ class P2MProcessor : BaseProcessor() {
                             .addModifiers(KModifier.OVERRIDE)
                             .mutable(false)
                             .delegate(
-                                "%T(%T::class.java%L) { %L() }",
+                                "%T(%T::class.java, %L) { %L() }",
                                 ActivityLauncherDelegate,
                                 className,
                                 launchActivityInterceptorsStr,

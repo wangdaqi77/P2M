@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger
 internal class LaunchActivityHelper : Application.ActivityLifecycleCallbacks {
     companion object {
         private const val EXT_ID = "Key_RecoverableChannelHelper_RecoverableChannel"
-        private const val DISCARD_TIMEOUT = 60_000L
+        private const val DISCARD_TIMEOUT = 20_000L
         private const val ID_NO_SET = 0
     }
 
@@ -38,14 +38,14 @@ internal class LaunchActivityHelper : Application.ActivityLifecycleCallbacks {
         initialized = true
     }
 
-    internal fun onLaunchActivityNavigationCompleted(channel: LaunchActivityChannel, intent: Intent) {
-        if (channel.isRedirect) {
-            channel.recoverableChannel?.also { saveRecoverableChannel(intent, it) }
+    internal fun onLaunchActivityNavigationWillCompleted(channel: LaunchActivityChannel, intent: Intent) {
+        if (channel.isRedirectChannel) {
+            channel.recoverableChannel?.also { onLaunchActivityNavigationWillCompleted(intent, it) }
                 ?: logE("unknown error.")
         }
     }
 
-    private fun saveRecoverableChannel(intent: Intent, recoverableChannel: RecoverableLaunchActivityChannel) {
+    private fun onLaunchActivityNavigationWillCompleted(intent: Intent, recoverableChannel: RecoverableLaunchActivityChannel) {
         if (!initialized) {
             logE("please call `init()` before.")
             return
@@ -61,7 +61,7 @@ internal class LaunchActivityHelper : Application.ActivityLifecycleCallbacks {
     }
 
     private fun tryRestore(id: Int) {
-        table[id]?.tryRestore()
+        table[id]?.tryRestoreNavigation()
     }
 
     private inline fun Activity.recoverableChannelIdIfFind(onFound: (Int) -> Unit) {
@@ -72,7 +72,7 @@ internal class LaunchActivityHelper : Application.ActivityLifecycleCallbacks {
 
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
         activity.recoverableChannelIdIfFind { id ->
-            timeoutRunnable[id]?.also(executor::removeTask)
+            timeoutRunnable[id]?.also(executor::cancelTask)
         }
     }
 

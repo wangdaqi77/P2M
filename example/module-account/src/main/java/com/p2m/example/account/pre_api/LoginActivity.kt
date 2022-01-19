@@ -32,7 +32,7 @@ class LoginActivity : AppCompatActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.login_activity_login)
+        setContentView(R.layout.account_activity_login)
         initView()
         
         login?.setOnClickListener {

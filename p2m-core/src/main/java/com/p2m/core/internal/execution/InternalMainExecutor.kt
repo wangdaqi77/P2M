@@ -2,18 +2,16 @@ package com.p2m.core.internal.execution
 
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.Looper
 
-internal class InternalExecutor : Executor {
-    private val handlerThread = HandlerThread("p2m_internal")
-    private val handler by lazy { Handler(handlerThread.looper) }
+internal class InternalMainExecutor : Executor {
+    private val handler by lazy { Handler(Looper.getMainLooper()) }
 
     init {
         loop()
     }
 
-    override fun loop() {
-        handlerThread.start()
-    }
+    override fun loop() {}
 
     override fun postTask(runnable: Runnable) {
         handler.post(runnable)
@@ -27,7 +25,5 @@ internal class InternalExecutor : Executor {
         handler.removeCallbacks(runnable)
     }
 
-    override fun quitLoop(runnable: Runnable?) {
-        handlerThread.quit()
-    }
+    override fun quitLoop(runnable: Runnable?) {}
 }

@@ -32,7 +32,7 @@ internal class InternalActivityLauncher<I, O>(
     override fun launchChannel(launchBlock: LaunchActivityBlock): LaunchActivityChannel {
         val intent = createIntent()
         return Channel.launchActivity(this) { channel ->
-            _P2M.onLaunchActivityNavigationCompleted(channel, intent)
+            _P2M.onLaunchActivityNavigationWillCompleted(channel, intent)
             launchBlock(intent)
         }.also(::addAnnotatedInterceptor)
     }
@@ -60,7 +60,9 @@ internal class InternalActivityLauncher<I, O>(
     }
 
     internal fun addAnnotatedInterceptor(channel: LaunchActivityChannel){
-        annotatedInterceptorClasses.forEach(channel::addInterceptorAfter)
+        annotatedInterceptorClasses.forEach{
+            channel.addInterceptorAfter(it)
+        }
     }
 
     private fun ActivityResultLauncher<I>.compat(): InternalActivityResultLauncherCompat<I, O> =

@@ -1,5 +1,6 @@
 package com.p2m.core.channel
 
+import com.p2m.core.exception.ChannelRedirectInterruptedException
 import com.p2m.core.exception.ChannelClosedException
 import com.p2m.core.exception.P2MException
 import com.p2m.core.internal._P2M
@@ -20,6 +21,34 @@ interface NavigationCallback {
     fun onRedirect(channel: Channel, redirectChannel: Channel)
 
     fun onInterrupt(channel: Channel, e: Throwable?)
+}
+
+open class SimpleNavigationCallback: NavigationCallback {
+    override fun onStarted(channel: Channel) {
+
+    }
+
+    override fun onFailure(channel: Channel, e: Throwable) {
+
+    }
+
+    override fun onCompleted(channel: Channel) {
+
+    }
+
+    override fun onRedirect(channel: Channel, redirectChannel: Channel) {
+
+    }
+
+    override fun onInterrupt(channel: Channel, e: Throwable?) {
+
+    }
+}
+
+enum class ChannelRedirectionMode {
+    NEVER,                          // never redirect, will interrupted if redirect.
+    CONTINUOUS_AND_RECOVER_TRY,     // continuous redirects and try recover navigation after redirected.
+    CONTINUOUS_AND_RECOVER_FORCE,   // continuous redirects and recover after redirected until navigation completed or failure.
 }
 
 open class GreenChannel internal constructor(owner: Any, channelBlock: ChannelBlock) :
@@ -86,6 +115,10 @@ open class InterruptibleChannel internal constructor(
         return super.timeout(timeout) as InterruptibleChannel
     }
 
+    public override fun redirectionMode(mode: ChannelRedirectionMode): InterruptibleChannel {
+        return super.redirectionMode(mode) as InterruptibleChannel
+    }
+
     public override fun navigation(navigationCallback: NavigationCallback?) {
         super.navigation(navigationCallback)
     }
@@ -99,7 +132,6 @@ open class Channel internal constructor(
     companion object {
         private const val DEFAULT_TIMEOUT = 10_000L
         private const val DEFAULT_CHANNEL_INTERCEPT = true
-        private val EMPTY_INTERCEPTORS = emptyList<IInterceptor>()
         private val EMPTY_BLOCK = { _: Channel -> }
 
         internal fun green(owner: Any, channelBlock: ChannelBlock) =
@@ -107,11 +139,15 @@ open class Channel internal constructor(
 
         internal fun interruptible(owner: Any, interceptorService: InterceptorService, channelBlock: ChannelBlock) =
             InterruptibleChannel(owner, interceptorService, channelBlock)
+                .redirectionMode(ChannelRedirectionMode.CONTINUOUS_AND_RECOVER_TRY)
 
         internal fun launchActivity(activityLauncher: ActivityLauncher<*, *>, channelBlock: (channel: LaunchActivityChannel) -> Unit) =
             LaunchActivityChannel(activityLauncher, _P2M.launchActivityHelper.interceptorService) {
-                channelBlock(it as LaunchActivityChannel)
+                _P2M.mainExecutor.postTask(Runnable {
+                    channelBlock(it as LaunchActivityChannel)
+                })
             }
+                .redirectionMode(ChannelRedirectionMode.CONTINUOUS_AND_RECOVER_TRY)
 
         internal fun launchGreen(launcher: Launcher, channelBlock: ChannelBlock) =
             LaunchGreenChannel(launcher, channelBlock)
@@ -134,8 +170,9 @@ open class Channel internal constructor(
     private var closedException : ChannelClosedException? = null
     private val lock = Any()
     private var navigationCallback: NavigationCallback? = null
-    protected var _onRedirect : ((redirectChannel: Channel) -> Unit)? = null
-    internal var isRedirect = false
+    internal lateinit var redirectionMode : ChannelRedirectionMode
+    protected var onPrepareRedirect : ((redirectChannel: Channel, processingInterceptor: IInterceptor, unprocessedInterceptors: ArrayList<IInterceptor>) -> Unit)? = null
+    internal var isRedirectChannel = false
     private val _navigationCallback: NavigationCallback by lazy(LazyThreadSafetyMode.NONE) {
         object : NavigationCallback {
             override fun onStarted(channel: Channel) {
@@ -157,6 +194,44 @@ open class Channel internal constructor(
             override fun onInterrupt(channel: Channel, e: Throwable?) {
                 onInterrupt?.invoke(channel, e)
             }
+        }
+    }
+
+    private class InternalInterceptorServiceCallback constructor(
+        private val channel: Channel,
+        private val processingInterceptors: ArrayList<IInterceptor>,
+        private val lastRedirectedChannel: Channel? = null,
+        private val lastRedirectedInterceptor: IInterceptor? = null
+    ): InterceptorServiceCallback {
+        private var processingInterceptor: IInterceptor? = null
+        override fun onInterceptorProcessing(interceptor: IInterceptor) {
+            this.processingInterceptors.remove(interceptor)
+            this.processingInterceptor = interceptor
+        }
+
+        override fun onContinue() {
+            this.channel._navigation(this.channel._navigationCallback)
+        }
+
+        override fun onRedirect(redirectChannel: Channel) {
+            val processingInterceptor = this.processingInterceptor
+                ?: throw IllegalStateException("please call `callback.onInterceptorProcessing()` first in service.")
+            val unprocessedInterceptors = processingInterceptors
+            when (this.channel.redirectionMode) {
+                ChannelRedirectionMode.NEVER -> onInterrupt(ChannelRedirectInterruptedException(redirectChannel, "never redirect, redirection mode is ChannelRedirectionMode.NEVER"))
+                ChannelRedirectionMode.CONTINUOUS_AND_RECOVER_TRY -> {
+                    if (this.lastRedirectedInterceptor === processingInterceptor &&  this.lastRedirectedChannel?.owner === redirectChannel.owner) {
+                        onInterrupt(ChannelRedirectInterruptedException(redirectChannel, "cannot be redirected to again, redirection mode is ChannelRedirectionMode.CONTINUOUS_AND_RECOVER_TRY"))
+                        return
+                    }
+                    this.channel.redirectTo(redirectChannel, processingInterceptor, unprocessedInterceptors)
+                }
+                ChannelRedirectionMode.CONTINUOUS_AND_RECOVER_FORCE -> this.channel.redirectTo(redirectChannel, processingInterceptor, unprocessedInterceptors)
+            }
+        }
+
+        override fun onInterrupt(e: Throwable?) {
+            this.channel.navigationCallback?.onInterrupt(this.channel, e)
         }
     }
 
@@ -227,6 +302,15 @@ open class Channel internal constructor(
     }
 
     /**
+     * set redirect mode.
+     */
+    protected open fun redirectionMode(mode: ChannelRedirectionMode): Channel {
+        checkImmutable()
+        this.redirectionMode = mode
+        return this
+    }
+
+    /**
      * If the method is called when the channel is already closed, this method will be ignored.
      */
     protected open fun close(cause: Throwable? = null) {
@@ -274,44 +358,77 @@ open class Channel internal constructor(
                 if (interceptorService == null) {
                     throw P2MException("has not interceptorService.")
                 }
+
+                val interceptors = interceptors
+                if (interceptors == null) {
+                    _navigation(this@Channel._navigationCallback)
+                    return
+                }
                 interceptorService.doInterceptions(
                     channel = this,
-                    interceptors = interceptors ?: EMPTY_INTERCEPTORS,
-                    callback = object : InterceptorCallback {
-                        override fun onContinue() {
-                            _navigation()
-                        }
-
-                        override fun onRedirect(redirectChannel: Channel) {
-                            _onRedirect?.invoke(/*redirectChannel = */redirectChannel)
-                            redirectChannel.isRedirect = true
-                            this@Channel.navigationCallback?.onRedirect(channel = this@Channel, redirectChannel = redirectChannel)
-                            redirectChannel.navigation()
-                        }
-
-                        override fun onInterrupt(e: Throwable?) {
-                            this@Channel.navigationCallback?.onInterrupt(this@Channel, e)
-                        }
-
-                    })
+                    interceptors = interceptors,
+                    callback = InternalInterceptorServiceCallback(this, ArrayList(interceptors)))
             } else {
-                _navigation()
+                _navigation(this@Channel._navigationCallback)
             }
         }
     }
 
-    private fun _navigation() {
+    private fun redirectTo(
+        redirectChannel: Channel,
+        processingInterceptor: IInterceptor,
+        unprocessedInterceptors: ArrayList<IInterceptor>
+    ) {
+        redirectChannel.isRedirectChannel = true
+        this.onPrepareRedirect?.invoke(
+            /*redirectChannel = */redirectChannel,
+            /*processingInterceptor = */processingInterceptor,
+            /*processingInterceptors = */unprocessedInterceptors
+        )
+        redirectChannel._navigation(object : SimpleNavigationCallback() {
+            override fun onFailure(channel: Channel, e: Throwable) {
+                super.onFailure(channel, e)
+                this@Channel.navigationCallback?.onInterrupt(channel = this@Channel, e = ChannelRedirectInterruptedException(redirectChannel, "redirect failure.", e))
+            }
+
+            override fun onCompleted(channel: Channel) {
+                super.onCompleted(channel)
+                this@Channel.navigationCallback?.onRedirect(channel = this@Channel, redirectChannel = redirectChannel)
+            }
+        })
+    }
+
+    internal fun recoverNavigation(
+        redirectChannel: LaunchActivityChannel,
+        processingInterceptor: IInterceptor,
+        unprocessedInterceptors: ArrayList<IInterceptor>
+    ) {
+        unprocessedInterceptors.add(0, processingInterceptor)
+        when (redirectionMode) {
+            ChannelRedirectionMode.NEVER -> { /*never access*/ }
+            ChannelRedirectionMode.CONTINUOUS_AND_RECOVER_TRY,
+            ChannelRedirectionMode.CONTINUOUS_AND_RECOVER_FORCE-> {
+                interceptorService?.doInterceptions(
+                    channel = this,
+                    interceptors = unprocessedInterceptors,
+                    callback = InternalInterceptorServiceCallback(this, ArrayList(unprocessedInterceptors), redirectChannel, processingInterceptor)
+                )
+            }
+        }
+    }
+
+    private fun _navigation(navigationCallback: NavigationCallback?) {
         synchronized(lock) {
             try {
                 if (isClosed) {
-                    this@Channel.navigationCallback?.onFailure(this, closedException!!)
+                    navigationCallback?.onFailure(this, closedException!!)
                     return
                 }
                 channelBlock(this)
                 isCompleted = true
-                this@Channel.navigationCallback?.onCompleted(this)
+                navigationCallback?.onCompleted(this)
             } catch (e: Throwable) {
-                this@Channel.navigationCallback?.onFailure(this, e)
+                navigationCallback?.onFailure(this, e)
             } finally {
                 close()
             }
