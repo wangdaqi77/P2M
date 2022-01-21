@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.app.Service
 import com.p2m.annotation.module.api.ApiLauncher
-import com.p2m.core.channel.LaunchGreenChannel
 import com.p2m.core.internal.launcher.InternalServiceLauncher
 import kotlin.reflect.KProperty
 
@@ -48,11 +47,11 @@ interface ServiceLauncher : Launcher {
      * as input param, all other fields (action, data, type) are null, they can
      * be modified later in [launchBlock].
      *
-     * @return [LaunchGreenChannel] - call `navigation` to launch.
+     * @return [LaunchServiceChannel] - call `navigation` to launch.
      *
-     * @see LaunchGreenChannel.navigation
+     * @see LaunchServiceChannel.navigation
      */
-    fun launchChannel(launchBlock: LaunchServiceBlock): LaunchGreenChannel
+    fun launchChannel(launchBlock: LaunchServiceBlock): LaunchServiceChannel
 }
 
 /**

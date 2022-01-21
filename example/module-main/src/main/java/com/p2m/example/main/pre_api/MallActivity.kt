@@ -16,16 +16,24 @@ import com.p2m.example.account.p2m.api.AccountLaunchActivityInterceptorForBindPh
 
 @ApiLauncher(
     launcherName = "Mall",
-    launchActivityInterceptor = [AccountLaunchActivityInterceptorForBindPhoneNum::class, AccountLaunchActivityInterceptorForAddAddress::class]
+    launchActivityInterceptor = [
+        AccountLaunchActivityInterceptorForBindPhoneNum::class,
+        AccountLaunchActivityInterceptorForAddAddress::class
+    ]
 )
 class MallActivity : AppCompatActivity() {
-
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.main_activity_mall)
-    }
 
+        P2M.apiOf(Account::class.java).event.loginInfo.observe(this, {
+            findViewById<TextView>(R.id.main_content).text = """
+                手机号：${it?.phone}
+                
+                收货地址：${it?.address}
+            """.trimIndent()
+        })
+    }
 }

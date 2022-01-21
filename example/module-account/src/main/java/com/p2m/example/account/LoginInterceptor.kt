@@ -23,19 +23,17 @@ class LoginInterceptor : ILaunchActivityInterceptor {
     override fun process(callback: LaunchActivityInterceptorCallback) {
         try {
             val account = P2M.apiOf(Account::class.java)
-            val loginState = account.event.loginState.getValue()
-            when(loginState) {
-                true -> callback.onContinue()
-                false -> {
-                    callback.onRedirect(
-                        redirectChannel = account.launcher
-                            .activityOfLogin
-                            .launchChannel {
-                                context.startActivity(it)
-                            }
-                    )
-                }
-                null -> callback.onInterrupt(IllegalStateException("unknown login state!"))
+            val isLogin = account.event.loginState.getValue() ?: false
+            if (!isLogin) {
+                callback.onRedirect(
+                    redirectChannel = account.launcher
+                        .activityOfLogin
+                        .launchChannel {
+                            context.startActivity(it)
+                        }
+                )
+            } else {
+                callback.onContinue()
             }
         } catch (e: Throwable) {
             callback.onInterrupt(e)

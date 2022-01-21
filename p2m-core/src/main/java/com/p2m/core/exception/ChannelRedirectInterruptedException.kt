@@ -1,5 +1,6 @@
 package com.p2m.core.exception
 
-import com.p2m.core.channel.Channel
+import com.p2m.core.channel.ChannelRedirectionMode
+import com.p2m.core.channel.RecoverableChannel
 
-class ChannelRedirectInterruptedException(val redirectChannel: Channel, message:String, cause: Throwable? = null): Exception(message, cause)
+class ChannelRedirectInterruptedException constructor(val mode: ChannelRedirectionMode, val recoverableChannel: RecoverableChannel): Exception()

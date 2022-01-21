@@ -6,11 +6,9 @@ internal abstract class Node<N : Node<N>> {
     abstract val name: String
     abstract val isTop: Boolean
 
-    // 被依赖
     var byDependDegree: Int = 0
     val byDependNodes: HashSet<N> = HashSet()
 
-    // 依赖
     var dependDegree: Int = 0
     val dependNodes: HashSet<N> = HashSet()
 

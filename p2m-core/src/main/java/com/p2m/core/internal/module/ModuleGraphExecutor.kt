@@ -1,6 +1,5 @@
 package com.p2m.core.internal.module
 
-import android.os.SystemClock
 import com.p2m.core.app.App
 import com.p2m.core.internal.execution.BeginDirection
 import com.p2m.core.internal.execution.TagRunnable
@@ -8,9 +7,7 @@ import com.p2m.core.internal.graph.AbsGraphExecutor
 import com.p2m.core.internal.graph.GraphThreadPoolExecutor
 import com.p2m.core.internal.graph.Stage
 import com.p2m.core.internal.graph.Node.State
-import com.p2m.core.internal.log.logE
 import com.p2m.core.internal.log.logI
-import com.p2m.core.internal.log.logW
 import com.p2m.core.internal.module.task.TaskOutputProviderImplForModule
 import com.p2m.core.internal.module.task.TaskGraph
 import com.p2m.core.internal.module.task.TaskGraphExecutor
@@ -23,10 +20,6 @@ internal class ModuleGraphExecutor(
     private val executingModuleProvider: ThreadLocal<SafeModuleApiProvider>,
     direction: BeginDirection
 ) : AbsGraphExecutor<Class<out Module<*>>, ModuleNode, ModuleGraph>(direction) {
-
-    companion object {
-        private const val EVALUATING_TIMEOUT = 10L
-    }
 
     private val executor: ExecutorService = GraphThreadPoolExecutor()
     override val messageQueue: BlockingQueue<Runnable> = ArrayBlockingQueue(graph.moduleSize)
@@ -45,12 +38,12 @@ internal class ModuleGraphExecutor(
 
                 // Executing
                 node.executing()
-                postTask(Runnable {
+                executeTask {
                     // Completed
                     node.markSelfAvailable()
                     node.executed()
                     onDependsNodeComplete()
-                })
+                }
             })
         }
     }

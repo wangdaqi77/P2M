@@ -2,9 +2,9 @@ package com.p2m.core.launcher
 
 import android.content.Context
 import androidx.annotation.WorkerThread
+import com.p2m.annotation.module.api.LaunchActivityInterceptor
 import com.p2m.core.channel.*
 import com.p2m.core.internal._P2M
-import com.p2m.core.internal.log.logW
 import kotlin.reflect.KClass
 
 class LaunchActivityChannel internal constructor(
@@ -12,51 +12,23 @@ class LaunchActivityChannel internal constructor(
     interceptorService: InterceptorService,
     channelBlock: ChannelBlock
 ) : InterruptibleChannel(launcher, interceptorService, channelBlock) {
-    private val interceptors = arrayListOf<IInterceptor>()
-    internal var recoverableChannel: RecoverableLaunchActivityChannel? = null
-
-    init {
-        onPrepareRedirect =  { redirectChannel, processingInterceptor, unprocessedInterceptors ->
-            if (redirectChannel is LaunchActivityChannel) {
-                redirectChannel.recoverableChannel =
-                    RecoverableLaunchActivityChannel(
-                        this,
-                        redirectChannel,
-                        processingInterceptor,
-                        unprocessedInterceptors
-                    )
-            } else {
-                logW("Not support type: ${redirectChannel::class.java.name}")
+    companion object {
+        internal fun create(activityLauncher: ActivityLauncher<*, *>, channelBlock: (channel: LaunchActivityChannel) -> Unit) =
+            LaunchActivityChannel(activityLauncher, _P2M.interceptorService) {
+                _P2M.mainExecutor.executeTask {
+                    channelBlock(it as LaunchActivityChannel)
+                }
             }
-        }
     }
 
-    override fun navigationCallback(navigationCallback: NavigationCallback): LaunchActivityChannel {
-        return super.navigationCallback(navigationCallback) as LaunchActivityChannel
-    }
-
-    override fun onStarted(onStarted: (channel: Channel) -> Unit): LaunchActivityChannel {
-        return super.onStarted(onStarted) as LaunchActivityChannel
-    }
-
-    override fun onFailure(onFailure: (channel: Channel) -> Unit): LaunchActivityChannel {
-        return super.onFailure(onFailure) as LaunchActivityChannel
-    }
-
-    override fun onCompleted(onCompleted: (channel: Channel) -> Unit): LaunchActivityChannel {
-        return super.onCompleted(onCompleted) as LaunchActivityChannel
-    }
-
-    override fun onRedirect(onRedirect: (newChannel: Channel) -> Unit): LaunchActivityChannel {
-        return super.onRedirect(onRedirect) as LaunchActivityChannel
-    }
-
-    override fun onInterrupt(onInterrupt: (channel: Channel, e: Throwable?) -> Unit): LaunchActivityChannel {
-        return super.onInterrupt(onInterrupt) as LaunchActivityChannel
-    }
+    private var interceptors :ArrayList<IInterceptor>? = null
 
     fun addInterceptorBefore(interceptorClass: KClass<out ILaunchActivityInterceptor>): LaunchActivityChannel {
         checkImmutable()
+
+        val interceptors = this.interceptors ?:  arrayListOf<IInterceptor>().also{
+            this.interceptors = it
+        }
         val interceptor = _P2M.interceptorContainer.get(interceptorClass)
         interceptors.add(0, interceptor)
         return this
@@ -64,29 +36,30 @@ class LaunchActivityChannel internal constructor(
 
     fun addInterceptorAfter(interceptorClass: KClass<out ILaunchActivityInterceptor>): LaunchActivityChannel {
         checkImmutable()
+
+        val interceptors = this.interceptors ?:  arrayListOf<IInterceptor>().also{
+            this.interceptors = it
+        }
         val interceptor = _P2M.interceptorContainer.get(interceptorClass)
         interceptors.add(interceptor)
         return this
     }
 
-    override fun timeout(timeout: Long): LaunchActivityChannel {
-        return super.timeout(timeout) as LaunchActivityChannel
-    }
-
-    override fun redirectionMode(mode: ChannelRedirectionMode): LaunchActivityChannel {
-        return super.redirectionMode(mode) as LaunchActivityChannel
-    }
-
     /**
      * Call [channelBlock] when the channel is not interrupted and redirected.
      *
-     * If it is redirected, will wait for the redirected `activity` to close
-     * and restart the [navigation], you also can disable this feature
-     * by calling [restoreMode].
+     * If call [LaunchActivityInterceptorCallback.onRedirect] in a interceptor,
+     * will select continue to redirect or interrupted according to different [redirectionMode].
+     *
+     * @see ILaunchActivityInterceptor - interceptor
+     * @see LaunchActivityInterceptorCallback - callback
+     * @see LaunchActivityInterceptor -  annotation for interceptor
+     * @see ChannelRedirectionMode -  redirection behavior
      */
     override fun navigation(navigationCallback: NavigationCallback?) {
         if (!immutable) {
-            interceptors(interceptors)
+            interceptors?.run { interceptors(this) }
+            interceptors = null
         }
         super.navigation(navigationCallback)
     }
@@ -146,16 +119,5 @@ private class LaunchActivityInterceptorDelegate(private val real: ILaunchActivit
         } else {
             callback.onContinue()
         }
-    }
-}
-
-class RecoverableLaunchActivityChannel internal constructor(
-    private val channel: LaunchActivityChannel,
-    private val redirectChannel: LaunchActivityChannel,
-    private val processingInterceptor: IInterceptor,
-    private val unprocessedInterceptors: ArrayList<IInterceptor>
-) {
-    fun tryRestoreNavigation() {
-        channel.recoverNavigation(redirectChannel, processingInterceptor, unprocessedInterceptors)
     }
 }

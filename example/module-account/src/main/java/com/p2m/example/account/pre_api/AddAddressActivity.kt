@@ -19,7 +19,10 @@ import java.util.*
 /**
  * 添加收货地址Activity
  */
-@ApiLauncher(launcherName = "AddAddress")
+@ApiLauncher(
+    launcherName = "AddAddress",
+    activityResultContract = SimpleBooleanResultContract::class
+)
 class AddAddressActivity : AppCompatActivity() {
     private var loading: ProgressBar? = null
     private var confirm: Button? = null
@@ -64,7 +67,7 @@ class AddAddressActivity : AppCompatActivity() {
                 mutable().loginInfo.setValue(this)
             }
         }
-
+        SimpleBooleanResultContract.makeSuccess(this)
         finish()
     }
 

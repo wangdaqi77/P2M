@@ -42,7 +42,11 @@ class MainActivity : AppCompatActivity() {
             .observe(this, Observer { loginInfo ->
                 findViewById<TextView>(R.id.main_content).apply {
                     text = """
-                        Welcome ${loginInfo?.userName} ~
+                        用户名:${loginInfo?.userName}
+                        
+                        手机号:${loginInfo?.phone}
+                        
+                        收货地址:${loginInfo?.address}
                     """.trimIndent()
                 }
             })
@@ -59,11 +63,8 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.main_btn_mall).setOnClickListener {
             P2M.apiOf(Main::class.java)
                 .launcher
-                .activityOfMall
-                .launchChannel { intent ->
-                    startActivity(intent)
-                }
-                .redirectionMode(ChannelRedirectionMode.CONTINUOUS_AND_RECOVER_TRY)
+                .activityOfInterceptor
+                .launchChannel(::startActivity)
                 .navigation()
         }
 

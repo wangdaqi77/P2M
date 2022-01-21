@@ -4,6 +4,8 @@ internal interface Executor{
 
     fun loop()
 
+    fun executeTask(runnable: Runnable)
+
     fun postTask(runnable: Runnable)
 
     fun postTaskDelay(ms:Long, runnable: Runnable)

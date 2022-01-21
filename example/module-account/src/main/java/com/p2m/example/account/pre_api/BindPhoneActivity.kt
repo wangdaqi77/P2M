@@ -19,7 +19,10 @@ import java.util.*
 /**
  * 绑定手机号Activity
  */
-@ApiLauncher(launcherName = "BindPhone")
+@ApiLauncher(
+    launcherName = "BindPhone",
+    activityResultContract = SimpleBooleanResultContract::class
+)
 class BindPhoneActivity : AppCompatActivity() {
     private var loading: ProgressBar? = null
     private var confirm: Button? = null
@@ -64,7 +67,7 @@ class BindPhoneActivity : AppCompatActivity() {
                 mutable().loginInfo.setValue(this)
             }
         }
-
+        SimpleBooleanResultContract.makeSuccess(this)
         finish()
     }
 

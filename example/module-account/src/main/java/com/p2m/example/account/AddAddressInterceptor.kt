@@ -24,7 +24,9 @@ class AddAddressInterceptor : ILaunchActivityInterceptor {
         try {
             val account = P2M.apiOf(Account::class.java)
             val address = account.event.loginInfo.getValue()?.address
-            if (address.isNullOrEmpty()) {
+            val noAdd = address.isNullOrEmpty()
+            if (noAdd) {
+                // 未添加
                 callback.onRedirect(
                     redirectChannel = account.launcher
                         .activityOfAddAddress
@@ -33,10 +35,11 @@ class AddAddressInterceptor : ILaunchActivityInterceptor {
                         }
                 )
             } else {
+                // 添加过
                 callback.onContinue()
             }
-
         } catch (e: Throwable) {
+            // 中断
             callback.onInterrupt(e)
         }
     }

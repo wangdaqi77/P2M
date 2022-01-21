@@ -1,17 +1,23 @@
 package com.p2m.core.internal.execution
 
 import android.os.Handler
-import android.os.HandlerThread
 import android.os.Looper
+import com.p2m.core.internal.log.logW
 
 internal class InternalMainExecutor : Executor {
     private val handler by lazy { Handler(Looper.getMainLooper()) }
 
-    init {
-        loop()
+    override fun loop() {
+        logW("disallow in main thread")
     }
 
-    override fun loop() {}
+    override fun executeTask(runnable: Runnable) {
+        if (Thread.currentThread() === Looper.getMainLooper().thread) {
+            runnable.run()
+        } else {
+            postTask(runnable)
+        }
+    }
 
     override fun postTask(runnable: Runnable) {
         handler.post(runnable)
@@ -25,5 +31,7 @@ internal class InternalMainExecutor : Executor {
         handler.removeCallbacks(runnable)
     }
 
-    override fun quitLoop(runnable: Runnable?) {}
+    override fun quitLoop(runnable: Runnable?) {
+        logW("disallow in main thread")
+    }
 }

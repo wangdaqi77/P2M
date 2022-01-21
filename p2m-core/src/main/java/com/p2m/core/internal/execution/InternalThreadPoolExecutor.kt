@@ -1,22 +1,22 @@
-package com.p2m.core.internal.graph
+package com.p2m.core.internal.execution
 
-import java.util.concurrent.SynchronousQueue
-import java.util.concurrent.ThreadFactory
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.max
+import kotlin.math.min
 
-internal class GraphThreadPoolExecutor : ThreadPoolExecutor(
-    0,
-    Int.MAX_VALUE,
+internal class InternalThreadPoolExecutor : ThreadPoolExecutor(
+    CORE_SIZE,
+    CORE_SIZE,
     10,
-    TimeUnit.MILLISECONDS,
-    SynchronousQueue(),
+    TimeUnit.SECONDS,
+    LinkedBlockingQueue(),
     object : ThreadFactory {
-        private val THREAD_NAME_PREFIX = "p2m_graph"
+        private val THREAD_NAME_PREFIX = "p2m_internal"
         private val threadId = AtomicInteger(0)
 
         override fun newThread(r: Runnable): Thread {
+            Runtime.getRuntime().availableProcessors()
             val t = Thread(r)
             t.isDaemon = false
             t.priority = Thread.NORM_PRIORITY
@@ -25,6 +25,11 @@ internal class GraphThreadPoolExecutor : ThreadPoolExecutor(
         }
     }
 ) {
+
+    companion object {
+        private val CORE_SIZE = min(4, max(2, Runtime.getRuntime().availableProcessors() + 1))
+    }
+
     override fun beforeExecute(t: Thread?, r: Runnable) {
         super.beforeExecute(t, r)
 //        if (r is TagRunnable) {

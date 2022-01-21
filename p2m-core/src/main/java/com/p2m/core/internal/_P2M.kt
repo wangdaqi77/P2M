@@ -6,14 +6,16 @@ import android.content.Intent
 import android.os.SystemClock
 import androidx.annotation.WorkerThread
 import com.p2m.core.app.App
+import com.p2m.core.channel.InterceptorService
 import com.p2m.core.launcher.LaunchActivityChannel
 import com.p2m.core.config.P2MConfigManager
 import com.p2m.core.internal.channel.ChannelInterceptorContainer
+import com.p2m.core.internal.channel.InterceptorServiceDefault
 import com.p2m.core.internal.launcher.LaunchActivityHelper
 import com.p2m.core.internal.config.InternalP2MConfigManager
 import com.p2m.core.internal.execution.Executor
-import com.p2m.core.internal.execution.InternalExecutor
 import com.p2m.core.internal.execution.InternalMainExecutor
+import com.p2m.core.internal.execution.InternalThreadPoolExecutor
 import com.p2m.core.internal.log.logE
 import com.p2m.core.internal.module.*
 import com.p2m.core.internal.module.DefaultModuleFactory
@@ -23,15 +25,17 @@ import com.p2m.core.internal.module.ManifestModuleInfoFinder
 import com.p2m.core.internal.module.ModuleContainerDefault
 import com.p2m.core.internal.module.deriver.InternalDriver
 import com.p2m.core.module.*
+import java.util.concurrent.ExecutorService
 import kotlin.collections.ArrayList
 
 @SuppressLint("StaticFieldLeak")
 internal object _P2M : ModuleApiProvider, ModuleVisitor {
     internal lateinit var internalContext : Context
-    internal val executor: Executor = InternalExecutor()
-    internal val mainExecutor: Executor = InternalMainExecutor()
     internal val configManager: P2MConfigManager = InternalP2MConfigManager()
-    internal val launchActivityHelper = LaunchActivityHelper()
+    internal val executor : ExecutorService by lazy(LazyThreadSafetyMode.NONE) { InternalThreadPoolExecutor() }
+    internal val mainExecutor: Executor by lazy(LazyThreadSafetyMode.NONE) { InternalMainExecutor() }
+    internal val interceptorService: InterceptorService by lazy(LazyThreadSafetyMode.NONE) { InterceptorServiceDefault(executor) }
+    internal val launchActivityHelper by lazy(LazyThreadSafetyMode.NONE) { LaunchActivityHelper() }
     internal val interceptorContainer = ChannelInterceptorContainer()
     private val moduleContainer = ModuleContainerDefault()
     private lateinit var driver: InternalDriver
@@ -50,7 +54,7 @@ internal object _P2M : ModuleApiProvider, ModuleVisitor {
         var ideaStartTime = 0L
         val app = App()
             .onEvaluate {
-                launchActivityHelper.init(context, executor)
+                launchActivityHelper.init(context)
                 ideaStartTime = SystemClock.uptimeMillis()
                 onIdea?.invoke()
             }
@@ -99,8 +103,8 @@ internal object _P2M : ModuleApiProvider, ModuleVisitor {
         return module.api as MODULE_API
     }
 
-    internal fun onLaunchActivityNavigationWillCompleted(channel: LaunchActivityChannel, intent: Intent) {
-        launchActivityHelper.onLaunchActivityNavigationWillCompleted(channel, intent)
+    internal fun onLaunchActivityNavigationCompletedBefore(channel: LaunchActivityChannel, intent: Intent) {
+        launchActivityHelper.onLaunchActivityNavigationCompletedBefore(channel, intent)
     }
 
     override fun visit(module: Module<*>) {

@@ -6,7 +6,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
 import androidx.fragment.app.Fragment
 import com.p2m.annotation.module.api.ApiLauncher
-import com.p2m.core.channel.Channel
 import com.p2m.core.launcher.LaunchActivityChannel
 import com.p2m.core.internal._P2M
 import com.p2m.core.launcher.*
@@ -14,7 +13,7 @@ import kotlin.reflect.KClass
 
 internal class InternalActivityLauncher<I, O>(
     private val clazz: Class<*>,
-    internal val annotatedInterceptorClasses: Array<out KClass<out ILaunchActivityInterceptor>>,
+    private val annotatedInterceptorClasses: Array<out KClass<out ILaunchActivityInterceptor>>,
     private val createActivityResultContractBlock: () -> ActivityResultContractCompat<I, O>
 ) : ActivityLauncher<I, O> {
 
@@ -31,8 +30,8 @@ internal class InternalActivityLauncher<I, O>(
 
     override fun launchChannel(launchBlock: LaunchActivityBlock): LaunchActivityChannel {
         val intent = createIntent()
-        return Channel.launchActivity(this) { channel ->
-            _P2M.onLaunchActivityNavigationWillCompleted(channel, intent)
+        return LaunchActivityChannel.create(this) { channel ->
+            _P2M.onLaunchActivityNavigationCompletedBefore(channel, intent)
             launchBlock(intent)
         }.also(::addAnnotatedInterceptor)
     }

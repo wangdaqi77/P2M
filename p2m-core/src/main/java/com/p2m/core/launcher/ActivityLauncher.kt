@@ -10,7 +10,6 @@ import androidx.activity.result.contract.ActivityResultContract
 import androidx.core.app.ActivityOptionsCompat
 import androidx.fragment.app.Fragment
 import com.p2m.annotation.module.api.ApiLauncher
-import com.p2m.core.channel.Channel
 import com.p2m.core.channel.IInterceptor
 import com.p2m.core.internal._P2M
 import com.p2m.core.internal.launcher.InternalActivityLauncher
@@ -137,10 +136,10 @@ internal class InternalActivityResultLauncherCompat<I, O>(
 ) : ActivityResultLauncherCompat<I, O> {
 
     override fun launchChannel(options: ActivityOptionsCompat?, inputBlock: () -> I) =
-        Channel.launchActivity(activityLauncher) { channel ->
-            getContract().onCreateIntent { intent: Intent->
+        LaunchActivityChannel.create(activityLauncher) { channel ->
+            getContract().onCreateIntent = { intent: Intent ->
                 // after `activityResultLauncher.launch(inputBlock(), options)`
-                _P2M.onLaunchActivityNavigationWillCompleted(channel, intent)
+                _P2M.onLaunchActivityNavigationCompletedBefore(channel, intent)
             }
             activityResultLauncher.launch(inputBlock(), options)
         }.also(activityLauncher::addAnnotatedInterceptor)
@@ -187,10 +186,6 @@ abstract class ActivityResultContractCompat<I, O> :
 
     final override fun parseResult(resultCode: Int, intent: Intent?): ActivityResultCompat<O> =
         ActivityResultCompat(resultCode, outputFromResultIntent(resultCode, intent))
-
-    internal fun onCreateIntent(onCreateIntent: (Intent) -> Unit) {
-        this.onCreateIntent = onCreateIntent
-    }
 }
 
 class DefaultActivityResultContractCompat : ActivityResultContractCompat<Intent, Intent>() {

@@ -6,11 +6,10 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.SparseArray
-import com.p2m.core.channel.InterceptorService
-import com.p2m.core.channel.InterceptorServiceDefault
 import com.p2m.core.launcher.LaunchActivityChannel
-import com.p2m.core.launcher.RecoverableLaunchActivityChannel
+import com.p2m.core.channel.RecoverableChannel
 import com.p2m.core.internal.execution.Executor
+import com.p2m.core.internal.execution.InternalExecutor
 import com.p2m.core.internal.execution.TagRunnable
 import com.p2m.core.internal.log.logE
 import com.p2m.core.internal.log.logW
@@ -19,33 +18,32 @@ import java.util.concurrent.atomic.AtomicInteger
 internal class LaunchActivityHelper : Application.ActivityLifecycleCallbacks {
     companion object {
         private const val EXT_ID = "Key_RecoverableChannelHelper_RecoverableChannel"
-        private const val DISCARD_TIMEOUT = 20_000L
+        private const val DISCARD_TIMEOUT = 60_000L
         private const val ID_NO_SET = 0
     }
 
     private var initialized = false
     private val idFactory = AtomicInteger(ID_NO_SET)
-    private val table = SparseArray<RecoverableLaunchActivityChannel>()
+    private val table = SparseArray<RecoverableChannel>()
     private val timeoutRunnable = SparseArray<TagRunnable>()
-    private lateinit var executor: Executor
-    internal lateinit var interceptorService : InterceptorService
+    private val executor: Executor by lazy(LazyThreadSafetyMode.NONE) {
+        InternalExecutor()
+    }
 
-    fun init(context: Context, executor: Executor) {
+    fun init(context: Context) {
         val application = context.applicationContext as Application
         application.registerActivityLifecycleCallbacks(this)
-        this.executor = executor
-        interceptorService = InterceptorServiceDefault()
         initialized = true
     }
 
-    internal fun onLaunchActivityNavigationWillCompleted(channel: LaunchActivityChannel, intent: Intent) {
+    internal fun onLaunchActivityNavigationCompletedBefore(channel: LaunchActivityChannel, intent: Intent) {
         if (channel.isRedirectChannel) {
-            channel.recoverableChannel?.also { onLaunchActivityNavigationWillCompleted(intent, it) }
+            channel.recoverableChannel?.also { onLaunchActivityNavigationCompletedBefore(intent, it) }
                 ?: logE("unknown error.")
         }
     }
 
-    private fun onLaunchActivityNavigationWillCompleted(intent: Intent, recoverableChannel: RecoverableLaunchActivityChannel) {
+    private fun onLaunchActivityNavigationCompletedBefore(intent: Intent, recoverableChannel: RecoverableChannel) {
         if (!initialized) {
             logE("please call `init()` before.")
             return
@@ -60,8 +58,17 @@ internal class LaunchActivityHelper : Application.ActivityLifecycleCallbacks {
         }.also { timeoutRunnable.put(id, it) })
     }
 
-    private fun tryRestore(id: Int) {
-        table[id]?.tryRestoreNavigation()
+    private fun Activity.saveRecoverableChannel() {
+        recoverableChannelIdIfFind { id ->
+            timeoutRunnable[id]?.also(executor::cancelTask)
+        }
+    }
+
+    private fun Activity.recoverChannel() {
+        recoverableChannelIdIfFind{ id ->
+            table[id]?.recoverNavigation()
+            table.remove(id)
+        }
     }
 
     private inline fun Activity.recoverableChannelIdIfFind(onFound: (Int) -> Unit) {
@@ -71,9 +78,7 @@ internal class LaunchActivityHelper : Application.ActivityLifecycleCallbacks {
     }
 
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-        activity.recoverableChannelIdIfFind { id ->
-            timeoutRunnable[id]?.also(executor::cancelTask)
-        }
+        activity.saveRecoverableChannel()
     }
 
     override fun onActivityStarted(activity: Activity) { }
@@ -82,10 +87,7 @@ internal class LaunchActivityHelper : Application.ActivityLifecycleCallbacks {
 
     override fun onActivityPaused(activity: Activity) {
         if (activity.isFinishing) {
-            activity.recoverableChannelIdIfFind{ id ->
-                tryRestore(id)
-                table.remove(id)
-            }
+            activity.recoverChannel()
         }
     }
 
@@ -93,7 +95,5 @@ internal class LaunchActivityHelper : Application.ActivityLifecycleCallbacks {
 
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) { }
 
-    override fun onActivityDestroyed(activity: Activity) {
-
-    }
+    override fun onActivityDestroyed(activity: Activity) { }
 }

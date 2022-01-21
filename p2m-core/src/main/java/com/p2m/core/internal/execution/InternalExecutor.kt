@@ -15,6 +15,14 @@ internal class InternalExecutor : Executor {
         handlerThread.start()
     }
 
+    override fun executeTask(runnable: Runnable) {
+        if (Thread.currentThread() === handlerThread) {
+            runnable.run()
+        } else {
+            postTask(runnable)
+        }
+    }
+
     override fun postTask(runnable: Runnable) {
         handler.post(runnable)
     }

@@ -1,56 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#0099cc"
+    android:orientation="vertical"
     tools:context="com.p2m.example.main.pre_api.MainActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="【event】observe - 用户信息："
+        android:textColor="#FFF"
+        android:textSize="22sp"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/main_content"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:keepScreenOn="true"
-        android:textColor="#33b5e5"
-        android:textSize="50sp"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="50dp"
+        android:textColor="#FFF"
+        android:textSize="20sp"
         android:textStyle="bold" />
 
-    <FrameLayout
+
+    <Button
+        android:id="@+id/main_btn_modify"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
+        android:layout_height="wrap_content"
+        android:text="【launcher】 Result Api示例 - 更改用户名"
+        android:textAllCaps="false"
+        android:textSize="16sp" />
 
-        <LinearLayout
-            android:id="@+id/fullscreen_content_controls"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal"
-            android:orientation="vertical"
-            tools:ignore="UselessParent">
+    <Button
+        android:id="@+id/main_btn_mall"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="【launcher】拦截器相关示例"
+        android:textAllCaps="false"
+        android:textSize="16sp" />
 
-            <Button
-                android:id="@+id/main_btn_modify"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:text="Result Api示例：更改用户名" />
+    <Button
+        android:id="@+id/main_btn_logout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="【service】退出登录"
+        android:textAllCaps="false"
+        android:textSize="16sp" />
 
-            <Button
-                android:id="@+id/main_btn_mall"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:text="拦截器示例" />
-
-            <Button
-                android:id="@+id/main_btn_logout"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:text="退出登录" />
-
-        </LinearLayout>
-    </FrameLayout>
-
-</FrameLayout>
+</LinearLayout>

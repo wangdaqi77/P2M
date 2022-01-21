@@ -44,7 +44,7 @@
         android:layout_marginEnd="48dp"
         android:layout_marginBottom="64dp"
         android:enabled="false"
-        android:text="绑定"
+        android:text="添加"
         app:layout_constraintTop_toBottomOf="@+id/et_address"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
