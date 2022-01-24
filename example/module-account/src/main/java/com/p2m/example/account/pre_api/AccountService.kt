@@ -55,21 +55,4 @@ class AccountService{
             }
     }
 
-    /**
-     * 删除收货地址并更新缓存，之后将会发送一个事件
-     */
-    fun deleteAddress(context: Context) {
-        P2M.apiOf(Account::class.java)
-            .event
-            .mutable()
-            .loginInfo
-            .run {
-                getValue()
-                    ?.apply {
-                        address = null
-                        UserDiskCache(context).saveLoginUserInfo(this)
-                        postValue(this)
-                    }
-            }
-    }
 }

@@ -7,6 +7,5 @@ class LoginUserInfo {
     var userId: String? = null
     var userName: String? = null
     var phone: String? = null
-    var address: String? = null
 }
 

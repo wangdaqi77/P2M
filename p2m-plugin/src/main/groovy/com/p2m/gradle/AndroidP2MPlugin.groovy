@@ -177,7 +177,7 @@ class AndroidP2MPlugin implements Plugin<Settings> {
 
     private static def dependencyP2MProjectForAllApplyAndroidLibraryPluginProject(Project rootProject) {
         rootProject.allprojects.each { project ->
-            project.beforeEvaluate {
+            project.afterEvaluate {
                 if (project.name != Constant.P2M_NAME_API && project.plugins.hasPlugin(Constant.PLUGIN_ID_ANDROID_LIBRARY)) {
                     project.dependencies.add("compileOnly", project._p2mApi())
                 }

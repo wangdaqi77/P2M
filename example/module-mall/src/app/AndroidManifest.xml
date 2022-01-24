@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.p2m.example.mall">
+
+    <!--1. 指定自定义Application-->
+    <application
+        android:label="Mall模块"
+        android:name="com.p2m.example.mall.MallApp"
+        >
+
+        <!--2.指定启动Activity-->
+        <activity android:name="com.p2m.example.mall.ui.LauncherActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

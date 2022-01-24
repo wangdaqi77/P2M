@@ -6,7 +6,6 @@ import com.p2m.core.P2M
 import com.p2m.core.launcher.ILaunchActivityInterceptor
 import com.p2m.core.launcher.LaunchActivityInterceptorCallback
 import com.p2m.example.account.p2m.api.Account
-import com.p2m.example.account.pre_api.SimpleBooleanResultContract
 
 /**
  * 添加绑定手机号拦截器

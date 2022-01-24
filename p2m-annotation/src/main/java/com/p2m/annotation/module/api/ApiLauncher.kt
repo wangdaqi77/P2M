@@ -11,21 +11,21 @@ import kotlin.reflect.KClass
  *
  * Supports:
  *  * Activity - will generate a property for launch activity,
- *  that property name is activityOf[launcherName], also can use
+ *  that property name is `activityOf$launcherName`, also can use
  *  [activityResultContract] specify a result contract, also can
  *  use [launchActivityInterceptor] specify some interceptors.
  *  * Fragment - will generate a property for create fragment,
- *  that property name is fragmentOf[launcherName].
+ *  that property name is `fragmentOf$launcherName`.
  *  * Service  - will generate a property for launch service,
- *  that property name is serviceOf[launcherName].
+ *  that property name is `serviceOf$launcherName`.
  *
- * For example, has a `Activity` for login in `Account` module:
+ * For example, has a activity for login in `Account` module:
  * ```kotlin
  * @ApiLauncher("Login")
  * class LoginActivity : Activity()
  * ```
  *
- * then launch in `activity` of external module:
+ * then launch:
  * ```kotlin
  * P2M.apiOf(Account)
  *      .launcher
@@ -65,3 +65,7 @@ annotation class LaunchActivityInterceptor(val interceptorName: String) {
         }
     }
 }
+
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class LaunchActivityInterceptors(vararg val launchActivityInterceptor: KClass<out ILaunchActivityInterceptor>)

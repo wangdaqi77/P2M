@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.p2m.example.mall">
+
+    <application>
+        <activity
+            android:name="com.p2m.example.mall.pre_api.MallActivity"/>
+        <activity
+            android:name="com.p2m.example.mall.pre_api.AddAddressActivity"/>
+    </application>
+
+</manifest>

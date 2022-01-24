@@ -45,8 +45,6 @@ class MainActivity : AppCompatActivity() {
                         用户名:${loginInfo?.userName}
                         
                         手机号:${loginInfo?.phone}
-                        
-                        收货地址:${loginInfo?.address}
                     """.trimIndent()
                 }
             })

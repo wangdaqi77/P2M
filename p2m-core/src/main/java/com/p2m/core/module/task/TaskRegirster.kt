@@ -9,7 +9,7 @@ interface TaskRegister {
      * Register a task.
      *
      * @param clazz the task class.
-     * @param input [Task.input] of [clazz] instance set to the value.
+     * @param input input of task.
      */
     fun<INPUT> register(clazz: Class<out Task<INPUT, *>>, input: INPUT): TaskUnit
 

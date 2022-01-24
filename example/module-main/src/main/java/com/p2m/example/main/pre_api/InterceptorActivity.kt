@@ -19,6 +19,7 @@ import com.p2m.core.launcher.LaunchActivityChannel
 import com.p2m.example.main.R
 import com.p2m.example.account.p2m.api.Account
 import com.p2m.example.main.p2m.api.Main
+import com.p2m.example.mall.p2m.api.Mall
 
 @ApiLauncher("Interceptor")
 class InterceptorActivity : AppCompatActivity() {
@@ -60,7 +61,7 @@ class InterceptorActivity : AppCompatActivity() {
 
         // 删除收货地址
         findViewById<Button>(R.id.main_btn_reset_address).setOnClickListener {
-            P2M.apiOf(Account::class.java)
+            P2M.apiOf(Mall::class.java)
                 .service
                 .deleteAddress(this)
             printLog("删除收货地址")
@@ -68,7 +69,7 @@ class InterceptorActivity : AppCompatActivity() {
     }
 
     private fun testGreenChannel() {
-        P2M.apiOf(Main::class.java)
+        P2M.apiOf(Mall::class.java)
             .launcher
             .activityOfMall
             .launchChannel { intent ->
@@ -89,7 +90,7 @@ class InterceptorActivity : AppCompatActivity() {
     }
 
     private fun testRedirectionMode1() {
-        P2M.apiOf(Main::class.java)
+        P2M.apiOf(Mall::class.java)
             .launcher
             .activityOfMall
             .launchChannel(::startActivity)
@@ -111,7 +112,7 @@ class InterceptorActivity : AppCompatActivity() {
                         val recoverableChannel = e.recoverableChannel
                         val interruptedChannel = recoverableChannel.interruptedChannel as LaunchActivityChannel
                         val bindPhoneLauncher = P2M.apiOf(Account::class.java).launcher.activityOfBindPhone
-                        val addAddressLauncher = P2M.apiOf(Account::class.java).launcher.activityOfAddAddress
+                        val addAddressLauncher = P2M.apiOf(Mall::class.java).launcher.activityOfAddAddress
                         when(interruptedChannel.launcher) {
                             bindPhoneLauncher -> {
                                 AlertDialog.Builder(this@InterceptorActivity)
@@ -156,7 +157,7 @@ class InterceptorActivity : AppCompatActivity() {
     }
 
     private fun testRedirectionMode2() {
-        P2M.apiOf(Main::class.java)
+        P2M.apiOf(Mall::class.java)
             .launcher
             .activityOfMall
             .launchChannel(::startActivity)
@@ -181,7 +182,7 @@ class InterceptorActivity : AppCompatActivity() {
                     redirectChannel as LaunchActivityChannel
                     when (redirectChannel.launcher) {
                         P2M.apiOf(Account::class.java).launcher.activityOfBindPhone -> toast("需要绑定手机号~")
-                        P2M.apiOf(Account::class.java).launcher.activityOfAddAddress -> toast("需要添加收货地址~")
+                        P2M.apiOf(Mall::class.java).launcher.activityOfAddAddress -> toast("需要添加收货地址~")
                     }
                 }
 
@@ -190,7 +191,7 @@ class InterceptorActivity : AppCompatActivity() {
     }
 
     private fun testRedirectionMode3() {
-        P2M.apiOf(Main::class.java)
+        P2M.apiOf(Mall::class.java)
             .launcher
             .activityOfMall
             .launchChannel(::startActivity)
@@ -215,7 +216,7 @@ class InterceptorActivity : AppCompatActivity() {
                     redirectChannel as LaunchActivityChannel
                     when (redirectChannel.launcher) {
                         P2M.apiOf(Account::class.java).launcher.activityOfBindPhone -> toast("一定要先绑定手机号!")
-                        P2M.apiOf(Account::class.java).launcher.activityOfAddAddress -> toast("一定要先添加收货地址!")
+                        P2M.apiOf(Mall::class.java).launcher.activityOfAddAddress -> toast("一定要先添加收货地址!")
                     }
                 }
             })

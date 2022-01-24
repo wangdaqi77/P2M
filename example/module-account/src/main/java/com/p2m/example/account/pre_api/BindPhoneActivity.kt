@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
+import com.my.lib.common.SimpleBooleanResultContract
 import com.p2m.core.P2M
 import com.p2m.annotation.module.api.ApiLauncher
 import com.p2m.example.account.UserDiskCache
@@ -31,7 +32,7 @@ class BindPhoneActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.account_bind_phone)
+        setContentView(R.layout.account_activity_bind_phone)
         initView()
 
         confirm?.setOnClickListener {
