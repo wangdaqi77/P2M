@@ -37,7 +37,7 @@ interface AccountEvent{
      * 为了保证事件的安全性不推荐设置
      */
     @ApiEventField(eventOn = EventOn.MAIN, externalMutable = true)
-    val testMutableEventFromExternal: Int
+    val testExternalMutable: Int
 
     val testAPT:Int     // 这个字段没有被注解，因此它将被过滤
 }

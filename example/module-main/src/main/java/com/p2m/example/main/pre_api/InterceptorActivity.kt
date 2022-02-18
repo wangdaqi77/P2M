@@ -10,25 +10,42 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.p2m.core.P2M
 import com.p2m.annotation.module.api.ApiLauncher
-import com.p2m.core.channel.Channel
-import com.p2m.core.channel.ChannelRedirectionMode
-import com.p2m.core.channel.NavigationCallback
-import com.p2m.core.channel.SimpleNavigationCallback
-import com.p2m.core.exception.ChannelRedirectInterruptedException
+import com.p2m.core.channel.*
+import com.p2m.core.exception.ChannelInterruptedWhenRedirectException
 import com.p2m.core.launcher.LaunchActivityChannel
 import com.p2m.example.main.R
 import com.p2m.example.account.p2m.api.Account
-import com.p2m.example.main.p2m.api.Main
 import com.p2m.example.mall.p2m.api.Mall
 
 @ApiLauncher("Interceptor")
 class InterceptorActivity : AppCompatActivity() {
+
+    /*测试模式：CONSERVATIVE*/
+    private var recoverableChannelForTestCONSERVATIVE : RecoverableChannel? = null
+    private val bindPhoneResultLauncherForTestCONSERVATIVE = P2M.apiOf(Account::class.java).launcher
+        .activityOfBindPhone
+        .registerResultLauncher(this) { resultCode, _ ->
+            if (resultCode == RESULT_OK) {
+                // 成功恢复导航
+                printLog("成功绑定手机后 recoverNavigation()")
+                recoverableChannelForTestCONSERVATIVE?.recoverNavigation()
+            }
+        }
+    private val addAddressResultLauncherForTestCONSERVATIVE = P2M.apiOf(Mall::class.java).launcher
+        .activityOfAddAddress
+        .registerResultLauncher(this) { resultCode, _ ->
+            if (resultCode == RESULT_OK) {
+                // 成功恢复导航
+                printLog("成功添加收货地址后 recoverNavigation()")
+                recoverableChannelForTestCONSERVATIVE?.recoverNavigation()
+            }
+        }
+
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.main_activity_interceptor)
-
 
         // 绿色通道
         findViewById<Button>(R.id.main_btn).setOnClickListener {
@@ -98,7 +115,7 @@ class InterceptorActivity : AppCompatActivity() {
             .navigation(object : NavigationCallback {
                 override fun onStarted(channel: Channel) {
                     printLog("")
-                    printLog("跳转商城-拦截器重定向模式：ChannelRedirectionMode.CONSERVATIVE，行为：只要重定向就会中断")
+                    printLog("跳转商城-拦截器重定向模式：ChannelRedirectionMode.CONSERVATIVE，行为：只要重定向时就会中断触发[onInterrupt]，永远不会触发[onRedirect]")
                     printLog("onStarted()")
                 }
 
@@ -108,39 +125,52 @@ class InterceptorActivity : AppCompatActivity() {
 
                 override fun onInterrupt(channel: Channel, e: Throwable) {
                     printLog("onInterrupt(), message:${e.message}")
-                    if (e is ChannelRedirectInterruptedException) {
-                        val recoverableChannel = e.recoverableChannel
+                    if (e is ChannelInterruptedWhenRedirectException) {
+                        val recoverableChannel = e.recoverableChannel // 可恢复的通道
                         val interruptedChannel = recoverableChannel.interruptedChannel as LaunchActivityChannel
                         val bindPhoneLauncher = P2M.apiOf(Account::class.java).launcher.activityOfBindPhone
                         val addAddressLauncher = P2M.apiOf(Mall::class.java).launcher.activityOfAddAddress
                         when(interruptedChannel.launcher) {
                             bindPhoneLauncher -> {
+                                printLog("重定向到绑定手机界面时中断，提示需要绑定手机")
                                 AlertDialog.Builder(this@InterceptorActivity)
                                     .setTitle("跳转商城中断")
                                     .setMessage("请先绑定手机！")
                                     .setNegativeButton("取消") { dialog, _ ->
                                         dialog.dismiss()
+                                        printLog("取消")
                                     }
-                                    .setPositiveButton("好的") { dialog, _ ->
+                                    .setPositiveButton("绑定") { dialog, _ ->
                                         dialog.dismiss()
-                                        bindPhoneLauncher
-                                            .launchChannel(::startActivity)
+                                        printLog("启动绑定手机")
+
+                                        recoverableChannelForTestCONSERVATIVE = recoverableChannel
+                                        // ResultApi 启动绑定手机号
+                                        bindPhoneResultLauncherForTestCONSERVATIVE
+                                            .launchChannel { }
                                             .navigation()
                                     }
                                     .create()
                                     .show()
                             }
+
                             addAddressLauncher -> {
+                                printLog("重定向到添加收货地址界面时中断，提示需要添加收货地址")
                                 AlertDialog.Builder(this@InterceptorActivity)
                                     .setTitle("跳转商城中断")
                                     .setMessage("请先添加收货地址！")
                                     .setNegativeButton("取消") { dialog, _ ->
                                         dialog.dismiss()
+                                        printLog("取消")
                                     }
-                                    .setPositiveButton("好的") { dialog, _ ->
+                                    .setPositiveButton("添加") { dialog, _ ->
                                         dialog.dismiss()
-                                        addAddressLauncher
-                                            .launchChannel(::startActivity)
+                                        printLog("启动添加收货地址")
+
+                                        recoverableChannelForTestCONSERVATIVE = recoverableChannel
+                                        // ResultApi 启动添加收货地址
+                                        addAddressResultLauncherForTestCONSERVATIVE
+                                            .launchChannel{ }
                                             .navigation()
                                     }
                                     .create()
@@ -150,9 +180,7 @@ class InterceptorActivity : AppCompatActivity() {
                     }
                 }
 
-                override fun onRedirect(channel: Channel, redirectChannel: Channel) {
-                    printLog("onRedirect()")
-                }
+                override fun onRedirect(channel: Channel, redirectChannel: Channel) { }
             })
     }
 
@@ -165,7 +193,7 @@ class InterceptorActivity : AppCompatActivity() {
             .navigation(object : NavigationCallback {
                 override fun onStarted(channel: Channel) {
                     printLog("")
-                    printLog("跳转商城-拦截器重定向模式：ChannelRedirectionMode.FLEXIBLY，行为：可以重定向，但是如果在恢复导航时被同一个拦截器重定向到同一个Channel，则中断。")
+                    printLog("跳转商城-拦截器重定向模式：ChannelRedirectionMode.FLEXIBLY，行为：可以重定向，重定向时会触发[onRedirect]，但如果在恢复导航时被同一个拦截器重定向到同一个Channel时将会中断触发[onInterrupt]。")
                     printLog("onStarted()")
                 }
 
@@ -199,7 +227,7 @@ class InterceptorActivity : AppCompatActivity() {
             .navigation(object : NavigationCallback {
                 override fun onStarted(channel: Channel) {
                     printLog("")
-                    printLog("跳转商城-拦截器重定向模式：ChannelRedirectionMode.RADICAL，行为：重定向直到导航完成，不信你点返回试试。")
+                    printLog("跳转商城-拦截器重定向模式：ChannelRedirectionMode.RADICAL，行为：重定向直到导航完成，重定向时会触发[onRedirect]，可以在重定向的页面点返回测试。")
                     printLog("onStarted()")
                 }
 

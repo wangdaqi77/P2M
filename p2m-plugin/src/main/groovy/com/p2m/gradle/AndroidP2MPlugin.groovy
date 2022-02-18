@@ -42,7 +42,7 @@ class AndroidP2MPlugin implements Plugin<Settings> {
             void settingsEvaluated(Settings settings1) {
                 println("======P2M version:${Constant.P2M_VERSION}======")
 
-                loadDevEnvForDeveloper(settings)
+                loadEnv(settings)
 
                 evaluateModulesFromConfigExtensions()
 
@@ -322,7 +322,7 @@ class AndroidP2MPlugin implements Plugin<Settings> {
         }
     }
 
-    private def loadDevEnvForDeveloper(Settings settings) {
+    private def loadEnv(Settings settings) {
         def isDevEnv = false
         def useLocalRepoForP2MProject = false
         def localProperties = new Properties()

@@ -7,18 +7,18 @@ import com.p2m.core.launcher.DefaultActivityResultContractCompat
 import com.p2m.core.module.EmptyModuleEvent
 import com.p2m.core.module.EmptyModuleService
 import com.p2m.example.external.im.IMActivity
-import com.p2m.example.external.im.p2m.api.NoneModuleApi
-import com.p2m.example.external.im.p2m.api.NoneModuleLauncher
+import com.p2m.example.external.im.p2m.api.IMModuleApi
+import com.p2m.example.external.im.p2m.api.IMModuleLauncher
 
-public class _NoneModuleLauncher : NoneModuleLauncher {
+public class _IMModuleLauncher : IMModuleLauncher {
 
-  public override val activityOfIM: ActivityLauncher<Intent, Intent> by
+  public override val activityOfIM: ActivityLauncher<Unit, Intent> by
       ActivityLauncher.Delegate(IMActivity::class.java) { DefaultActivityResultContractCompat() }
 }
 
-public class _NoneModuleApi : NoneModuleApi {
-  public override val launcher: NoneModuleLauncher by lazy() {
-      _NoneModuleLauncher() }
+public class _IMModuleApi : IMModuleApi {
+  public override val launcher: IMModuleLauncher by lazy() {
+      _IMModuleLauncher() }
 
   public override val service: EmptyModuleService by lazy() { com.p2m.core.module.EmptyModuleService
       }

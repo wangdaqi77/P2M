@@ -6,7 +6,7 @@ import kotlin.reflect.KClass
 /**
  * A class uses this annotation will generate a launch property for launcher of `Api` area.
  *
- * Use `P2M.apiOf(${moduleName}::class.java).launcher` to get `launcher` instance,
+ * Use `P2M.apiOf(${moduleName}::class.java).launcher.${generatedProperty}` to get `launcher` instance,
  * that `moduleName` is defined in `settings.gradle`.
  *
  * Supports:
@@ -65,7 +65,3 @@ annotation class LaunchActivityInterceptor(val interceptorName: String) {
         }
     }
 }
-
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.RUNTIME)
-annotation class LaunchActivityInterceptors(vararg val launchActivityInterceptor: KClass<out ILaunchActivityInterceptor>)

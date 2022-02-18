@@ -7,6 +7,6 @@ import com.p2m.core.module.Module
  *
  * Use `P2M.apiOf(None)` to get instance of its api.
  *
- * @see NoneModuleApi - api.
+ * @see IMModuleApi - api.
  */
-public abstract class IM : Module<NoneModuleApi>()
+public abstract class IM : Module<IMModuleApi>()

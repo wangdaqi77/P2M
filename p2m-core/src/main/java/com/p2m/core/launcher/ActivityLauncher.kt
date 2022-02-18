@@ -188,9 +188,9 @@ abstract class ActivityResultContractCompat<I, O> :
         ActivityResultCompat(resultCode, outputFromResultIntent(resultCode, intent))
 }
 
-class DefaultActivityResultContractCompat : ActivityResultContractCompat<Intent, Intent>() {
+class DefaultActivityResultContractCompat : ActivityResultContractCompat<Unit, Intent>() {
 
-    override fun inputIntoCreatedIntent(input: Intent, intent: Intent) = Unit
+    override fun inputIntoCreatedIntent(input: Unit, intent: Intent) = Unit
 
     override fun outputFromResultIntent(resultCode: Int, intent: Intent?): Intent? = intent
 }

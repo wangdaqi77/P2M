@@ -23,7 +23,7 @@ class LaunchActivityChannel internal constructor(
 
     private var interceptors :ArrayList<IInterceptor>? = null
 
-    fun addInterceptorBefore(interceptorClass: KClass<out ILaunchActivityInterceptor>): LaunchActivityChannel {
+    fun addInterceptorLeft(interceptorClass: KClass<out ILaunchActivityInterceptor>): LaunchActivityChannel {
         checkImmutable()
 
         val interceptors = this.interceptors ?:  arrayListOf<IInterceptor>().also{

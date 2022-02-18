@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="【event】observe - 用户信息："
+        android:text="【event】用户信息："
         android:textColor="#FFF"
         android:textSize="22sp"
         android:textStyle="bold" />
@@ -30,7 +30,7 @@
         android:id="@+id/main_btn_modify"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="【launcher】 Result Api示例 - 更改用户名"
+        android:text="【launcher】更改用户名(Result Api示例)"
         android:textAllCaps="false"
         android:textSize="16sp" />
 
@@ -38,7 +38,7 @@
         android:id="@+id/main_btn_mall"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="【launcher】拦截器相关示例"
+        android:text="【launcher】跳转商城(拦截器示例)"
         android:textAllCaps="false"
         android:textSize="16sp" />
 

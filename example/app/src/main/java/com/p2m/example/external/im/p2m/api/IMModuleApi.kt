@@ -8,9 +8,9 @@ import com.p2m.core.module.ModuleApi
 import com.p2m.core.module.ModuleLauncher
 
 
-public interface NoneModuleLauncher : ModuleLauncher {
-  public val activityOfIM: ActivityLauncher<Intent, Intent>
+public interface IMModuleLauncher : ModuleLauncher {
+  public val activityOfIM: ActivityLauncher<Unit, Intent>
 }
 
 
-public interface NoneModuleApi : ModuleApi<NoneModuleLauncher, EmptyModuleService, EmptyModuleEvent>
+public interface IMModuleApi : ModuleApi<IMModuleLauncher, EmptyModuleService, EmptyModuleEvent>

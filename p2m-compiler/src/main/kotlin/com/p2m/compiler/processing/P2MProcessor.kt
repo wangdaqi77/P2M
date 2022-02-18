@@ -1,5 +1,6 @@
 package com.p2m.compiler.processing
 
+import android.content.Intent
 import com.google.auto.service.AutoService
 import com.p2m.annotation.module.ModuleInitializer
 import com.p2m.annotation.module.api.*
@@ -656,6 +657,8 @@ class P2MProcessor : BaseProcessor() {
         val fragmentTmV4 = elementUtils.getTypeElement(CLASS_FRAGMENT_V4).asType()
         val fragmentTmAndroidX = elementUtils.getTypeElement(CLASS_FRAGMENT_ANDROID_X).asType()
         val defaultActivityResultContractP2MCompatTm = elementUtils.getTypeElement("${PACKAGE_NAME_LAUNCHER}.${CLASS_DefaultActivityResultContractP2MCompat}").asType()
+
+        val Unit = ClassName.bestGuess("kotlin.Unit")
         val Intent = ClassName.bestGuess(CLASS_INTENT)
 
         val ActivityLauncher = ClassName(PACKAGE_NAME_LAUNCHER, CLASS_ActivityLauncher)
@@ -671,14 +674,10 @@ class P2MProcessor : BaseProcessor() {
         val activityResultContractTypeCache = mutableMapOf<String, String>()
         // 模块内部拦截器映射 key: originInterceptor  value: genResult
         val moduleInternalActivityInterceptorsCache = mutableMapOf<ClassName, GenResult>()
+        val interceptorsCacheFinal = mutableMapOf<Element, List<ClassName>?>()
 
-        // 接口
-        val apiPropertySpecs = elements.map { element ->
-            element as TypeElement
-            element.checkKotlinClass()
-
-            val tm = element.asType()
-            val className = element.className()
+        // 收集拦截器
+        elements.map { element ->
             findAnnotationValue(
                 element = element,
                 annotationClass = ApiLauncher::class.qualifiedName!!,
@@ -686,7 +685,7 @@ class P2MProcessor : BaseProcessor() {
                 expectedType = com.sun.tools.javac.util.List::class.java
             )?.takeIf { it.nonEmpty() }?.forEach {
                 if (it.toString() == "<error>") {
-                    throw IllegalArgumentException("Please use the interceptor declared inside the module, see @ApiLauncher(launchActivityInterceptor = ...) in $className")
+                    throw IllegalArgumentException("Please use the interceptor declared inside the module, see @ApiLauncher(launchActivityInterceptor = ...) in ${element.className()}")
                 }
 
                 val interceptorClassName = ClassName.bestGuess(it.toString().removeSuffix(".class"))
@@ -695,8 +694,41 @@ class P2MProcessor : BaseProcessor() {
                         moduleInternalActivityInterceptorsCache[interceptorClassName] =
                             interceptorsResultMap[interceptorOriginTypeElement]!!
                     }
+            }?.also {
+                val tm = element.asType()
+                val launcherAnnotation = element.getAnnotation(ApiLauncher::class.java)
+                val className = element.className()
+                ApiLauncher.checkName(launcherAnnotation, className.canonicalName)
+                if (typeUtils.isSubtype(tm, activityTm)) { // Activity
+                    try {
+                        val launchActivityInterceptors = launcherAnnotation.launchActivityInterceptor
+                        interceptorsCacheFinal[element] = launchActivityInterceptors
+                            .takeIf { it.isNotEmpty() }
+                            ?.map { kClass -> kClass.asClassName() }
+                            ?.map { moduleInternalActivityInterceptorsCache[it]?.apiClassName ?: it }
+                    } catch (e: Throwable) {
+                        // Attempt to access Class objects for TypeMirrors []
+                        val allowErrorPrefix = "Attempt to access Class objects for TypeMirrors "
+                        val message = e.message ?: throw e
+                        if (!message.startsWith(allowErrorPrefix)) throw e
+//                        mLogger.info("allow error: $message\r\n")
+                        interceptorsCacheFinal[element] = message.removePrefix(allowErrorPrefix)
+                            .removePrefix("[").removeSuffix("]")
+                            .takeIf { it.isNotEmpty() }
+                            ?.split(",")
+                            ?.map { name -> ClassName.bestGuess(name.trim()) }
+                            ?.map { moduleInternalActivityInterceptorsCache[it]?.apiClassName ?: it }
+                    }
+                }
             }
+        }
 
+        // 接口
+        val apiPropertySpecs = elements.map { element ->
+            element as TypeElement
+            element.checkKotlinClass()
+            val tm = element.asType()
+            val className = element.className()
             val launcherAnnotation = element.getAnnotation(ApiLauncher::class.java)
             val launcherName = launcherAnnotation.launcherName
             // activityResultContract
@@ -715,7 +747,7 @@ class P2MProcessor : BaseProcessor() {
                 val activityResultContractName = message.removePrefix(allowErrorPrefix)
                 if (activityResultContractName == defaultActivityResultContractP2MCompatTm.toString()) {
                     activityResultContractTypeCache[launcherName] = activityResultContractName
-                    activityResultContractTypeArgumentsCache[launcherName] = listOf(Intent, Intent)
+                    activityResultContractTypeArgumentsCache[launcherName] = listOf(Unit, Intent)
                 } else {
                     val customActivityResultContractElement = elementUtils.getTypeElement(activityResultContractName)
                     val customTypeSpec = customActivityResultContractElement.toTypeSpec()
@@ -741,6 +773,13 @@ class P2MProcessor : BaseProcessor() {
                         .mutable(false)
                         .apply {
                             elementUtils.getKDoc(element)?.apply { addKdoc(this) }
+                            interceptorsCacheFinal[element]?.apply {
+                                addKdoc("Specify interceptors:\n")
+                                forEach { interceptorClassName ->
+                                    addKdoc(" - [%T]\n", interceptorClassName)
+                                }
+                                addKdoc("\n")
+                            }
                             addKdoc("@see %T - origin.\n", className)
                             addKdoc("@see %L - activity result contract.", activityResultContractTypeCache[launcherName]!!)
                         }
@@ -799,62 +838,24 @@ class P2MProcessor : BaseProcessor() {
             ApiLauncher.checkName(launcherAnnotation, className.canonicalName)
             val builder =  when {
                 typeUtils.isSubtype(tm, activityTm) -> { // Activity
-                    /*
-                     * val activityOf$launcherName: ActivityLauncher<I, O> by lazy(ActivityLauncher.Delegate(XX::class.java, XX::class.java))
-                     */
-                    try {
-                        val launchActivityInterceptors = launcherAnnotation.launchActivityInterceptor
-                        val launchActivityInterceptorsStr = launchActivityInterceptors
-                            .takeIf { it.isNotEmpty() }
-                            ?.map { kClass -> kClass.asClassName() }
-                            ?.map { moduleInternalActivityInterceptorsCache[it]?.apiClassName ?: it }
+                    val launchActivityInterceptorsStr = interceptorsCacheFinal[element]
                             ?.joinToString(", ") { "${it.canonicalName}::class" }
                             ?: ""
-                        PropertySpec.builder(
-                            name = "activityOf$launcherName",
-                            type = ActivityLauncher.parameterizedBy(
-                                activityResultContractTypeArgumentsCache[launcherName]!!
-                            )
+                    PropertySpec.builder(
+                        name = "activityOf$launcherName",
+                        type = ActivityLauncher.parameterizedBy(
+                            activityResultContractTypeArgumentsCache[launcherName]!!
                         )
-                            .addModifiers(KModifier.OVERRIDE)
-                            .mutable(false)
-                            .delegate(
-                                "%T(%T::class.java, %L) { %L() }",
-                                ActivityLauncherDelegate,
-                                className,
-                                launchActivityInterceptorsStr,
-                                activityResultContractTypeCache[launcherName]!!
-                            )
-                    }catch (e: Throwable) {
-                        // Attempt to access Class objects for TypeMirrors []
-                        val allowErrorPrefix = "Attempt to access Class objects for TypeMirrors "
-                        val message = e.message ?: throw e
-                        if (!message.startsWith(allowErrorPrefix)) throw e
-//                        mLogger.info("allow error: $message\r\n")
-                        val launchActivityInterceptorsStr = message.removePrefix(allowErrorPrefix)
-                            .removePrefix("[").removeSuffix("]")
-                            .takeIf { it.isNotEmpty() }
-                            ?.split(",")
-                            ?.map { name -> ClassName.bestGuess(name.trim()) }
-                            ?.map { moduleInternalActivityInterceptorsCache[it]?.apiClassName ?: it }
-                            ?.joinToString(", ") { "${it.canonicalName}::class" }
-                            ?: ""
-                        PropertySpec.builder(
-                            name = "activityOf$launcherName",
-                            type = ActivityLauncher.parameterizedBy(
-                                activityResultContractTypeArgumentsCache[launcherName]!!
-                            )
+                    )
+                        .addModifiers(KModifier.OVERRIDE)
+                        .mutable(false)
+                        .delegate(
+                            "%T(%T::class.java, %L) { %L() }",
+                            ActivityLauncherDelegate,
+                            className,
+                            launchActivityInterceptorsStr,
+                            activityResultContractTypeCache[launcherName]!!
                         )
-                            .addModifiers(KModifier.OVERRIDE)
-                            .mutable(false)
-                            .delegate(
-                                "%T(%T::class.java, %L) { %L() }",
-                                ActivityLauncherDelegate,
-                                className,
-                                launchActivityInterceptorsStr,
-                                activityResultContractTypeCache[launcherName]!!
-                            )
-                    }
                 }
                 typeUtils.isSubtype(tm, fragmentTm)
                         || typeUtils.isSubtype(tm, fragmentTmV4)
@@ -899,7 +900,7 @@ class P2MProcessor : BaseProcessor() {
         }
 
         apiFileSpecBuilder.addType(apiTypeSpec.toBuilder().run {
-            addKdoc("A launcher class of $optionModuleName module.\n")
+            addKdoc("A launchers holder class of $optionModuleName module.\n")
             addKdoc("\n")
             addKdoc("Use `P2M.apiOf(${optionModuleName}).launcher` to get the instance.\n")
             build()
@@ -1058,7 +1059,7 @@ class P2MProcessor : BaseProcessor() {
         }
 
         apiFileSpecBuilder.addType(apiTypeSpec.toBuilder().run {
-            addKdoc("A service class of $optionModuleName module.\n")
+            addKdoc("A services holder class of $optionModuleName module.\n")
             addKdoc("\n")
             addKdoc("Use `P2M.apiOf(${optionModuleName}).service` to get the instance.\n")
             addKdoc("\n")
@@ -1293,7 +1294,7 @@ class P2MProcessor : BaseProcessor() {
             .build()
 
         apiFileSpecBuilder.addType(apiTypeSpec.toBuilder().run {
-            addKdoc("A event class of $optionModuleName module.\n")
+            addKdoc("A events holder class of $optionModuleName module.\n")
             addKdoc("\n")
             addKdoc("Use `P2M.apiOf(${optionModuleName}).event` to get the instance.\n")
             addKdoc("\n")

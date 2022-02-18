@@ -1,11 +1,9 @@
 package com.p2m.core.channel
 
-import com.p2m.core.exception.ChannelRedirectInterruptedException
+import com.p2m.core.exception.ChannelInterruptedWhenRedirectException
 import com.p2m.core.exception.ChannelClosedException
 import com.p2m.core.exception.P2MException
 import com.p2m.core.internal._P2M
-import com.p2m.core.internal.log.logE
-import com.p2m.core.internal.log.logW
 
 typealias ChannelBlock = (channel: Channel) -> Unit
 
@@ -47,16 +45,16 @@ enum class ChannelRedirectionMode {
      * Interrupt if redirect.
      *
      * Callback [NavigationCallback.onInterrupt] when interrupted,
-     * that exception type is [ChannelRedirectInterruptedException].
+     * that exception type is [ChannelInterruptedWhenRedirectException].
      */
     CONSERVATIVE,
 
     /**
-     * Interrupt if redirected to the same channel by the same interceptor
-     * when recover navigation.
+     * Allow redirects and auto recover, interrupt if redirected to
+     * the same channel by the same interceptor when recover navigation.
      *
      * Callback [NavigationCallback.onInterrupt] when interrupted,
-     * that exception type is [ChannelRedirectInterruptedException].
+     * that exception type is [ChannelInterruptedWhenRedirectException].
      */
     FLEXIBLY,
 
@@ -234,7 +232,7 @@ open class Channel internal constructor(
     }
 
     /**
-     * set redirect mode.
+     * Set up redirect mode, default is [ChannelRedirectionMode.FLEXIBLY].
      */
     protected open fun redirectionMode(mode: ChannelRedirectionMode): Channel {
         checkImmutable()
@@ -384,10 +382,10 @@ open class Channel internal constructor(
             )
             redirectChannel.recoverableChannel = recoverableChannel
             when (this.channel.redirectionMode) {
-                ChannelRedirectionMode.CONSERVATIVE -> onInterrupt(ChannelRedirectInterruptedException(ChannelRedirectionMode.CONSERVATIVE, recoverableChannel))
+                ChannelRedirectionMode.CONSERVATIVE -> onInterrupt(ChannelInterruptedWhenRedirectException(ChannelRedirectionMode.CONSERVATIVE, recoverableChannel))
                 ChannelRedirectionMode.FLEXIBLY -> {
                     if (this.lastInterruptedInterceptor === processingInterceptor &&  this.lastInterruptedChannel?.owner === redirectChannel.owner) {
-                        onInterrupt(ChannelRedirectInterruptedException(ChannelRedirectionMode.FLEXIBLY, recoverableChannel))
+                        onInterrupt(ChannelInterruptedWhenRedirectException(ChannelRedirectionMode.FLEXIBLY, recoverableChannel))
                         return
                     }
                     this.channel.redirectTo(redirectChannel)
