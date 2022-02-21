@@ -18,9 +18,12 @@
         <activity
             android:name=".pre_api.BindPhoneActivity">
         </activity>
-        <activity
-            android:name=".pre_api.AddAddressActivity">
-        </activity>
+
+        <service
+            android:name=".pre_api.InternalTestService"
+            android:process=":test_service"
+            android:enabled="true"
+            android:exported="false"/>
     </application>
 
 </manifest>

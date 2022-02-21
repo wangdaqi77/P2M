@@ -1,4 +1,6 @@
-//移除这几个插件声明
+plugins {
+    id 'kotlin-android'
+}//移除这几个插件声明
 //apply plugin: 'com.android.library'
 //apply plugin: 'kotlin-android'
 //apply plugin: 'kotlin-kapt'
@@ -7,8 +9,8 @@ android {
     compileSdkVersion 30
 
     defaultConfig {
-        minSdkVersion 19
-        targetSdkVersion 26
+        minSdkVersion 28
+        targetSdkVersion 30
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

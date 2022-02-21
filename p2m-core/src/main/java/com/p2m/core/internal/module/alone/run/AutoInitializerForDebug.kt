@@ -9,7 +9,7 @@ import com.p2m.core.P2M
 import com.p2m.core.log.ILogger
 import com.p2m.core.log.Level
 
-
+@Deprecated("unsupported")
 internal class AutoInitializerForDebug : ContentProvider() {
 
     override fun onCreate(): Boolean {

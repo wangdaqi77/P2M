@@ -40,7 +40,7 @@ p2m {
         }
     }
 
-    module("Account") {                     // 声明Login模块
+    module("Account") {                     // 声明Account模块
         include(":module-account")          // 声明project描述
 
         groupId = "com.repo"                // 组

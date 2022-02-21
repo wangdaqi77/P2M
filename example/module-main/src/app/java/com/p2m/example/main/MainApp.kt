@@ -9,6 +9,15 @@ import com.p2m.core.log.Level
 class MainApp:Application() {
     override fun onCreate() {
         super.onCreate()
+
+        // 主进程
+        if (packageName == getProcessName()) {
+            initP2M()
+        }
+    }
+
+    private fun initP2M() {
+        // 配置
         P2M.config {
             logger = object : ILogger {
                 override fun log(level: Level, msg: String, throwable: Throwable?) {

@@ -8,8 +8,8 @@ android {
 
     defaultConfig {
         applicationId "com.p2m.example.app"
-        minSdkVersion 19
-        targetSdkVersion 26
+        minSdkVersion 28
+        targetSdkVersion 30
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

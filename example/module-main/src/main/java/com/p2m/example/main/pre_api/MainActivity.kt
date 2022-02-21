@@ -63,6 +63,23 @@ class MainActivity : AppCompatActivity() {
                 .navigation()
         }
 
+        // 开启服务
+        findViewById<Button>(R.id.main_btn_start_service).setOnClickListener {
+            P2M.apiOf(Account::class.java)
+                .launcher
+                .serviceOfTest
+                .launchChannel(::startService)
+                .navigation()
+        }
+
+        // 停止服务
+        findViewById<Button>(R.id.main_btn_stop_service).setOnClickListener {
+            P2M.apiOf(Account::class.java)
+                .launcher
+                .serviceOfTest
+                .stop(this)
+        }
+
         // 退出登录
         findViewById<Button>(R.id.main_btn_logout).setOnClickListener {
             P2M.apiOf(Account::class.java)

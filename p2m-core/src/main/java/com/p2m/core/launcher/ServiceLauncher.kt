@@ -16,13 +16,20 @@ import kotlin.reflect.KProperty
  * class WorkService : Service()
  * ```
  *
- * then launch in `activity` of external module:
+ * launch:
  * ```kotlin
  * P2M.apiOf(Account)
  *      .launcher
  *      .serviceOfWork
  *      .launchChannel(::startService)
  *      .navigation()
+ * ```
+ * stop:
+ * ```kotlin
+ * P2M.apiOf(Account)
+ *      .launcher
+ *      .serviceOfWork
+ *      .stop()
  * ```
  *
  * @see Context.startService - e.g.`launchChannel(::startService)`.
@@ -52,6 +59,11 @@ interface ServiceLauncher : Launcher {
      * @see LaunchServiceChannel.navigation
      */
     fun launchChannel(launchBlock: LaunchServiceBlock): LaunchServiceChannel
+
+    /**
+     * stop service.
+     */
+    fun stop(context: Context)
 }
 
 /**

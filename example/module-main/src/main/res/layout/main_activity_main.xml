@@ -42,6 +42,28 @@
         android:textAllCaps="false"
         android:textSize="16sp" />
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+        <Button
+            android:id="@+id/main_btn_start_service"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="【launcher】开启服务"
+            android:textAllCaps="false"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/main_btn_stop_service"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="【launcher】停止服务"
+            android:textAllCaps="false"
+            android:textSize="16sp" />
+    </LinearLayout>
+
     <Button
         android:id="@+id/main_btn_logout"
         android:layout_width="match_parent"

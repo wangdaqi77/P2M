@@ -18,7 +18,7 @@ import com.p2m.example.account.p2m.api.Account
 import com.p2m.example.mall.p2m.api.Mall
 
 @ApiLauncher("Interceptor")
-class InterceptorActivity : AppCompatActivity() {
+class InterceptorTestActivity : AppCompatActivity() {
 
     /*测试模式：CONSERVATIVE*/
     private var recoverableChannelForTestCONSERVATIVE : RecoverableChannel? = null
@@ -115,8 +115,8 @@ class InterceptorActivity : AppCompatActivity() {
             .navigation(object : NavigationCallback {
                 override fun onStarted(channel: Channel) {
                     printLog("")
-                    printLog("跳转商城-拦截器重定向模式：ChannelRedirectionMode.CONSERVATIVE，行为：只要重定向时就会中断触发[onInterrupt]，永远不会触发[onRedirect]")
-                    printLog("onStarted()")
+                    printLog("onStarted() 跳转商城\r\n" +
+                            "拦截器的重定向模式为ChannelRedirectionMode.CONSERVATIVE，该模式在拦截器中重定向就会中断并触发[onInterrupt]，永远不会触发[onRedirect]")
                 }
 
                 override fun onCompleted(channel: Channel) {
@@ -133,7 +133,7 @@ class InterceptorActivity : AppCompatActivity() {
                         when(interruptedChannel.launcher) {
                             bindPhoneLauncher -> {
                                 printLog("重定向到绑定手机界面时中断，提示需要绑定手机")
-                                AlertDialog.Builder(this@InterceptorActivity)
+                                AlertDialog.Builder(this@InterceptorTestActivity)
                                     .setTitle("跳转商城中断")
                                     .setMessage("请先绑定手机！")
                                     .setNegativeButton("取消") { dialog, _ ->
@@ -156,7 +156,7 @@ class InterceptorActivity : AppCompatActivity() {
 
                             addAddressLauncher -> {
                                 printLog("重定向到添加收货地址界面时中断，提示需要添加收货地址")
-                                AlertDialog.Builder(this@InterceptorActivity)
+                                AlertDialog.Builder(this@InterceptorTestActivity)
                                     .setTitle("跳转商城中断")
                                     .setMessage("请先添加收货地址！")
                                     .setNegativeButton("取消") { dialog, _ ->
@@ -193,8 +193,8 @@ class InterceptorActivity : AppCompatActivity() {
             .navigation(object : NavigationCallback {
                 override fun onStarted(channel: Channel) {
                     printLog("")
-                    printLog("跳转商城-拦截器重定向模式：ChannelRedirectionMode.FLEXIBLY，行为：可以重定向，重定向时会触发[onRedirect]，但如果在恢复导航时被同一个拦截器重定向到同一个Channel时将会中断触发[onInterrupt]。")
-                    printLog("onStarted()")
+                    printLog("onStarted() 跳转商城\r\n" +
+                            "拦截器的重定向模式为ChannelRedirectionMode.FLEXIBLY，该模式在拦截器中可以重定向，重定向时会触发[onRedirect]，但是如果在恢复导航时被同一个拦截器重定向到同一个Channel时将会中断并触发[onInterrupt]")
                 }
 
                 override fun onCompleted(channel: Channel) {
@@ -227,8 +227,8 @@ class InterceptorActivity : AppCompatActivity() {
             .navigation(object : NavigationCallback {
                 override fun onStarted(channel: Channel) {
                     printLog("")
-                    printLog("跳转商城-拦截器重定向模式：ChannelRedirectionMode.RADICAL，行为：重定向直到导航完成，重定向时会触发[onRedirect]，可以在重定向的页面点返回测试。")
-                    printLog("onStarted()")
+                    printLog("onStarted() 跳转商城\r\n" +
+                            "拦截器的重定向模式为ChannelRedirectionMode.RADICAL，该模式在拦截器中可以重定向，重定向直到导航完成，重定向时会触发[onRedirect]，可以在重定向的页面点返回测试")
                 }
 
                 override fun onCompleted(channel: Channel) {
