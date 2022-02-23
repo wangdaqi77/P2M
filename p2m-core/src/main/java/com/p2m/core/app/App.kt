@@ -15,8 +15,8 @@ class App: Module<AppModuleApi>() {
         return this
     }
 
-    internal fun onExecuted(onExecuted:() -> Unit):App {
-        (init as AppModuleInit).onExecuted = onExecuted
+    internal fun onCompleted(onCompleted:() -> Unit):App {
+        (init as AppModuleInit).onCompleted = onCompleted
         return this
     }
 

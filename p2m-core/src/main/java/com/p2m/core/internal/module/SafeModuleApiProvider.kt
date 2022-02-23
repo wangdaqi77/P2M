@@ -18,7 +18,7 @@ internal class SafeModuleApiProviderImpl(
 
     override fun <MODULE_API : ModuleApi<*, *, *>> apiOf(clazz: Class<out Module<MODULE_API>>): MODULE_API {
         if (clazz.isInstance(self)) {
-            check(selfAvailable) { "${clazz.moduleName} is unavailable in `onEvaluate()` or `onExecuted()` when ${self.internalModuleUnit.moduleName} initializing, only can call `P2M.apiOf(${clazz.simpleName})` in `onExecuted()`" }
+            check(selfAvailable) { "${clazz.moduleName} is unavailable in `onEvaluate()` or `onCompleted()` when ${self.internalModuleUnit.moduleName} initializing, only can call `P2M.apiOf(${clazz.simpleName})` in `onCompleted()`" }
             return self.api as MODULE_API
         }
 

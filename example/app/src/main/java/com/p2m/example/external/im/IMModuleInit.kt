@@ -10,7 +10,7 @@ class IMModuleInit: ModuleInit {
 
     }
 
-    override fun onExecuted(context: Context, taskOutputProvider: TaskOutputProvider) {
+    override fun onCompleted(context: Context, taskOutputProvider: TaskOutputProvider) {
 
     }
 

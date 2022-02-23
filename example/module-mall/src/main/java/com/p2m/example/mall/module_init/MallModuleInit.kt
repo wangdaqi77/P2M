@@ -18,7 +18,7 @@ class MallModuleInit : ModuleInit {
         taskRegister.register(ReadMallUserInfoTask::class.java, input = mallDiskCache)
     }
 
-    override fun onExecuted(context: Context, taskOutputProvider: TaskOutputProvider) {
+    override fun onCompleted(context: Context, taskOutputProvider: TaskOutputProvider) {
         val mallUserInfoTask = taskOutputProvider.outputOf(ReadMallUserInfoTask::class.java)
         P2M.apiOf(Mall::class.java)
             .event

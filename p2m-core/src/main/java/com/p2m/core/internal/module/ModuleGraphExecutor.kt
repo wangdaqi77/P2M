@@ -108,11 +108,11 @@ internal class ModuleGraphExecutor(
     }
 
     private fun ModuleNode.executed() {
-        logI("$name `onExecuted()`")
+        logI("$name `onCompleted()`")
         val taskOutputProviderImplForModule = TaskOutputProviderImplForModule(taskContainer)
 
         executingModuleProvider.set(safeModuleApiProvider)
-        module.internalInit.onExecuted(context, taskOutputProviderImplForModule)
+        module.internalInit.onCompleted(context, taskOutputProviderImplForModule)
         executingModuleProvider.set(null)
         markCompleted()
     }

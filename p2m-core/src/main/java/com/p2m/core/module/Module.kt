@@ -69,8 +69,8 @@ abstract class Module<MODULE_API : ModuleApi<*, *, *>> {
             launchActivityInterceptors = null
         }
 
-        override fun onExecuted(context: Context, taskOutputProvider: TaskOutputProvider) {
-            init.onExecuted(context, taskOutputProvider)
+        override fun onCompleted(context: Context, taskOutputProvider: TaskOutputProvider) {
+            init.onCompleted(context, taskOutputProvider)
         }
     }
 

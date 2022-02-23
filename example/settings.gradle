@@ -26,7 +26,7 @@ p2m {
         include(":app") {                   // 声明project描述
             projectDir = new File("./app")  // 声明project文件夹路径，如project文件夹路径与settings.gradle同一层级可不用配置
         }
-        dependencies {                      // 声明依赖项，可依赖多个
+        dependencies {                      // 声明模块依赖项，可依赖多个
             module("Account")
             module("Main")
         }
@@ -34,7 +34,7 @@ p2m {
 
     app {                                   // 可以声明多个app壳
         include(":app-b")                   // 声明project描述
-        dependencies {                      // 依赖的模块
+        dependencies {                      // 声明模块依赖项，可依赖多个
             module("Account")
             module("Main")
         }
@@ -43,11 +43,11 @@ p2m {
     module("Account") {                     // 声明Account模块
         include(":module-account")          // 声明project描述
 
-        groupId = "com.repo"                // 组
-        versionName = "0.0.1"               // 版本
+        groupId = "com.repo"                // 组，默认值模块名。用于发布模块到仓库或者使用仓库中的模块
+        versionName = "0.0.1"               // 版本，默认值unspecified。用于发布模块到仓库或者使用仓库中的模块
 
-        useRepo = false                     // 使用已经发布到仓库中的模块，true表示使用仓库，false表示使用源码，默认false
-        runApp = false                      // 运行app开关，true表示可以运行app，false表示作为模块，默认false
+        useRepo = false                     // 使用远程仓库开关，默认false。true表示使用仓库，false表示使用源码
+        runApp = false                      // 运行app开关，默认值false，true表示可以运行app，false表示作为模块，applicationId等配置在./projectPath/build.gradle中的p2mRunAppBuildGradle{}
     }
 
     module("Main") {
@@ -77,9 +77,9 @@ p2m {
         runApp = false
     }
 
-//    p2mMavenRepository {                    // 声明maven仓库用于发布和获取模块, 默认为mavenLocal()
-//        url = "your maven repository url"   // 仓库地址
-//        credentials {                       // 登录信息
+//    p2mMavenRepository {                        // 声明maven仓库, 默认mavenLocal()
+//        url = "your maven repository url"       // 仓库地址
+//        credentials {                           // 认证信息
 //            username = "your user name"
 //            password = "your password"
 //        }

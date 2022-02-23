@@ -35,7 +35,7 @@ class ${project.p2mProject.getModuleName()}ModuleInit : ModuleInit{
 
     override fun onEvaluate(context: Context, taskRegister: TaskRegister) { }
 
-    override fun onExecuted(context: Context, taskOutputProvider: TaskOutputProvider) { }
+    override fun onCompleted(context: Context, taskOutputProvider: TaskOutputProvider) { }
 }
 """)
                 }

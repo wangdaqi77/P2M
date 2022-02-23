@@ -25,7 +25,7 @@ import com.p2m.core.module.ModuleInit
  *         taskRegister.register(LoadLoginStateTask::class.java, input = userDiskCache)
  *     }
  *
- *     override fun onExecuted(context: Context, taskOutputProvider: TaskOutputProvider) {
+ *     override fun onCompleted(context: Context, taskOutputProvider: TaskOutputProvider) {
  *         // get output of LoadLoginStateTask
  *         val loginState = taskOutputProvider.outputOf(LoadLoginStateTask::class.java)
  *
@@ -56,7 +56,7 @@ abstract class Task<INPUT, OUTPUT> {
         onExecute(context, NULL.unbox(inputObj), taskOutputProvider)
 
     /**
-     * The task executing, called after [ModuleInit.onEvaluate] and before [ModuleInit.onExecuted].
+     * The task executing, called after [ModuleInit.onEvaluate] and before [ModuleInit.onCompleted].
      *
      * Note:
      *  * Running in alone work thread.

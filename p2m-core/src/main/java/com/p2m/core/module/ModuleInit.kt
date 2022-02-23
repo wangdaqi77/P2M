@@ -15,29 +15,29 @@ import com.p2m.annotation.module.ModuleInitializer
  * Module initialization has three stages, in the following order:
  *  * evaluate, corresponds to [onEvaluate].
  *  * execute,  corresponds to [Task.onExecute].
- *  * executed, corresponds to [onExecuted].
+ *  * executed, corresponds to [onCompleted].
  *
  * The module initialization has the following formula:
  *  * Within a module, the execution order must be
- *  [onEvaluate] > [Task.onExecute] > [onExecuted].
+ *  [onEvaluate] > [Task.onExecute] > [onCompleted].
  *  * Within a module, If task A depends on task B, the execution order must be
  *  `onExecute` of task B > `onExecute` of task A.
  *  * If module A depends on module B, the execution order must be
- *  [onExecuted] of module B > [onExecuted] of module A.
+ *  [onCompleted] of module B > [onCompleted] of module A.
  *  * If module A depends on module B and B depends on C, the execution order must be
- *  [onExecuted] of module C > [onExecuted] of module A.
+ *  [onCompleted] of module C > [onCompleted] of module A.
  *
  * Begin initialization for all module by call `P2M.init()` in your custom application.
  *
  * see more at [doc](https://github.com/wangdaqi77/P2M)
  *
  * @see onEvaluate - evaluate stage.
- * @see onExecuted - executed stage.
+ * @see onCompleted - executed stage.
  * @see Task - the smallest unit in a module to perform initialization.
  * @see TaskRegister - register some task.
  * @see TaskOutputProvider - get some task output.
  */
-interface ModuleInit : OnEvaluateListener, OnExecutedListener
+interface ModuleInit : OnEvaluateListener, OnCompletedListener
 
 interface OnEvaluateListener{
     /**
@@ -60,7 +60,7 @@ interface OnEvaluateListener{
     fun onEvaluate(context: Context, taskRegister: TaskRegister)
 }
 
-interface OnExecutedListener{
+interface OnCompletedListener{
     /**
      * Executed stage of itself, indicates will completed initialized of the module.
      *
@@ -78,12 +78,12 @@ interface OnExecutedListener{
      * @see TaskOutputProvider TaskOutputProvider - get some task output.
      */
     @MainThread
-    fun onExecuted(context: Context, taskOutputProvider: TaskOutputProvider)
+    fun onCompleted(context: Context, taskOutputProvider: TaskOutputProvider)
 }
 
 class EmptyModuleInit : ModuleInit {
 
     override fun onEvaluate(context: Context, taskRegister: TaskRegister) { }
 
-    override fun onExecuted(context: Context, taskOutputProvider: TaskOutputProvider) { }
+    override fun onCompleted(context: Context, taskOutputProvider: TaskOutputProvider) { }
 }

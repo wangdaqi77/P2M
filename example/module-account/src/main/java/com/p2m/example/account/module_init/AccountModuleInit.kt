@@ -7,34 +7,33 @@ import com.p2m.core.module.*
 import com.p2m.example.account.p2m.api.Account
 import com.p2m.core.module.task.TaskOutputProvider
 import com.p2m.core.module.task.TaskRegister
-import com.p2m.core.module.task.TaskUnit
 import com.p2m.example.account.UserDiskCache
 import com.p2m.example.account.p2m.impl.mutable
 
 @ModuleInitializer
 class AccountModuleInit : ModuleInit {
 
-    // 运行在子线程，用于注册该模块内的任务、组织任务的依赖关系，所有的任务在单独的子线程运行。
+    // 评估自身阶段，意味着准备开始初始化
     override fun onEvaluate(context: Context, taskRegister: TaskRegister) {
-        val userDiskCache = UserDiskCache(context) // 用户本地缓存
-
+        // 用户本地缓存
+        val userDiskCache = UserDiskCache(context)
         // 注册读取登录状态的任务
         taskRegister.register(LoadLoginStateTask::class.java, input = userDiskCache)
 
         // 注册读取登录用户信息的任务
-        taskRegister
-            .register(LoadLastUserTask::class.java, userDiskCache)
-            .dependOn(LoadLoginStateTask::class.java) // 执行顺序一定为LoadLoginStateTask.onExecute() > LoadLastUserTask.onExecute()
+        taskRegister.register(LoadLastUserTask::class.java, userDiskCache)
+            // 执行顺序一定为LoadLoginStateTask.onExecute() > LoadLastUserTask.onExecute()
+            .dependOn(LoadLoginStateTask::class.java)
     }
 
-    // 运行在主线程，当所有的依赖项完成模块初始化且本模块的任务执行完毕时调用
-    override fun onExecuted(context: Context, taskOutputProvider: TaskOutputProvider) {
+    // 初始化完成阶段，意味着初始化完成
+    override fun onCompleted(context: Context, taskOutputProvider: TaskOutputProvider) {
         val loginState = taskOutputProvider.outputOf(LoadLoginStateTask::class.java) // 获取任务输出-登录状态
-        val loginInfo = taskOutputProvider.outputOf(LoadLastUserTask::class.java)
+        val loginInfo = taskOutputProvider.outputOf(LoadLastUserTask::class.java)    // 获取任务输出-登录用户信息
 
-        // 在该模块初始化完成时务必对其Api区输入正确的数据，只有这样才能保证其他模块安全的使用该模块。
+        // Account模块初始化完成后，外部模块才可以使用其Api区，因此在初始化完成时在其Api区一定要准备好必要的数据。
         val account = P2M.apiOf(Account::class.java)                        // 找到自身的Api区
-        account.event.mutable().loginState.setValue(loginState)             // 保存到事件持有者
-        account.event.mutable().loginInfo.setValue(loginInfo)               // 保存到事件持有者
+        account.event.mutable().loginState.setValue(loginState)             // 数据保存到事件持有者
+        account.event.mutable().loginInfo.setValue(loginInfo)               // 数据保存到事件持有者
     }
 }

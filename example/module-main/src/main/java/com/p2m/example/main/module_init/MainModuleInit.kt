@@ -21,7 +21,7 @@ class MainModuleInit : ModuleInit {
     }
 
     // 运行在主线程，当所有的依赖项完成模块初始化且本模块的任务执行完毕时调用
-    override fun onExecuted(context: Context, taskOutputProvider: TaskOutputProvider) {
+    override fun onCompleted(context: Context, taskOutputProvider: TaskOutputProvider) {
         val account = P2M.apiOf(Account::class.java)
         
         // 登录成功跳转主页
