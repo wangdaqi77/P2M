@@ -55,12 +55,12 @@ annotation class ApiLauncher(val launcherName: String, val activityResultContrac
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
-annotation class LaunchActivityInterceptor(val interceptorName: String) {
+annotation class ApiLaunchActivityInterceptor(val interceptorName: String) {
     companion object {
         private val NAME_REGEX = Regex("^[A-Z][A-Za-z0-9]*$")
-        fun checkName(interceptor: LaunchActivityInterceptor, clazzName: String) {
+        fun checkName(interceptor: ApiLaunchActivityInterceptor, clazzName: String) {
             check(interceptor.interceptorName.isEmpty() || interceptor.interceptorName.matches(NAME_REGEX)) {
-                "The LaunchActivityInterceptor(name = \"${interceptor.interceptorName}\") at $clazzName, that name must matches ${NAME_REGEX.pattern}"
+                "The ApiLaunchActivityInterceptor(name = \"${interceptor.interceptorName}\") at $clazzName, that name must matches ${NAME_REGEX.pattern}"
             }
         }
     }

@@ -17,6 +17,7 @@ import com.p2m.core.internal.execution.Executor
 import com.p2m.core.internal.execution.InternalMainExecutor
 import com.p2m.core.internal.execution.InternalThreadPoolExecutor
 import com.p2m.core.internal.log.logE
+import com.p2m.core.internal.log.logW
 import com.p2m.core.internal.module.*
 import com.p2m.core.internal.module.DefaultModuleFactory
 import com.p2m.core.internal.module.DefaultModuleNameCollectorFactory
@@ -39,12 +40,10 @@ internal object _P2M : ModuleApiProvider, ModuleVisitor {
     internal val interceptorContainer = ChannelInterceptorContainer()
     private val moduleContainer = ModuleContainerDefault()
     private lateinit var driver: InternalDriver
-
     fun init(
         context: Context,
         externalModuleClassLoader: ClassLoader = context.classLoader,
-        externalPublicModuleClassName: Array<out String>,
-        @WorkerThread onIdea: (() -> Unit)? = null
+        externalPublicModuleClassName: Array<out String>
     ) {
         check(!_P2M::internalContext.isInitialized) { "`can only be called once." }
 
@@ -56,13 +55,18 @@ internal object _P2M : ModuleApiProvider, ModuleVisitor {
             .onEvaluate {
                 launchActivityHelper.init(context)
                 ideaStartTime = SystemClock.uptimeMillis()
-                onIdea?.invoke()
+
+                // ex:
+                // Thread.sleep(1000L)
+                // log:
+                // running `onIdea` too long, it is recommended to shorten to 30 ms.
+                // `onIdea` was ran for too long, timeout: 970 ms.
             }
             .onEvaluateTooLongStart {
-                logE("running `onIdea` too long, it is recommended to shorten to ${(SystemClock.uptimeMillis() - ideaStartTime).also { ideaStartTime+=it }} ms.")
+                logW("running `onIdea` too long, it is recommended to shorten to ${(SystemClock.uptimeMillis() - ideaStartTime).also { ideaStartTime+=it }} ms.")
             }
             .onEvaluateTooLongEnd {
-                logE("`onIdea` was ran for too long, timeout: ${SystemClock.uptimeMillis() - ideaStartTime} ms.")
+                logW("`onIdea` was ran for too long, timeout: ${SystemClock.uptimeMillis() - ideaStartTime} ms.")
             }
 
         val externalModules = externalPublicModuleClassName.mapTo(ArrayList(externalPublicModuleClassName.size)) { className ->
@@ -85,31 +89,31 @@ internal object _P2M : ModuleApiProvider, ModuleVisitor {
         this.driver.considerOpenAwait()
     }
 
-    override fun <MODULE_API : ModuleApi<*, *, *>> apiOf(
-        clazz: Class<out Module<MODULE_API>>
-    ): MODULE_API {
+    private fun <MODULE : Module<*>> moduleOf(clazz: Class<out MODULE>): MODULE {
         check(::internalContext.isInitialized) { "Please call `init()` before." }
 
         val driver = this.driver
-        check(driver.isEvaluating?.get() != true) { "Don not call `P2M.apiOf()` in `onEvaluate()`." }
+        check(driver.isEvaluating?.get() != true) { "Don not call `P2M.moduleOf()` in `onEvaluate()`." }
         driver.safeModuleApiProvider?.get()?.let { moduleProvider ->
-            return moduleProvider.apiOf(clazz)
+            return moduleProvider.moduleOf(clazz)
         }
 
         val module = moduleContainer.find(clazz)
         check(module != null) { "The ${clazz.moduleName} is not exist for ${clazz.name}" }
         driver.considerOpenAwait()
         @Suppress("UNCHECKED_CAST")
-        return module.api as MODULE_API
+        return module as MODULE
     }
+
+    override fun <MODULE_API : ModuleApi<*, *, *>> apiOf(clazz: Class<out Module<MODULE_API>>): MODULE_API =
+        moduleOf(clazz).api
 
     internal fun onLaunchActivityNavigationCompletedBefore(channel: LaunchActivityChannel, intent: Intent) {
         launchActivityHelper.onLaunchActivityNavigationCompletedBefore(channel, intent)
     }
 
     override fun visit(module: Module<*>) {
-        module.interceptorContainer = interceptorContainer
-        module.initLazy()
+        module.initLazy(interceptorContainer)
     }
 
 }

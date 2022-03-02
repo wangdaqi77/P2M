@@ -1,4 +1,4 @@
-package com.p2m.example.main.module_init
+package com.p2m.example.main.initialization
 
 import android.content.Context
 import android.content.Intent
@@ -11,7 +11,6 @@ import com.p2m.example.account.p2m.api.Account
 import com.p2m.example.main.p2m.api.Main
 import com.p2m.core.module.task.TaskOutputProvider
 import com.p2m.core.module.task.TaskRegister
-import com.p2m.core.module.task.TaskUnit
 
 @ModuleInitializer
 class MainModuleInit : ModuleInit {
@@ -20,7 +19,7 @@ class MainModuleInit : ModuleInit {
 
     }
 
-    // 运行在主线程，当所有的依赖项完成模块初始化且本模块的任务执行完毕时调用
+    // 运行在主线程，当模块的依赖项完成初始化且本模块的任务执行完毕时调用
     override fun onCompleted(context: Context, taskOutputProvider: TaskOutputProvider) {
         val account = P2M.apiOf(Account::class.java)
         

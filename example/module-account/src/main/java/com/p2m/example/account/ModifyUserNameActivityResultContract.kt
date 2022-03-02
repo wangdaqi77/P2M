@@ -1,4 +1,4 @@
-package com.p2m.example.account.pre_api
+package com.p2m.example.account
 
 import android.content.Intent
 import com.p2m.core.launcher.ActivityResultContractCompat

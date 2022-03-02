@@ -51,15 +51,10 @@ abstract class Task<INPUT, OUTPUT> {
     internal val output: OUTPUT
         get() = NULL.unbox(outputObj)
 
-    @WorkerThread
-    internal fun onExecute(context: Context, taskOutputProvider: TaskOutputProvider): OUTPUT =
-        onExecute(context, NULL.unbox(inputObj), taskOutputProvider)
-
     /**
-     * The task executing, called after [ModuleInit.onEvaluate] and before [ModuleInit.onCompleted].
+     * Execution stage, means start executing the registered task within a module.
      *
-     * Note:
-     *  * Running in alone work thread.
+     * Running on alone work thread.
      *
      * @param input input passed in during registration, see [TaskRegister.register].
      * @param taskOutputProvider task output provider, call `taskOutputProvider.outputOf`
@@ -71,6 +66,10 @@ abstract class Task<INPUT, OUTPUT> {
      */
     @WorkerThread
     abstract fun onExecute(context: Context, input: INPUT, taskOutputProvider: TaskOutputProvider): OUTPUT
+
+    @WorkerThread
+    internal fun onExecute(context: Context, taskOutputProvider: TaskOutputProvider): OUTPUT =
+        onExecute(context, NULL.unbox(inputObj), taskOutputProvider)
 
     override fun toString(): String {
         return this::class.java.simpleName

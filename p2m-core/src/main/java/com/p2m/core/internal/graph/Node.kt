@@ -12,7 +12,7 @@ internal abstract class Node<N : Node<N>> {
     var dependDegree: Int = 0
     val dependNodes: HashSet<N> = HashSet()
 
-    val isExecuted: Boolean
+    val isCompleted: Boolean
         get() = state.get() == State.COMPLETED
 
     private val stateLock = Any()

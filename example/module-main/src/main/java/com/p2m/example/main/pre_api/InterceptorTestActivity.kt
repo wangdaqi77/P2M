@@ -194,7 +194,7 @@ class InterceptorTestActivity : AppCompatActivity() {
                 override fun onStarted(channel: Channel) {
                     printLog("")
                     printLog("onStarted() 跳转商城\r\n" +
-                            "拦截器的重定向模式为ChannelRedirectionMode.FLEXIBLY，该模式在拦截器中可以重定向，重定向时会触发[onRedirect]，但是如果在恢复导航时被同一个拦截器重定向到同一个Channel时将会中断并触发[onInterrupt]")
+                            "拦截器的重定向模式为ChannelRedirectionMode.FLEXIBLY，该模式在拦截器中可以重定向，重定向时会触发[onRedirect]，但是如果在恢复导航（重定向目标界面在销毁时会触发恢复导航）时被同一个拦截器重定向到同一个Channel时将会中断并触发[onInterrupt]")
                 }
 
                 override fun onCompleted(channel: Channel) {
@@ -228,7 +228,7 @@ class InterceptorTestActivity : AppCompatActivity() {
                 override fun onStarted(channel: Channel) {
                     printLog("")
                     printLog("onStarted() 跳转商城\r\n" +
-                            "拦截器的重定向模式为ChannelRedirectionMode.RADICAL，该模式在拦截器中可以重定向，重定向直到导航完成，重定向时会触发[onRedirect]，可以在重定向的页面点返回测试")
+                            "拦截器的重定向模式为ChannelRedirectionMode.RADICAL，该模式在拦截器中可以重定向，重定向直到导航完成，重定向时会触发[onRedirect]，可以在重定向的目标界面点返回测试")
                 }
 
                 override fun onCompleted(channel: Channel) {

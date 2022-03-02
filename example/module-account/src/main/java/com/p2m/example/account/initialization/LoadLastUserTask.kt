@@ -1,14 +1,10 @@
-package com.p2m.example.account.module_init
+package com.p2m.example.account.initialization
 
 import android.content.Context
-import android.util.Log
-import com.p2m.core.P2M
 import com.p2m.core.module.task.Task
 import com.p2m.core.module.task.TaskOutputProvider
 import com.p2m.example.account.pre_api.LoginUserInfo
 import com.p2m.example.account.UserDiskCache
-import com.p2m.example.account.p2m.api.Account
-import kotlin.concurrent.thread
 
 // 读取登录用户信息的任务，input:UserDiskCache output:LoginUserInfo
 class LoadLastUserTask: Task<UserDiskCache, LoginUserInfo?>() {

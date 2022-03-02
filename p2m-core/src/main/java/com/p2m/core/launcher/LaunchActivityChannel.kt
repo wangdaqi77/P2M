@@ -2,7 +2,7 @@ package com.p2m.core.launcher
 
 import android.content.Context
 import androidx.annotation.WorkerThread
-import com.p2m.annotation.module.api.LaunchActivityInterceptor
+import com.p2m.annotation.module.api.ApiLaunchActivityInterceptor
 import com.p2m.core.channel.*
 import com.p2m.core.internal._P2M
 import kotlin.reflect.KClass
@@ -53,7 +53,7 @@ class LaunchActivityChannel internal constructor(
      *
      * @see ILaunchActivityInterceptor - interceptor
      * @see LaunchActivityInterceptorCallback - callback
-     * @see LaunchActivityInterceptor -  annotation for interceptor
+     * @see ApiLaunchActivityInterceptor -  annotation for interceptor
      * @see ChannelRedirectionMode -  redirection behavior
      */
     override fun navigation(navigationCallback: NavigationCallback?) {

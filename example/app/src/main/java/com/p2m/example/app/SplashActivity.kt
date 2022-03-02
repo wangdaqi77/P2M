@@ -18,8 +18,33 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
-        // 有拦截器
+
         findViewById<View>(R.id.fullscreen_content).postDelayed( {
+            jumpMain1()  // 使用拦截器
+            // jumpMain2()  // 不使用拦截器
+        }, 2000)
+        return
+    }
+
+    private fun jumpMain1() {
+        P2M.apiOf(Main::class.java)
+            .launcher
+            .activityOfMain
+            .launchChannel {
+                it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(it)
+            }
+            .addInterceptorLeft(AccountLaunchActivityInterceptorForLogin::class) // 首先登录
+            //.redirectionMode(ChannelRedirectionMode.FLEXIBLY) // 默认就是ChannelRedirectionMode.FLEXIBLY
+            .navigation()
+        finish()
+    }
+
+    private fun jumpMain2() {
+        // 获取登录状态
+        val loginState = P2M.apiOf(Account::class.java).event.loginState.getValue()
+        if (loginState == true) {
             // 登录过
             P2M.apiOf(Main::class.java)
                 .launcher
@@ -29,44 +54,21 @@ class SplashActivity : AppCompatActivity() {
                     it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     startActivity(it)
                 }
-                .addInterceptorLeft(AccountLaunchActivityInterceptorForLogin::class) // 首先登录
-//                .redirectionMode(ChannelRedirectionMode.FLEXIBLY)
                 .navigation()
             finish()
-        }, 2000)
-        return
-
-        // 无拦截器
-        findViewById<View>(R.id.fullscreen_content).postDelayed( {
-            // 获取登录状态
-            val loginState = P2M.apiOf(Account::class.java).event.loginState.getValue()
-            if (loginState == true) {
-                // 登录过
-                P2M.apiOf(Main::class.java)
-                    .launcher
-                    .activityOfMain
-                    .launchChannel {
-                        it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                        it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        startActivity(it)
-                    }
-                    .navigation()
-                finish()
-            } else {
-                // 未登录
-                P2M.apiOf(Account::class.java)
-                    .launcher
-                    .activityOfLogin
-                    .launchChannel {
-                        it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                        it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        startActivity(it)
-                    }
-                    .navigation()
-                finish()
-            }
-
-        },2000L)
+        } else {
+            // 未登录
+            P2M.apiOf(Account::class.java)
+                .launcher
+                .activityOfLogin
+                .launchChannel {
+                    it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(it)
+                }
+                .navigation()
+            finish()
+        }
     }
 
 }

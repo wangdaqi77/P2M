@@ -18,28 +18,30 @@ object P2M : ModuleApiProvider {
     }
 
     /**
-     * Initialization.
+     * All module start to initialize.
      *
      * @param context
      * @param externalModuleClassLoader classLoader for [externalPublicModuleClassName]
      * @param externalPublicModuleClassName class name for external public module
      * @param onIdea run on work thread.
+     *
+     * @see ModuleInit
      */
     @MainThread
     fun init(
         context: Context,
         externalModuleClassLoader: ClassLoader = context.classLoader,
-        vararg externalPublicModuleClassName: String,
-        @WorkerThread onIdea: (() -> Unit)? = null
+        vararg externalPublicModuleClassName: String
     ) {
         check(Looper.getMainLooper() === Looper.myLooper()) { "`P2M.init()` must be called on the main thread." }
-        _P2M.init(context, externalModuleClassLoader, externalPublicModuleClassName, onIdea)
+        _P2M.init(context, externalModuleClassLoader, externalPublicModuleClassName)
     }
 
     /**
-     * Get instance of `api` by [clazz] of module.
+     * Get `api`.
      *
      * @param clazz its class name is defined module name in `settings.gradle`.
+     * @return `api`.
      *
      * @see Module
      * @see ModuleApi

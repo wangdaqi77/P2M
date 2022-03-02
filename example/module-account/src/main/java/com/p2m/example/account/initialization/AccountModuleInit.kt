@@ -1,4 +1,4 @@
-package com.p2m.example.account.module_init
+package com.p2m.example.account.initialization
 
 import android.content.Context
 import com.p2m.annotation.module.ModuleInitializer

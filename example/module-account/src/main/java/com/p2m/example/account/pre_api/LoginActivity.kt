@@ -38,7 +38,6 @@ class LoginActivity : AppCompatActivity() {
         login?.setOnClickListener {
             login(username?.text.toString(), password?.text.toString())
         }
-        testBackgroundLiveEvent()
     }
 
     private fun login(userName: String, pwd: String) {
@@ -85,10 +84,6 @@ class LoginActivity : AppCompatActivity() {
             login?.isEnabled = username?.text?.length?:0  > 2 && password?.text?.length?:0  > 2
         }
 
-    }
-
-    private fun testBackgroundLiveEvent() {
-        P2M.apiOf(Account::class.java).event.loginSuccess.observe(this, androidx.lifecycle.Observer {  })
     }
 }
 

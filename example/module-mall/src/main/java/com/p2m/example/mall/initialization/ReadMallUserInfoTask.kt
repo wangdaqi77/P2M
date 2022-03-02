@@ -1,4 +1,4 @@
-package com.p2m.example.mall.module_init
+package com.p2m.example.mall.initialization
 
 import android.content.Context
 import com.p2m.core.module.task.Task

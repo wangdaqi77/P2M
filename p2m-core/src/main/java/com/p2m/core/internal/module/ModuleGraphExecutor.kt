@@ -24,8 +24,8 @@ internal class ModuleGraphExecutor(
     private val executor: ExecutorService = GraphThreadPoolExecutor()
     override val messageQueue: BlockingQueue<Runnable> = ArrayBlockingQueue(graph.moduleSize)
 
-    override fun runNode(node: ModuleNode, onDependsNodeComplete: () -> Unit) {
-        node.markStarted(onDependsNodeComplete) {
+    override fun runNode(node: ModuleNode, onNodeComplete: () -> Unit) {
+        node.markStarted(onNodeComplete) {
             // Started
             executor.execute(TagRunnable(node.name) {
                 val evaluatingWhenDependingIdle = {
@@ -42,7 +42,7 @@ internal class ModuleGraphExecutor(
                     // Completed
                     node.markSelfAvailable()
                     node.executed()
-                    onDependsNodeComplete()
+                    onNodeComplete()
                 }
             })
         }
@@ -76,8 +76,8 @@ internal class ModuleGraphExecutor(
             return
         }
         val countDownLatch = CountDownLatch(dependNodes.size)
-        val onDependenciesComplete = {
-            // Dependencies be Completed.
+        val onDependencyComplete = {
+            // dependency be Completed.
             countDownLatch.countDown()
 
             if (isTop && countDownLatch.count == 0L) {
@@ -90,7 +90,7 @@ internal class ModuleGraphExecutor(
         }
 
         dependNodes.forEach { dependNode ->
-            runNode(dependNode, onDependenciesComplete)
+            runNode(dependNode, onDependencyComplete)
         }
 
         if (isTop) {
@@ -125,7 +125,7 @@ internal class ModuleGraphExecutor(
         // logI("Module-Graph-Stage${stage.name} Completed.")
     }
 
-    override fun onCompletedForNode(node: ModuleNode) {
+    override fun onCompleted(node: ModuleNode) {
 //        logI("${node.name} Completed.")
     }
 

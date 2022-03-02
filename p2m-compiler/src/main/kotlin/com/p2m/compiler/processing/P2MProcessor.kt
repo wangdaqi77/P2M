@@ -35,7 +35,7 @@ import javax.tools.StandardLocation
     "com.p2m.annotation.module.api.ApiService",
     "com.p2m.annotation.module.api.ApiEvent",
     "com.p2m.annotation.module.api.ApiUse",
-    "com.p2m.annotation.module.api.LaunchActivityInterceptor",
+    "com.p2m.annotation.module.api.ApiLaunchActivityInterceptor",
     "com.p2m.annotation.module.ModuleInitializer"
 )
 @SupportedOptions(
@@ -319,7 +319,7 @@ class P2MProcessor : BaseProcessor() {
         val implPackageName = packageNameImpl
         val implFileName = "_${apiFileName}"
 
-        val elements = roundEnv.getElementsAnnotatedWith(LaunchActivityInterceptor::class.java)
+        val elements = roundEnv.getElementsAnnotatedWith(ApiLaunchActivityInterceptor::class.java)
         if (elements.isEmpty()) return emptyMap()
 
         val apiFileSpecBuilder = FileSpec
@@ -335,8 +335,8 @@ class P2MProcessor : BaseProcessor() {
             element as TypeElement
             element.checkKotlinClass()
 
-            val annotation = element.getAnnotation(LaunchActivityInterceptor::class.java)
-            LaunchActivityInterceptor.checkName(annotation, element.qualifiedName.toString())
+            val annotation = element.getAnnotation(ApiLaunchActivityInterceptor::class.java)
+            ApiLaunchActivityInterceptor.checkName(annotation, element.qualifiedName.toString())
             val apiName = "${optionModuleName}LaunchActivityInterceptorFor${annotation.interceptorName}"
             element to genInterceptorClassForKotlin(
                 element,

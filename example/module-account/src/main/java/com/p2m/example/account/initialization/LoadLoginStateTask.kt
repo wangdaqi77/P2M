@@ -1,7 +1,6 @@
-package com.p2m.example.account.module_init
+package com.p2m.example.account.initialization
 
 import android.content.Context
-import android.util.Log
 import com.p2m.core.module.task.Task
 import com.p2m.core.module.task.TaskOutputProvider
 import com.p2m.example.account.UserDiskCache

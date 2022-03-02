@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 internal class LaunchActivityHelper : Application.ActivityLifecycleCallbacks {
     companion object {
-        private const val EXT_ID = "Key_RecoverableChannelHelper_RecoverableChannel"
+        private const val EXT_ID = "com.p2m.core.internal.launcher.LaunchActivityHelper"
         private const val DISCARD_TIMEOUT = 60_000L
         private const val ID_NO_SET = 0
     }

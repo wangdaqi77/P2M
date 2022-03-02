@@ -6,16 +6,15 @@ import androidx.annotation.WorkerThread
 import com.p2m.core.module.task.TaskOutputProvider
 import com.p2m.core.module.task.TaskRegister
 import com.p2m.core.module.task.Task
-import com.p2m.core.module.task.TaskUnit
 import com.p2m.annotation.module.ModuleInitializer
 
 /**
  * A [Module] has one [ModuleInit] only, related to [ModuleInitializer].
  *
- * Module initialization has three stages, in the following order:
- *  * evaluate, corresponds to [onEvaluate].
- *  * execute,  corresponds to [Task.onExecute].
- *  * executed, corresponds to [onCompleted].
+ * Module initialization has three stages in sequence:
+ *  * evaluation stage, corresponds to [onEvaluate].
+ *  * execution stage,  corresponds to [Task.onExecute].
+ *  * completion stage, corresponds to [onCompleted].
  *
  * The module initialization has the following formula:
  *  * Within a module, the execution order must be
@@ -27,12 +26,12 @@ import com.p2m.annotation.module.ModuleInitializer
  *  * If module A depends on module B and B depends on C, the execution order must be
  *  [onCompleted] of module C > [onCompleted] of module A.
  *
- * Begin initialization for all module by call `P2M.init()` in your custom application.
+ * Start initialize for all module by call `P2M.init()` in your custom application.
  *
  * see more at [doc](https://github.com/wangdaqi77/P2M)
  *
- * @see onEvaluate - evaluate stage.
- * @see onCompleted - executed stage.
+ * @see onEvaluate - evaluation stage.
+ * @see onCompleted - completion stage.
  * @see Task - the smallest unit in a module to perform initialization.
  * @see TaskRegister - register some task.
  * @see TaskOutputProvider - get some task output.
@@ -41,19 +40,18 @@ interface ModuleInit : OnEvaluateListener, OnCompletedListener
 
 interface OnEvaluateListener{
     /**
-     * Evaluate stage of itself.
+     * Evaluate stage, means ready to start initialization.
      *
-     * Here, you can use [TaskRegister] to register some task and organizational dependencies
-     * for help initialize module fast, and then these tasks will be executed
-     * on different worker threads in the order of dependencies.
+     * Running on a alone work thread.
      *
-     * Note:
-     *  * Can not call `P2M.apiOf()` here.
-     *  * It running in work thread.
+     * Used [taskRegister] to register tasks and organize the dependencies of tasks
+     * in this module, these tasks are designed for fast loading of
+     * data, which will be used in the initialization completion stage.
      *
-     * @param taskRegister task register.
+     * Can not call `P2M.apiOf()` here
      *
-     * @see TaskRegister TaskRegister - register some task.
+     * @param taskRegister register tasks.
+     *
      * @see Task Task - is the smallest unit in a module to perform initialization.
      */
     @WorkerThread
@@ -62,16 +60,14 @@ interface OnEvaluateListener{
 
 interface OnCompletedListener{
     /**
-     * Executed stage of itself, indicates will completed initialized of the module.
+     * Completion stage, means initialization is complete of the module.
+     *
+     * Running on main thread.
      *
      * Called when its all tasks be completed and all dependencies completed initialized.
      *
-     * Here, you can use [TaskOutputProvider] to get some output of itself tasks.
-     *
-     * Note:
-     *  * It running in main thread.
-     *  * The correct data must be entered in the `Api` area before the module been completed
-     *  initialized, that can the module be used safely by external modules.
+     * Here, you can use [TaskOutputProvider] get output data and load the data into api,
+     * that can the module be used safely by external modules.
      *
      * @param taskOutputProvider task output provider.
      *

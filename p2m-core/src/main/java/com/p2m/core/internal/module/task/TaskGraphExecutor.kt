@@ -19,16 +19,16 @@ internal class TaskGraphExecutor(
 
     override val messageQueue: BlockingQueue<Runnable> = ArrayBlockingQueue(graph.taskSize)
 
-    override fun runNode(node: TaskNode, onDependsNodeComplete: () -> Unit) {
-        node.markStarted(onDependsNodeComplete) {
+    override fun runNode(node: TaskNode, onNodeComplete: () -> Unit) {
+        node.markStarted(onNodeComplete) {
             // Started
             executor.execute(TagRunnable(node.name) Runnable@{
                 // Depending
                 node.depending()
 
                 if (node.isTop) {
-                    node.executed()
-                    onDependsNodeComplete()
+                    node.completed()
+                    onNodeComplete()
                     return@Runnable
                 }
 
@@ -36,13 +36,13 @@ internal class TaskGraphExecutor(
                 node.executing()
 
                 // Completed
-                node.executed()
-                onDependsNodeComplete()
+                node.completed()
+                onNodeComplete()
             })
         }
     }
 
-    private fun TaskNode.executed() {
+    private fun TaskNode.completed() {
         markCompleted()
     }
 
@@ -53,13 +53,13 @@ internal class TaskGraphExecutor(
         }
 
         val countDownLatch = CountDownLatch(dependNodes.size)
-        val onDependsNodeComplete = {
+        val onNodeComplete = {
             // Dependencies be Completed.
             countDownLatch.countDown()
         }
 
         dependNodes.forEach { dependNode ->
-            runNode(dependNode, onDependsNodeComplete)
+            runNode(dependNode, onNodeComplete)
         }
 
         // Wait dependencies be Completed.
@@ -85,7 +85,7 @@ internal class TaskGraphExecutor(
         // }
     }
 
-    override fun onCompletedForNode(node: TaskNode) {
+    override fun onCompleted(node: TaskNode) {
 //        if (node.task is TopTask) return
 //        logI("Task-${node.taskName} Completed.")
     }

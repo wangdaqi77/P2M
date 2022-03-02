@@ -16,9 +16,7 @@ class SplashBActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
-        // 有拦截器
         findViewById<View>(R.id.fullscreen_content).postDelayed( {
-            // 登录过
             P2M.apiOf(Main::class.java)
                 .launcher
                 .activityOfMain
@@ -28,7 +26,7 @@ class SplashBActivity : AppCompatActivity() {
                     startActivity(it)
                 }
                 .addInterceptorLeft(AccountLaunchActivityInterceptorForLogin::class) // 首先登录
-//                .redirectionMode(ChannelRedirectionMode.FLEXIBLY)
+                //.redirectionMode(ChannelRedirectionMode.FLEXIBLY) // 默认就是ChannelRedirectionMode.FLEXIBLY
                 .navigation()
             finish()
         }, 2000)

@@ -10,6 +10,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import com.p2m.core.P2M
 import com.p2m.annotation.module.api.ApiLauncher
+import com.p2m.example.account.ModifyUserNameActivityResultContract
 import com.p2m.example.account.UserDiskCache
 import com.p2m.example.account.R
 import com.p2m.example.http.Http
@@ -35,7 +36,6 @@ class ModifyAccountNameActivity : AppCompatActivity() {
         confirm?.setOnClickListener {
             confirm(username?.text.toString())
         }
-        testBackgroundLiveEvent()
     }
 
     private fun confirm(userName: String) {
@@ -81,9 +81,5 @@ class ModifyAccountNameActivity : AppCompatActivity() {
 
         val currentName = intent.getStringExtra("current_user_name")
         findViewById<TextView>(R.id.tv_current_name)?.text = "当前用户名：$currentName"
-    }
-
-    private fun testBackgroundLiveEvent() {
-        P2M.apiOf(Account::class.java).event.loginSuccess.observe(this, androidx.lifecycle.Observer {  })
     }
 }

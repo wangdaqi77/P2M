@@ -77,7 +77,7 @@ internal abstract class AbsGraphExecutor<KEY, NODE : Node<NODE>, GRAPH : Graph<K
                     .map { "[${it.key.name}, ${it.value.name}]" }
                     .joinToString()
             }
-            runStage(stage) {
+            runStage(stage) onStageComplete@{
                 val count = graph.stageCompletedCount.incrementAndGet()
                 onCompletedForStage(stage)
                 if (graph.stageSize == count) {
@@ -91,29 +91,29 @@ internal abstract class AbsGraphExecutor<KEY, NODE : Node<NODE>, GRAPH : Graph<K
         }
     }
 
-    private fun runStage(stage: Stage<NODE>, onComplete: () -> Unit) {
+    private fun runStage(stage: Stage<NODE>, onStageComplete: () -> Unit) {
         if (stage.isEmpty) return
         check(!stage.hasRing) { "Prohibit interdependence between nodes." }
         stage.nodes?.run {
             forEach { node ->
-                runNode(node) {
+                runNode(node) onNodeComplete@{
                     val count = stage.completedCount.incrementAndGet()
-                    onCompletedForNode(node)
+                    onCompleted(node)
                     if ((stage.nodes?.size ?: 0) == count) {
-                        onComplete()
+                        onStageComplete()
                     }
                 }
             }
         }
     }
 
-    abstract fun runNode(node: NODE, onDependsNodeComplete: () -> Unit)
+    abstract fun runNode(node: NODE, onNodeComplete: () -> Unit)
 
     abstract fun onCompletedForGraph(graph: GRAPH)
 
     abstract fun onCompletedForStage(stage: Stage<NODE>)
 
-    abstract fun onCompletedForNode(node: NODE)
+    abstract fun onCompleted(node: NODE)
 
     private interface ExitRunnable : Runnable
 }
