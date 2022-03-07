@@ -5,7 +5,6 @@ import android.content.Intent
 import com.p2m.annotation.module.ModuleInitializer
 import com.p2m.core.P2M
 import com.p2m.core.event.BackgroundObserver
-import com.p2m.core.event.ObserveOn
 import com.p2m.core.module.*
 import com.p2m.example.account.p2m.api.Account
 import com.p2m.example.main.p2m.api.Main
@@ -24,20 +23,17 @@ class MainModuleInit : ModuleInit {
         val account = P2M.apiOf(Account::class.java)
         
         // 登录成功跳转主页
-        account.event.loginSuccess.observeForeverNoSticky(object: BackgroundObserver<Unit>(ObserveOn.BACKGROUND) {
-            override fun onChanged(t: Unit) {
+        account.event.loginSuccess.observeForeverNoSticky(BackgroundObserver<Unit> {
                 // 登录成功启动主界面
-                P2M.apiOf(Main::class.java)
-                    .launcher
-                    .activityOfMain
-                    .launchChannel {
-                        it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                        it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        context.startActivity(it)
-                    }
-                    .navigation()
-            }
-
+            P2M.apiOf(Main::class.java)
+                .launcher
+                .activityOfMain
+                .launchChannel {
+                    it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(it)
+                }
+                .navigation()
         })
     }
 
