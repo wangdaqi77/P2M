@@ -15,22 +15,15 @@ import com.p2m.core.internal.event.InternalBackgroundLiveEvent
  * @see EventOn.MAIN - gen by KAPT.
  */
 interface LiveEvent<T>{
+    companion object {
+        fun <T> delegate(): Lazy<LiveEvent<T>> =
+            lazy { InternalLiveEvent() }
 
-    class Delegate<T> {
-        private val real by lazy { InternalLiveEvent<T>() }
+        fun <T> delegateMutable(): Lazy<MutableLiveEvent<T>> =
+            lazy { InternalLiveEvent() }
 
-        operator fun getValue(thisRef: Any?, property: KProperty<*>): LiveEvent<T> = real
-    }
-
-    class MutableDelegate<T> {
-        private val real by lazy { InternalLiveEvent<T>() }
-
-        operator fun getValue(thisRef: Any?, property: KProperty<*>): MutableLiveEvent<T> = real
-    }
-
-    class InternalMutableDelegate<T>(private val real: LiveEvent<T>) {
-
-        operator fun getValue(thisRef: Any?, property: KProperty<*>): MutableLiveEvent<T> = real as MutableLiveEvent
+        fun <T> toMutable(real: LiveEvent<T>): Lazy<MutableLiveEvent<T>> =
+            lazy(LazyThreadSafetyMode.NONE) { real as MutableLiveEvent }
     }
 
     fun observe(owner: LifecycleOwner, observer: Observer<in T>)

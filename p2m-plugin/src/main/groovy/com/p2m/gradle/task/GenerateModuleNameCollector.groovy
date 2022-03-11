@@ -1,7 +1,5 @@
 package com.p2m.gradle.task
 
-import com.google.common.base.Charsets
-import com.google.common.io.Closer
 import com.p2m.gradle.utils.Constant
 import com.squareup.javawriter.JavaWriter
 import org.gradle.api.DefaultTask
@@ -49,11 +47,13 @@ class GenerateModuleNameCollector extends DefaultTask {
         }
         def moduleNameCollectorJavaFile = new File(pkgFolder, MODULE_AUTO_COLLECTOR_NAME)
 
-        Closer closer = Closer.create()
+        FileOutputStream fos = null
+        OutputStreamWriter out = null
+        JavaWriter writer = null
         try {
-            FileOutputStream fos = closer.register(new FileOutputStream(moduleNameCollectorJavaFile))
-            OutputStreamWriter out = closer.register(new OutputStreamWriter(fos, Charsets.UTF_8))
-            JavaWriter writer = closer.register(new JavaWriter(out))
+            fos = new FileOutputStream(moduleNameCollectorJavaFile)
+            out = new OutputStreamWriter(fos, "UTF-8")
+            writer = new JavaWriter(out)
 
             Set classModifiers = new HashSet()
             classModifiers.add(Modifier.PUBLIC)
@@ -70,11 +70,11 @@ class GenerateModuleNameCollector extends DefaultTask {
                 writer.emitStatement("collect(\"%s\")", moduleName)
             }
             writer.endConstructor()
-            writer.endType();
-        } catch (Throwable e) {
-            throw closer.rethrow(e);
+            writer.endType()
         } finally {
-            closer.close();
+            try {writer.close()} catch (Exception e) {}
+            try {out.close()} catch (Exception e) {}
+            try {fos.close()} catch (Exception e) {}
         }
 
     }

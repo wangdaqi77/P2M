@@ -32,9 +32,9 @@ abstract class BaseProcessor : AbstractProcessor() {
         const val CLASS_BACKGROUND_EVENT = "BackgroundLiveEvent"
         const val CLASS_MUTABLE_LIVE_EVENT = "MutableLiveEvent"
         const val CLASS_MUTABLE_BACKGROUND_EVENT = "MutableBackgroundLiveEvent"
-        const val CLASS_EVENT_DELEGATE = "Delegate"
-        const val CLASS_EVENT_MUTABLE_DELEGATE = "MutableDelegate"
-        const val CLASS_EVENT_INTERNAL_MUTABLE_DELEGATE = "InternalMutableDelegate"
+        const val CLASS_EVENT_DELEGATE = "delegate"
+        const val CLASS_EVENT_MUTABLE_DELEGATE = "delegateMutable"
+        const val CLASS_EVENT_INTERNAL_MUTABLE_DELEGATE = "toMutable"
 
         const val PACKAGE_NAME_LAUNCHER = "${PACKAGE_NAME_CORE}.launcher"
         const val CLASS_ActivityResultContractCompat = "ActivityResultContractCompat"
@@ -42,7 +42,7 @@ abstract class BaseProcessor : AbstractProcessor() {
         const val CLASS_ActivityLauncher = "ActivityLauncher"
         const val CLASS_FragmentLauncher = "FragmentLauncher"
         const val CLASS_ServiceLauncher = "ServiceLauncher"
-        const val CLASS_LAUNCHER_DELEGATE = "Delegate"
+        const val CLASS_LAUNCHER_DELEGATE = "delegate"
         const val CLASS_ILaunchActivityInterceptor = "ILaunchActivityInterceptor"
     }
 

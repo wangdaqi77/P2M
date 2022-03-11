@@ -1,6 +1,5 @@
 package com.p2m.compiler.processing
 
-import android.content.Intent
 import com.google.auto.service.AutoService
 import com.p2m.annotation.module.ModuleInitializer
 import com.p2m.annotation.module.api.*
@@ -576,19 +575,19 @@ class P2MProcessor : BaseProcessor() {
             launcherVarName,
             genModuleLauncherResult.apiClassName,
             KModifier.OVERRIDE
-        ).mutable(false).delegate("lazy() { ${genModuleLauncherResult.getImplInstanceStatement()} }").build()
+        ).mutable(false).initializer(genModuleLauncherResult.getImplInstanceStatement()).build()
 
         val serviceProperty = PropertySpec.builder(
             serviceVarName,
             genModuleServiceResult.apiClassName,
             KModifier.OVERRIDE
-        ).mutable(false).delegate("lazy() { ${genModuleServiceResult.getImplInstanceStatement()} }").build()
+        ).mutable(false).initializer(genModuleServiceResult.getImplInstanceStatement()).build()
 
         val eventProperty = PropertySpec.builder(
             eventVarName,
             genModuleEventResult.apiClassName,
             KModifier.OVERRIDE
-        ).mutable(false).delegate("lazy() { ${genModuleEventResult.getImplInstanceStatement()} }").build()
+        ).mutable(false).initializer(genModuleEventResult.getImplInstanceStatement()).build()
 
         // 模块实现类
         val implTypeSpecBuilder = TypeSpec
@@ -664,9 +663,7 @@ class P2MProcessor : BaseProcessor() {
         val ActivityLauncher = ClassName(PACKAGE_NAME_LAUNCHER, CLASS_ActivityLauncher)
         val ServiceLauncher = ClassName(PACKAGE_NAME_LAUNCHER, CLASS_ServiceLauncher)
         val FragmentLauncher = ClassName(PACKAGE_NAME_LAUNCHER, CLASS_FragmentLauncher)
-        val ActivityLauncherDelegate = ClassName.bestGuess("$ActivityLauncher.$CLASS_LAUNCHER_DELEGATE")
-        val ServiceLauncherDelegate = ClassName.bestGuess("$ServiceLauncher.$CLASS_LAUNCHER_DELEGATE")
-        val FragmentLauncherDelegate = ClassName.bestGuess("$FragmentLauncher.$CLASS_LAUNCHER_DELEGATE")
+        val delegateFunctionName = CLASS_LAUNCHER_DELEGATE
         val ActivityResultContractP2MCompat = ClassName(PACKAGE_NAME_LAUNCHER, CLASS_ActivityResultContractCompat)
 
 
@@ -841,6 +838,9 @@ class P2MProcessor : BaseProcessor() {
                     val launchActivityInterceptorsStr = interceptorsCacheFinal[element]
                             ?.joinToString(", ") { "${it.canonicalName}::class" }
                             ?: ""
+                    /*
+                    * val activityOf$launcherName: ActivityLauncher<I, O> by lazy(ActivityLauncher.delegate())
+                    */
                     PropertySpec.builder(
                         name = "activityOf$launcherName",
                         type = ActivityLauncher.parameterizedBy(
@@ -850,8 +850,9 @@ class P2MProcessor : BaseProcessor() {
                         .addModifiers(KModifier.OVERRIDE)
                         .mutable(false)
                         .delegate(
-                            "%T(%T::class.java, %L) { %L() }",
-                            ActivityLauncherDelegate,
+                            "%T.%L(%T::class.java, %L) { %L() }",
+                            ActivityLauncher,
+                            delegateFunctionName,
                             className,
                             launchActivityInterceptorsStr,
                             activityResultContractTypeCache[launcherName]!!
@@ -870,21 +871,31 @@ class P2MProcessor : BaseProcessor() {
                     )
 
                     /*
-                    * val fragmentOf$launcherName: FragmentLauncher<Fragment> by lazy(FragmentLauncher.Delegate{ XX() }})
+                    * val fragmentOf$launcherName: FragmentLauncher<Fragment> by lazy(FragmentLauncher.delegate{ XX() }})
                     */
                     PropertySpec.builder(name = "fragmentOf$launcherName", type = FragmentLauncher.parameterizedBy(fragmentClassName))
                         .addModifiers(KModifier.OVERRIDE)
                         .mutable(false)
-                        .delegate("%T{ %T() }", FragmentLauncherDelegate, className)
+                        .delegate(
+                            "%T.%L{ %T() }",
+                            FragmentLauncher,
+                            delegateFunctionName,
+                            className
+                        )
                 }
                 typeUtils.isSubtype(tm, serviceTm) -> { // Service
                     /*
-                    * val serviceOf$launcherName: ServiceLauncher by lazy(ServiceLauncher.Delegate(XX::class.java))
+                    * val serviceOf$launcherName: ServiceLauncher by lazy(ServiceLauncher.delegate(XX::class.java))
                     */
                     PropertySpec.builder(name = "serviceOf$launcherName", type = ServiceLauncher)
                         .addModifiers(KModifier.OVERRIDE)
                         .mutable(false)
-                        .delegate("%T(%T::class.java)", ServiceLauncherDelegate, className)
+                        .delegate(
+                            "%T.%L(%T::class.java)",
+                            ServiceLauncher,
+                            delegateFunctionName,
+                            className
+                        )
                 }
                 else -> throw IllegalArgumentException("@ApiLauncher not support in ${className.canonicalName}.")
             }

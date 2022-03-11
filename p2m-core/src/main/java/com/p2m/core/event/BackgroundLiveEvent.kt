@@ -4,6 +4,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
 import com.p2m.annotation.module.api.*
 import com.p2m.core.internal.event.InternalBackgroundLiveEvent
+import com.p2m.core.internal.event.InternalLiveEvent
 import kotlin.reflect.KProperty
 
 /**
@@ -15,22 +16,15 @@ import kotlin.reflect.KProperty
  * @see BackgroundObserver - can specified thread to receive event.
  */
 interface BackgroundLiveEvent<T> {
+    companion object {
+        fun <T> delegate(): Lazy<BackgroundLiveEvent<T>> =
+            lazy { InternalBackgroundLiveEvent() }
 
-    class Delegate<T> {
-        private val real by lazy { InternalBackgroundLiveEvent<T>() }
+        fun <T> delegateMutable(): Lazy<MutableBackgroundLiveEvent<T>> =
+            lazy { InternalBackgroundLiveEvent() }
 
-        operator fun getValue(thisRef: Any?, property: KProperty<*>): BackgroundLiveEvent<T> = real
-    }
-
-    class MutableDelegate<T> {
-        private val real by lazy { InternalBackgroundLiveEvent<T>() }
-
-        operator fun getValue(thisRef: Any?, property: KProperty<*>): MutableBackgroundLiveEvent<T> = real
-    }
-
-    class InternalMutableDelegate<T>(private val real: BackgroundLiveEvent<T>) {
-
-        operator fun getValue(thisRef: Any?, property: KProperty<*>): MutableBackgroundLiveEvent<T> = real as MutableBackgroundLiveEvent
+        fun <T> toMutable(real: BackgroundLiveEvent<T>): Lazy<MutableBackgroundLiveEvent<T>> =
+            lazy(LazyThreadSafetyMode.NONE) { real as MutableBackgroundLiveEvent }
     }
 
     fun observe(owner: LifecycleOwner, observer: BackgroundObserver<in T>)

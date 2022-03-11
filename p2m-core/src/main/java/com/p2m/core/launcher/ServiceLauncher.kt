@@ -39,11 +39,9 @@ import kotlin.reflect.KProperty
  * @see ApiLauncher
  */
 interface ServiceLauncher : Launcher {
-
-    class Delegate(clazz: Class<*>) {
-        private val real by lazy(LazyThreadSafetyMode.NONE) { InternalServiceLauncher(clazz) }
-
-        operator fun getValue(thisRef: Any?, property: KProperty<*>): ServiceLauncher = real
+    companion object {
+        fun delegate(clazz: Class<*>): Lazy<ServiceLauncher> =
+            lazy(LazyThreadSafetyMode.NONE) { InternalServiceLauncher(clazz) }
     }
 
     /**

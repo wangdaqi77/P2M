@@ -38,13 +38,18 @@ import kotlin.reflect.KProperty
  * @see ApiLauncher
  */
 interface ActivityLauncher<I, O> : Launcher{
-
-    class Delegate<I, O>(clazz: Class<*>, vararg annotatedInterceptorClass: KClass<out ILaunchActivityInterceptor>, createActivityResultContractBlock: () -> ActivityResultContractCompat<I, O>) {
-        private val real by lazy(LazyThreadSafetyMode.NONE) {
-            InternalActivityLauncher<I, O>(clazz, annotatedInterceptorClass, createActivityResultContractBlock)
+    companion object {
+        fun <I, O> delegate(
+            clazz: Class<*>,
+            vararg annotatedInterceptorClass: KClass<out ILaunchActivityInterceptor>,
+            createActivityResultContractBlock: () -> ActivityResultContractCompat<I, O>
+        ) : Lazy<ActivityLauncher<I, O>> = lazy(LazyThreadSafetyMode.NONE) {
+            InternalActivityLauncher(
+                clazz,
+                annotatedInterceptorClass,
+                createActivityResultContractBlock
+            )
         }
-
-        operator fun getValue(thisRef: Any?, property: KProperty<*>): ActivityLauncher<I, O> = real
     }
 
     /**

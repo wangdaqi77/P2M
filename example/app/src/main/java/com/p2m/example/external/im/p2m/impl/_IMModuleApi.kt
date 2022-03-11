@@ -13,7 +13,7 @@ import com.p2m.example.external.im.p2m.api.IMModuleLauncher
 public class _IMModuleLauncher : IMModuleLauncher {
 
   public override val activityOfIM: ActivityLauncher<Unit, Intent> by
-      ActivityLauncher.Delegate(IMActivity::class.java) { DefaultActivityResultContractCompat() }
+      ActivityLauncher.delegate(IMActivity::class.java) { DefaultActivityResultContractCompat() }
 }
 
 public class _IMModuleApi : IMModuleApi {

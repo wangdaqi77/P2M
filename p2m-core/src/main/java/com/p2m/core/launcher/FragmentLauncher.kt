@@ -24,11 +24,9 @@ import kotlin.reflect.KProperty
  * @see ApiLauncher
  */
 interface FragmentLauncher<T> : Launcher {
-
-    class Delegate<T>(createBlock:() -> T) {
-        private val real by lazy(LazyThreadSafetyMode.NONE) { InternalFragmentLauncher<T>(createBlock) }
-
-        operator fun getValue(thisRef: Any?, property: KProperty<*>): FragmentLauncher<T> = real
+    companion object {
+        fun <T> delegate(createBlock: () -> T): Lazy<FragmentLauncher<T>> =
+            lazy(LazyThreadSafetyMode.NONE) { InternalFragmentLauncher(createBlock) }
     }
 
     /**
