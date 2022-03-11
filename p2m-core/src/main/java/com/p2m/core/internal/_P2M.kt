@@ -33,9 +33,8 @@ import kotlin.collections.ArrayList
 internal object _P2M : ModuleApiProvider, ModuleVisitor {
     internal lateinit var internalContext : Context
     internal val configManager: P2MConfigManager = InternalP2MConfigManager()
-    internal val executor : ExecutorService by lazy(LazyThreadSafetyMode.NONE) { InternalThreadPoolExecutor() }
     internal val mainExecutor: Executor by lazy(LazyThreadSafetyMode.NONE) { InternalMainExecutor() }
-    internal val interceptorService: InterceptorService by lazy(LazyThreadSafetyMode.NONE) { InterceptorServiceDefault(executor) }
+    internal val interceptorService: InterceptorService by lazy(LazyThreadSafetyMode.NONE) { InterceptorServiceDefault(InternalThreadPoolExecutor()) }
     internal val launchActivityHelper by lazy(LazyThreadSafetyMode.NONE) { LaunchActivityHelper() }
     internal val interceptorContainer = ChannelInterceptorContainer()
     private val moduleContainer = ModuleContainerDefault()

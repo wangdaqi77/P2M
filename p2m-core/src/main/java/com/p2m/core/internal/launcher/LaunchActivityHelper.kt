@@ -26,9 +26,7 @@ internal class LaunchActivityHelper : Application.ActivityLifecycleCallbacks {
     private val idFactory = AtomicInteger(ID_NO_SET)
     private val table = SparseArray<RecoverableChannel>()
     private val timeoutRunnable = SparseArray<TagRunnable>()
-    private val executor: Executor by lazy(LazyThreadSafetyMode.NONE) {
-        InternalExecutor()
-    }
+    private val executor: Executor = InternalExecutor()
 
     fun init(context: Context) {
         val application = context.applicationContext as Application

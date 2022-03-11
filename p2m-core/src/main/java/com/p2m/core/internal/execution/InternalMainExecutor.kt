@@ -5,7 +5,7 @@ import android.os.Looper
 import com.p2m.core.internal.log.logW
 
 internal class InternalMainExecutor : Executor {
-    private val handler by lazy { Handler(Looper.getMainLooper()) }
+    private val handler = Handler(Looper.getMainLooper())
 
     override fun loop() {
         logW("disallow in main thread")
