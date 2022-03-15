@@ -22,7 +22,7 @@ class PublishUtils {
                 ConfigureUtil.configure(project._p2mMavenRepositoryClosure, repository)
             }
             if (repository.getUrl() == null) {
-                repository.url = project.buildscript.repositories.mavenLocal().url
+                repository.url = project.rootProject.file("repo")
             }
             repository.name = Constant.P2M_MODULE_AAR_REPO_NAME
         }

@@ -79,7 +79,7 @@ P2M插件的全名为`p2m-android`，它需要在`settings.gradle`文件中进�
             runApp = false                          // 运行app开关，默认值false，true表示可以运行app，false表示作为模块，applicationId等配置在./projectPath/build.gradle中的p2mRunAppBuildGradle{}
         }
 
-        p2mMavenRepository {                        // 声明maven仓库, 默认mavenLocal()
+        p2mMavenRepository {                        // 声明maven仓库, 默认rootProjectPath/repo
             url = "your maven repository url"       // 仓库地址
             credentials {                           // 认证信息
                 username = "your user name"

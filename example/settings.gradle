@@ -77,7 +77,7 @@ p2m {
         runApp = false
     }
 
-//    p2mMavenRepository {                        // 声明maven仓库, 默认mavenLocal()
+//    p2mMavenRepository {                        // 声明maven仓库, 默认rootProjectPath/repo
 //        url = "your maven repository url"       // 仓库地址
 //        credentials {                           // 认证信息
 //            username = "your user name"
