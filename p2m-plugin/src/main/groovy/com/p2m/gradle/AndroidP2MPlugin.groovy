@@ -34,52 +34,39 @@ class AndroidP2MPlugin implements Plugin<Settings> {
     void apply(final Settings settings) {
 
         p2mConfig = settings.extensions.create("p2m", P2MConfig.class, settings)
-        settings.gradle.addBuildListener(new BuildListener() {
-            @Override
-            void buildStarted(Gradle gradle) { }
+        settings.gradle.settingsEvaluated { settings1 ->
+            println("======P2M version:${Constant.P2M_VERSION}======")
 
-            @Override
-            void settingsEvaluated(Settings settings1) {
-                println("======P2M version:${Constant.P2M_VERSION}======")
+            loadEnv(settings)
 
-                loadEnv(settings)
+            evaluateModulesFromConfigExtensions()
 
-                evaluateModulesFromConfigExtensions()
+            startIncludeModulesByConfig(settings)
+        }
 
-                startIncludeModulesByConfig(settings)
+        settings.gradle.projectsLoaded { gradle ->
+            settings.gradle.removeListener(this)
+
+            def rootProject = gradle.rootProject
+            rootProject.ext._p2mDevEnv = p2mConfig._devEnv
+
+            genP2MProjectDependencyConfig(rootProject)
+
+            genModuleProjectTable(rootProject)
+
+            rootProject.ext._moduleProjectUnitTable = moduleProjectUnitTable
+
+            configLocalModuleProject()
+
+            configRemoteModuleProject()
+
+            if (!existRunAppModule) {
+                configAppProject(rootProject)
             }
 
-            @Override
-            void projectsLoaded(Gradle gradle) {
-                settings.gradle.removeListener(this)
-
-                def rootProject = gradle.rootProject
-                rootProject.ext._p2mDevEnv = p2mConfig._devEnv
-
-                genP2MProjectDependencyConfig(rootProject)
-
-                genModuleProjectTable(rootProject)
-
-                rootProject.ext._moduleProjectUnitTable = moduleProjectUnitTable
-
-                configLocalModuleProject()
-
-                configRemoteModuleProject()
-
-                if (!existRunAppModule) {
-                    configAppProject(rootProject)
-                }
-
-                // 为所有apply "com.android.library"插件的项目编译时依赖P2M project
-                dependencyP2MProjectForAllApplyAndroidLibraryPluginProject(rootProject)
-            }
-
-            @Override
-            void projectsEvaluated(Gradle gradle) { }
-
-            @Override
-            void buildFinished(BuildResult buildResult) { }
-        })
+            // 为所有apply "com.android.library"插件的项目编译时依赖P2M project
+            dependencyP2MProjectForAllApplyAndroidLibraryPluginProject(rootProject)
+        }
     }
 
     private static def checkAppConfig(BaseProjectUnit project) {
