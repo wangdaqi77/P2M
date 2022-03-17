@@ -1,16 +1,18 @@
 package com.p2m.gradle.task
 
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.bundling.Jar
 
-class ApiJar extends Jar {
+abstract class ApiJar extends Jar {
 
     @InputDirectory
-    File inputKaptDirCollection
+    abstract DirectoryProperty getInputKaptDir()
 
     @InputFiles
-    FileTree inputKotlinCompilerOutput
+    abstract ConfigurableFileCollection getInputKotlinCompilerSource()
 
 }

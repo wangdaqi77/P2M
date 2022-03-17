@@ -13,11 +13,13 @@ import com.p2m.gradle.utils.PublishUtils
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.jetbrains.kotlin.gradle.internal.KaptTask
 
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.Callable
 
 class ProductApiPlugin implements Plugin<Project> {
     private LocalModuleProjectUnit moduleProject
@@ -102,8 +104,8 @@ class ProductApiPlugin implements Plugin<Project> {
                 dependsOn(compileKotlin)
                 archiveFileName.set(apiJarName)
                 destinationDirectory.set(p2mApiJarDir)
-                inputKaptDirCollection = kaptKotlin.get().destinationDir // for UP-TO-DATE
-                inputKotlinCompilerOutput = compileKotlin.get().source // for UP-TO-DATE
+                inputKaptDir.set(kaptKotlin.get().destinationDir)// for UP-TO-DATE
+                inputKotlinCompilerSource.from(compileKotlin.get().source) // for UP-TO-DATE
                 // value like java/lang/String
                 List<String> exportApiClassPathList = new ArrayList<>()
 
@@ -140,8 +142,8 @@ class ProductApiPlugin implements Plugin<Project> {
                 archiveClassifier.set('sources')
                 // java/lang/String
                 List<String> exportApiSourcePathList = new ArrayList<>()
-                inputKaptDirCollection = kaptKotlin.get().destinationDir // for UP-TO-DATE
-                inputKotlinCompilerOutput = compileKotlin.get().source // for UP-TO-DATE
+                inputKaptDir.set(kaptKotlin.get().destinationDir) // for UP-TO-DATE
+                inputKotlinCompilerSource.from(compileKotlin.get().source) // for UP-TO-DATE
                 doFirst {
                     p2mApiPropertiesConfigurableFileCollection.getSingleFile().newReader(StandardCharsets.UTF_8.name()).eachLine { line ->
                         def split = line.split("=")
