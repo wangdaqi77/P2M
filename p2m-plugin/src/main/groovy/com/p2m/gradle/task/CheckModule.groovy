@@ -7,15 +7,10 @@ import org.gradle.api.tasks.TaskAction
 
 import java.nio.charset.StandardCharsets
 
-class CheckModule extends DefaultTask {
-
-
-    private RegularFileProperty propertiesFile = project.objects.fileProperty()
+abstract class CheckModule extends DefaultTask {
 
     @InputFile
-    RegularFileProperty getPropertiesFile() {
-        return propertiesFile
-    }
+    abstract RegularFileProperty getPropertiesFile()
 
     @TaskAction
     void doCheck(){

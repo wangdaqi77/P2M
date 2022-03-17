@@ -14,24 +14,17 @@ import org.gradle.api.tasks.TaskAction
 import javax.lang.model.element.Modifier
 
 @CacheableTask
-class GenerateModuleNameCollector extends DefaultTask {
+abstract class GenerateModuleNameCollector extends DefaultTask {
     public static final String MODULE_AUTO_COLLECTOR = "GeneratedModuleNameCollector"
     public static final String MODULE_AUTO_COLLECTOR_NAME = MODULE_AUTO_COLLECTOR + ".java"
     public static final String MODULE_AUTO_COLLECTOR_SUPER = "com.p2m.core.module.ModuleNameCollector"
-    private ListProperty<List<String>> validDependenciesName = project.objects.listProperty(String.class)
     private Property<String> packageName = project.objects.property(String.class)
 
-    private DirectoryProperty sourceOutputDir = project.objects.directoryProperty()
-
     @OutputDirectory
-    DirectoryProperty getSourceOutputDir() {
-        return sourceOutputDir
-    }
+    abstract DirectoryProperty getSourceOutputDir()
 
     @Input
-    ListProperty<String> getValidDependenciesName() {
-        return validDependenciesName
-    }
+    abstract ListProperty<String> getValidDependenciesName()
 
     @Input
     Property<String> getPackageName() {
