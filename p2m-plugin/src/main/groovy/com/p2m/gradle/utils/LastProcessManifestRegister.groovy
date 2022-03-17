@@ -7,8 +7,8 @@ import com.android.build.gradle.tasks.ProcessApplicationManifest
 import com.android.build.gradle.tasks.ProcessLibraryManifest
 import com.p2m.gradle.bean.BaseProjectUnit
 import com.p2m.gradle.bean.RunAppConfig
+import groovy.io.GroovyPrintWriter
 import groovy.util.slurpersupport.GPathResult
-import groovy.xml.XmlUtil
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.util.ConfigureUtil
 
@@ -64,7 +64,13 @@ class LastProcessManifestRegister {
                                 }
 
                                 newManifestFile.withWriter { out ->
-                                    XmlUtil.serialize(topNode, out)
+                                    //XmlUtil.serialize(topNode, out)
+                                    Writer sw = new StringWriter();
+                                    GroovyPrintWriter pw = new GroovyPrintWriter(sw);
+                                    XmlNodePrinter nodePrinter = new XmlNodePrinter(pw);
+                                    nodePrinter.setPreserveWhitespace(true);
+                                    nodePrinter.print(topNode);
+                                    out.write(sw.toString())
                                 }
 
                             }
