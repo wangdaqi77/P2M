@@ -75,6 +75,8 @@ class ModuleRunAppProjectPlugin extends BaseSupportDependencyModulePlugin {
             application.appendNode('meta-data', attributes)
         }
 
-        GenerateModuleNameCollectorJavaTaskRegister.register(moduleProject, true)
+        project.afterEvaluate {
+            GenerateModuleNameCollectorJavaTaskRegister.register(moduleProject, true)
+        }
     }
 }

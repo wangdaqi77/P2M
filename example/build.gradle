@@ -1,21 +1,24 @@
-
 buildscript {
-    ext.kotlin_version = "1.4.10"
     repositories {
+        google()
         mavenCentral()
     }
     dependencies {
-// 移除这几个依赖声明
-//        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.10'
-//        classpath 'com.android.tools.build:gradle:4.0.2'
+        // 移除KGP和AGP插件声明，settings.gradle会声明他们
+//        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$KT_VERSION"
+//        classpath "com.android.tools.build:gradle:$AGP_VERSION"
     }
+
 }
 
 
 allprojects { Project project ->
-    project.repositories {
-        google()
-        mavenCentral()
+    def isGradle6 = gradle.gradleVersion.startsWith("6")
+    if (isGradle6) {
+        project.repositories {
+            google()
+            mavenCentral()
+        }
     }
 }
 

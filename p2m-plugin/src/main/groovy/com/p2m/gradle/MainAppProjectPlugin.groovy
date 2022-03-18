@@ -54,7 +54,9 @@ class MainAppProjectPlugin extends BaseSupportDependencyModulePlugin {
             }
         }
 
-        GenerateModuleNameCollectorJavaTaskRegister.register(appProject, false)
+        project.afterEvaluate {
+            GenerateModuleNameCollectorJavaTaskRegister.register(appProject, false)
+        }
     }
 
 }

@@ -1,5 +1,6 @@
 package com.p2m.gradle
 
+import com.android.Version
 import com.android.build.gradle.api.BaseVariant
 import com.p2m.gradle.bean.LocalModuleProjectUnit
 import com.p2m.gradle.bean.ModuleProjectUnit
@@ -49,7 +50,7 @@ class ProductApiPlugin implements Plugin<Project> {
 
         AndroidUtils.forEachVariant(project) { BaseVariant variant ->
             moduleProject.project.kapt.arguments {
-                arg("applicationId", variant.getApplicationId())
+                arg("applicationId", AndroidUtils.getApplicationIdByVariant(variant))
             }
         }
 

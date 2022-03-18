@@ -7,6 +7,8 @@ import com.p2m.gradle.bean.ModuleProjectUnit
 import com.p2m.gradle.task.GenerateModuleNameCollector
 import org.gradle.api.tasks.TaskProvider
 
+import java.util.concurrent.Callable
+
 class GenerateModuleNameCollectorJavaTaskRegister {
 
     public static void register(BaseProjectUnit moduleProject, boolean collectSelf){
@@ -18,8 +20,8 @@ class GenerateModuleNameCollectorJavaTaskRegister {
             def variantName = variant.name
             def variantTaskMiddleName = variantName.capitalize()
             def taskName = "generate${variantTaskMiddleName}GeneratedModuleNameCollector"
-            HashSet<String> validDependenciesName = new HashSet<String>()
-            validDependencies.forEach { validDependenciesName.add(it.moduleName) }
+            HashSet<String> validDependenciesNames = new HashSet<String>()
+            validDependencies.forEach { validDependenciesNames.add(it.moduleName) }
             def generateModuleNameCollectorSourceOutputDir = new File(
                     project.getBuildDir().absolutePath
                             + File.separator
@@ -30,10 +32,16 @@ class GenerateModuleNameCollectorJavaTaskRegister {
                             + "GeneratedModuleNameCollector"
                             + File.separator
                             + variantName)
-            TaskProvider taskProvider = project.tasks.register(taskName, GenerateModuleNameCollector.class) { task ->
-                task.sourceOutputDir.set(generateModuleNameCollectorSourceOutputDir)
-                task.packageName.set(variant.applicationId)
-                task.validDependenciesName.set(validDependenciesName)
+            TaskProvider taskProvider = project.tasks.register(taskName, GenerateModuleNameCollector.class) {
+                dependsOn variant.getApplicationIdTextResource()
+                sourceOutputDir.set(generateModuleNameCollectorSourceOutputDir)
+                packageName.set(project.providers.provider(new Callable<String>() {
+                    @Override
+                     String call() throws Exception {
+                        return variant.getApplicationIdTextResource().asString()
+                    }
+                }))
+                validDependenciesName.set(validDependenciesNames)
             }
 
             variant.registerJavaGeneratingTask(taskProvider.get(), generateModuleNameCollectorSourceOutputDir)

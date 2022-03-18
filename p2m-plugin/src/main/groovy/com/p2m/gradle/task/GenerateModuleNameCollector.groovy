@@ -4,10 +4,13 @@ import com.p2m.gradle.utils.Constant
 import com.squareup.javawriter.JavaWriter
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.resources.TextResource
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 
@@ -18,7 +21,6 @@ abstract class GenerateModuleNameCollector extends DefaultTask {
     public static final String MODULE_AUTO_COLLECTOR = "GeneratedModuleNameCollector"
     public static final String MODULE_AUTO_COLLECTOR_NAME = MODULE_AUTO_COLLECTOR + ".java"
     public static final String MODULE_AUTO_COLLECTOR_SUPER = "com.p2m.core.module.ModuleNameCollector"
-    private Property<String> packageName = project.objects.property(String.class)
 
     @OutputDirectory
     abstract DirectoryProperty getSourceOutputDir()
@@ -27,9 +29,7 @@ abstract class GenerateModuleNameCollector extends DefaultTask {
     abstract ListProperty<String> getValidDependenciesName()
 
     @Input
-    Property<String> getPackageName() {
-        return packageName
-    }
+    abstract Property<String> getPackageName()
 
     @TaskAction
     void generate(){

@@ -35,7 +35,7 @@ class Constant {
     public static final P2M_NAME_API = "p2m-core"
     public static final P2M_NAME_ANNOTATION = "p2m-annotation"
     public static final P2M_NAME_COMPILER = "p2m-compiler"
-    public static final P2M_VERSION = "0.2.1"
+    public static final P2M_VERSION = "0.2.3"
     public static final P2M_MODULE_AAR_REPO_NAME = "p2mMavenRepository"
     public static final P2M_PUBLISH_TASK_GROUP = "p2mPublish"
     public static final P2M_MODULE_TASK_GROUP = "p2m"

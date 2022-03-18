@@ -10,11 +10,6 @@ dependencies {
     compileOnly 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.10'
     implementation gradleApi()
     implementation localGroovy()
-
-    //ASM
-    implementation 'org.ow2.asm:asm:7.1'
-    implementation 'org.ow2.asm:asm-util:7.1'
-    implementation 'org.ow2.asm:asm-commons:7.1'
 }
 
 repositories {
@@ -23,7 +18,7 @@ repositories {
 }
 
 group = "com.github.wangdaqi77.P2M"
-version = "0.2.1"
+version = "0.2.3"
 
 gradlePlugin {
     plugins {

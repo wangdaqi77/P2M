@@ -1,7 +1,25 @@
+def isGradle7 = gradle.gradleVersion.startsWith("7")
+if (isGradle7) {
+
+    dependencyResolutionManagement {
+        repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+        repositories {
+            google()
+            mavenLocal()
+            mavenCentral()
+            maven { url 'https://jitpack.io' }
+        }
+    }
+
+}
+
 rootProject.name = "P2M-Example"
 
 include ':lib-http'
 include ':lib-common'
+//include ':p2m-plugin'
+//project(':p2m-plugin').projectDir = new File("../p2m-plugin")
+//includeBuild '../p2m-plugin' // for debug ./gradlew assembleDebug -Dorg.gradle.debug=true --scan -s
 
 buildscript {
     repositories {
@@ -12,9 +30,9 @@ buildscript {
     }
 
     dependencies {
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.10'    // Kotlin支持1.3.20+
-        classpath 'com.android.tools.build:gradle:4.0.2'                // AGP支持3.4.0+
-        classpath 'com.github.wangdaqi77.P2M:p2m-plugin:0.2.1'         // P2M插件
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$KT_VERSION"       // Kotlin支持1.3.20+
+        classpath "com.android.tools.build:gradle:$AGP_VERSION"                 // AGP支持3.4.0+
+        classpath "com.github.wangdaqi77.P2M:p2m-plugin:$P2M_VERSION"           // P2M插件
     }
 }
 

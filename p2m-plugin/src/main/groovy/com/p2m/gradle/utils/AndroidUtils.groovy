@@ -1,5 +1,6 @@
 package com.p2m.gradle.utils
 
+import com.android.Version
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.TestExtension
@@ -42,4 +43,10 @@ class AndroidUtils {
             androidExtension.unitTestVariants.all(action)
         }
     }
+
+    static def getApplicationIdByVariant = { BaseVariant variant->
+        return isAGP7 ? [variant.mergedFlavor.applicationId, variant.buildType.applicationIdSuffix].findAll().join() : variant.getApplicationId()
+    }
+
+    static def isAGP7 = Version.ANDROID_GRADLE_PLUGIN_VERSION.startsWith("7")
 }

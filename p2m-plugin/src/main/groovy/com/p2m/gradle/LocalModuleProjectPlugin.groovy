@@ -20,6 +20,9 @@ class LocalModuleProjectPlugin extends BaseSupportDependencyModulePlugin {
             handler.add("compileOnly", project._p2mApi())
             handler.add("compileOnly", project._p2mAnnotation())
             handler.add("kapt", project._p2mCompiler())
+//            handler.add("kapt", "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.3.0") {
+//                exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib"
+//            }
         }
 
         def lastProcessManifestRegister = new LastProcessManifestRegister(moduleProject)
