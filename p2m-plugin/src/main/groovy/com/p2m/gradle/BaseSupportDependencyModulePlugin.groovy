@@ -48,11 +48,13 @@ abstract class BaseSupportDependencyModulePlugin extends BaseModulePlugin {
     }
 
     def remoteDependsOn = { DependencyHandler dependencyHandler, ModuleProjectUnit moduleProject ->
+        dependencyHandler.add("androidTestImplementation", "${moduleProject.groupId}:${moduleProject.moduleArtifactId}:${moduleProject.versionName}")
         dependencyHandler.add("runtimeOnly", "${moduleProject.groupId}:${moduleProject.moduleArtifactId}:${moduleProject.versionName}")
         dependencyHandler.add("compileOnly", "${moduleProject.groupId}:${moduleProject.apiArtifactId}:${moduleProject.versionName}")
     }
 
     def localDependsOn = { Project project, DependencyHandler dependencyHandler, ModuleProjectUnit moduleProject ->
+        dependencyHandler.add("androidTestImplementation", moduleProject.project)
         dependencyHandler.add("runtimeOnly", moduleProject.project)
         AndroidUtils.forEachVariant(project) { BaseVariant variant ->
             dependencyHandler.add("${variant.buildType.name}CompileOnly", dependencyHandler.project(path: moduleProject.project.path, configuration: "$variant.buildType.name$Constant.P2M_CONFIGURATION_NAME_SUFFIX_MODULE_API"))

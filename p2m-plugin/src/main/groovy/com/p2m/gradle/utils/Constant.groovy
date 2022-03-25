@@ -30,7 +30,7 @@ class Constant {
     public static final LOCAL_PROPERTY_USE_LOCAL_REPO_FOR_P2M_PROJECT = "p2m.useLocalRepoForP2MProject"
 
     public static final FILE_GEN_XML_COMMENT = "<!--Automatically generated file by P2M. DO NOT MODIFY-->"
-    public static final FILE_GEN_CODE_COMMENT = "Automatically generated file by P2M. DO NOT MODIFY"
+    public static final FILE_GEN_CODE_COMMENT = "Automatically generated file by P2M. DO NOT MODIFY!"
     public static final P2M_GROUP_ID = "com.github.wangdaqi77.P2M"
     public static final P2M_NAME_API = "p2m-core"
     public static final P2M_NAME_ANNOTATION = "p2m-annotation"

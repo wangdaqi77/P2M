@@ -1,6 +1,5 @@
 package com.p2m.gradle
 
-import com.android.Version
 import com.android.build.gradle.api.BaseVariant
 import com.p2m.gradle.bean.LocalModuleProjectUnit
 import com.p2m.gradle.bean.ModuleProjectUnit
@@ -14,13 +13,11 @@ import com.p2m.gradle.utils.PublishUtils
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.jetbrains.kotlin.gradle.internal.KaptTask
 
 import java.nio.charset.StandardCharsets
-import java.util.concurrent.Callable
 
 class ProductApiPlugin implements Plugin<Project> {
     private LocalModuleProjectUnit moduleProject

@@ -28,8 +28,8 @@ tasks.named("jar").configure{ Jar jar ->
 }
 
 dependencies {
-    compileOnly "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compileOnly "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    compileOnly "org.jetbrains.kotlin:kotlin-stdlib:1.4.10"
+    compileOnly "org.jetbrains.kotlin:kotlin-reflect:1.4.10"
 }
 
 sourceCompatibility = "8"

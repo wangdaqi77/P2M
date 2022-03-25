@@ -4,13 +4,10 @@ import com.p2m.gradle.utils.Constant
 import com.squareup.javawriter.JavaWriter
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.resources.TextResource
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 
@@ -30,6 +27,9 @@ abstract class GenerateModuleNameCollector extends DefaultTask {
 
     @Input
     abstract Property<String> getPackageName()
+
+    @Input
+    abstract Property<Boolean> getTesting()
 
     @TaskAction
     void generate(){
@@ -53,9 +53,12 @@ abstract class GenerateModuleNameCollector extends DefaultTask {
             classModifiers.add(Modifier.FINAL)
             writer.emitJavadoc(Constant.FILE_GEN_CODE_COMMENT)
                     .emitPackage(packageName)
-                    .beginType(MODULE_AUTO_COLLECTOR, "class", classModifiers, MODULE_AUTO_COLLECTOR_SUPER)
 
+            if (testing) {
+                writer.emitAnnotation("androidx.annotation.VisibleForTesting")
+            }
 
+            writer.beginType(MODULE_AUTO_COLLECTOR, "class", classModifiers, MODULE_AUTO_COLLECTOR_SUPER)
             Set constructorModifiers = new HashSet()
             constructorModifiers.add(Modifier.PUBLIC)
             writer.beginConstructor(constructorModifiers)
@@ -65,9 +68,9 @@ abstract class GenerateModuleNameCollector extends DefaultTask {
             writer.endConstructor()
             writer.endType()
         } finally {
-            try {writer.close()} catch (Exception e) {}
-            try {out.close()} catch (Exception e) {}
-            try {fos.close()} catch (Exception e) {}
+            try { writer.close() } catch (Exception e) { e.printStackTrace() }
+            try { out.close() } catch (Exception e) { e.printStackTrace() }
+            try { fos.close() } catch (Exception e) { e.printStackTrace() }
         }
 
     }

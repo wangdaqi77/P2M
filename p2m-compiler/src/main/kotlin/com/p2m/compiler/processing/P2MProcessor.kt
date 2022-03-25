@@ -837,9 +837,8 @@ class P2MProcessor : BaseProcessor() {
                 typeUtils.isSubtype(tm, activityTm) -> { // Activity
                     val launchActivityInterceptorsStr = interceptorsCacheFinal[element]
                             ?.joinToString(", ") { "${it.canonicalName}::class" }
-                            ?: ""
                     /*
-                    * val activityOf$launcherName: ActivityLauncher<I, O> by lazy(ActivityLauncher.delegate())
+                    * val activityOf$launcherName: ActivityLauncher<I, O> by ActivityLauncher.delegate()
                     */
                     PropertySpec.builder(
                         name = "activityOf$launcherName",
@@ -849,14 +848,26 @@ class P2MProcessor : BaseProcessor() {
                     )
                         .addModifiers(KModifier.OVERRIDE)
                         .mutable(false)
-                        .delegate(
-                            "%T.%L(%T::class.java, %L) { %L() }",
-                            ActivityLauncher,
-                            delegateFunctionName,
-                            className,
-                            launchActivityInterceptorsStr,
-                            activityResultContractTypeCache[launcherName]!!
-                        )
+                        .apply {
+                            if (launchActivityInterceptorsStr.isNullOrBlank()) {
+                                delegate(
+                                    "%T.%L(%T::class.java) { %L() }",
+                                    ActivityLauncher,
+                                    delegateFunctionName,
+                                    className,
+                                    activityResultContractTypeCache[launcherName]!!
+                                )
+                            } else {
+                                delegate(
+                                    "%T.%L(%T::class.java, %L) { %L() }",
+                                    ActivityLauncher,
+                                    delegateFunctionName,
+                                    className,
+                                    launchActivityInterceptorsStr,
+                                    activityResultContractTypeCache[launcherName]!!
+                                )
+                            }
+                        }
                 }
                 typeUtils.isSubtype(tm, fragmentTm)
                         || typeUtils.isSubtype(tm, fragmentTmV4)

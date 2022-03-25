@@ -1,6 +1,7 @@
 package com.p2m.gradle
 
 import com.p2m.gradle.bean.LocalModuleProjectUnit
+import com.p2m.gradle.utils.GenerateModuleNameCollectorJavaTaskRegisterForTesting
 import com.p2m.gradle.utils.LastProcessManifestRegister
 import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.DependencyHandler
@@ -19,10 +20,17 @@ class LocalModuleProjectPlugin extends BaseSupportDependencyModulePlugin {
         project.dependencies { DependencyHandler handler ->
             handler.add("compileOnly", project._p2mApi())
             handler.add("compileOnly", project._p2mAnnotation())
+            handler.add("androidTestImplementation", project._p2mApi())
+            handler.add("androidTestImplementation", project._p2mAnnotation())
             handler.add("kapt", project._p2mCompiler())
 //            handler.add("kapt", "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.3.0") {
 //                exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib"
 //            }
+        }
+
+
+        project.afterEvaluate {
+            GenerateModuleNameCollectorJavaTaskRegisterForTesting.register(moduleProject)
         }
 
         def lastProcessManifestRegister = new LastProcessManifestRegister(moduleProject)

@@ -10,16 +10,38 @@ android {
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     flavorDimensions "versionName"
     productFlavors {
-        baidu {}
-        xiaomi {}
-        huawei {}
+        baidu {
+            applicationIdSuffix ".baidu"
+            manifestPlaceholders = [
+                    APP_NAME: "app-b-baidu",
+            ]
+        }
+        xiaomi {
+            applicationIdSuffix ".xiaomi"
+            manifestPlaceholders = [
+                    APP_NAME: "app-b-xiaomi",
+            ]
+        }
+        huawei {
+            applicationIdSuffix ".huawei"
+            manifestPlaceholders = [
+                    APP_NAME: "app-b-huawei",
+            ]
+        }
     }
 
     compileOptions {
@@ -40,7 +62,7 @@ dependencies {
     implementation 'androidx.annotation:annotation:1.1.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-    compileOnly "androidx.lifecycle:lifecycle-common:2.3.1"
+    implementation "androidx.lifecycle:lifecycle-common:2.3.1"
     implementation project(":lib-common")
 
     testImplementation 'junit:junit:4.12'

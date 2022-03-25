@@ -9,6 +9,7 @@ import com.p2m.annotation.module.api.ApiLauncher
 import com.p2m.example.mall.R
 import com.p2m.example.account.p2m.api.Account
 import com.p2m.example.account.p2m.api.AccountLaunchActivityInterceptorForBindPhoneNum
+import com.p2m.example.account.p2m.api.AccountLaunchActivityInterceptorForLogin
 import com.p2m.example.mall.p2m.api.Mall
 
 @ApiLauncher(
