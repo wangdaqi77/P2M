@@ -438,7 +438,7 @@ Activity启动器如何支持ResultApi？
 
 Activity启动器如何指定拦截器？
 -------------------------------
- 1. 声明拦截器，使用`@ApiLaunchActivityInterceptor`并实现接口`ILaunchActivityInterceptor`，可参考示例工程中[Account模块的绑定手机号拦截器](./example/module-account/src/main/java/com/p2m/example/account/BindPhoneInterceptor.kt):
+ 1. 声明拦截器，使用`@ApiLaunchActivityInterceptor`并实现接口`ILaunchActivityInterceptor`，可参考示例工程中[Account模块的绑定手机号拦截器](./example/module-account/src/main/java/com/p2m/example/account/pre_api/BindPhoneInterceptor.kt):
     ```kotlin
     @ApiLaunchActivityInterceptor(interceptorName = "BindPhoneNum")
     class BindPhoneInterceptor : ILaunchActivityInterceptor {
