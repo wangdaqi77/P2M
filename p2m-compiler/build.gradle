@@ -9,10 +9,8 @@ sourceSets {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.4.10"){
-        force(true)
-    }
-    compileOnly("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.3.0") {
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.4.10")
+    implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.3.0") {
         exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib"
     }
     implementation 'com.google.auto.service:auto-service:1.0-rc7'
