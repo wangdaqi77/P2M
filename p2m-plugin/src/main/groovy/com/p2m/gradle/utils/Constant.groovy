@@ -2,17 +2,6 @@ package com.p2m.gradle.utils
 
 class Constant {
     public static final FILE_NAME_ANDROID_MANIFEST_XML= "AndroidManifest.xml"
-    public static final API_PATH_JAVA_SOURCE = "" +
-            "generated${File.separator}" +
-            "p2m${File.separator}" +
-            "src${File.separator}" +
-            "main"
-
-    public static final API_PATH_ANDROID_MANIFEST_XML = "" +
-            "generated${File.separator}" +
-            "p2m${File.separator}" +
-            "src${File.separator}" +
-            "main"
 
     public static final PLUGIN_ID_ANDROID_APP = "com.android.application"
     public static final PLUGIN_ID_ANDROID_LIBRARY = "com.android.library"
@@ -29,7 +18,6 @@ class Constant {
     public static final LOCAL_PROPERTY_DEV_ENV = "p2m.dev"
     public static final LOCAL_PROPERTY_USE_LOCAL_REPO_FOR_P2M_PROJECT = "p2m.useLocalRepoForP2MProject"
 
-    public static final FILE_GEN_XML_COMMENT = "<!--Automatically generated file by P2M. DO NOT MODIFY-->"
     public static final FILE_GEN_CODE_COMMENT = "Automatically generated file by P2M. DO NOT MODIFY!"
     public static final P2M_GROUP_ID = "com.github.wangdaqi77.P2M"
     public static final P2M_NAME_API = "p2m-core"

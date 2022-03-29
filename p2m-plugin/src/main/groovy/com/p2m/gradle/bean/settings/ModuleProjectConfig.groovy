@@ -13,8 +13,9 @@ class ModuleProjectConfig extends BaseProjectConfig{
     }
 
     boolean runApp          // 是否可以运行
-    boolean useRepo         // 使用已经发布到仓库中的模块，默认false。
+    boolean useRemote       // 使用已经发布到仓库中的模块，默认false。
     String groupId          // 组，用于发布和解析
+    String artifactId       // 发布件id，用于发布和解析
     String versionName      // 版本，用于发布和解析
 
     @Override
@@ -27,5 +28,29 @@ class ModuleProjectConfig extends BaseProjectConfig{
         this._projectPath = realPath
 
         this._projectDescriptorClosure = c
+    }
+
+    String getModuleName() {
+        return _moduleNamed.get()
+    }
+
+    String getModuleNameLowerCase() {
+        return getModuleName().toLowerCase()
+    }
+
+    String getGroupId(){
+        return groupId ?: getModuleName()
+    }
+
+    String getArtifactId(){
+        return artifactId == null ? "module-${getModuleNameLowerCase()}" : artifactId
+    }
+
+    String getApiArtifactId(){
+        return artifactId == null ? "module-${getModuleNameLowerCase()}-api" : "${artifactId}-api"
+    }
+
+    String getVersionName(){
+        return versionName ?: "unspecified"
     }
 }

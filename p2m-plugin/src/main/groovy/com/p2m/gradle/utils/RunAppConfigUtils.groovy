@@ -37,9 +37,9 @@ class RunAppConfigUtils {
                                     RunAppConfigUtils.applyMainActivity(manifestXmlParser, runAppConfig)
                                     RunAppConfigUtils.applyAutoInitializer(manifestXmlParser)
 
-                                    Object builder = Class.forName("groovy.xml.StreamingMarkupBuilder").getDeclaredConstructor().newInstance();
-                                    InvokerHelper.setProperty(builder, "encoding", "UTF-8");
-                                    // Writable w = (Writable)InvokerHelper.invokeMethod(builder, "bindNode", manifestXmlParser);
+                                    Object builder = Class.forName("groovy.xml.StreamingMarkupBuilder").getDeclaredConstructor().newInstance()
+                                    InvokerHelper.setProperty(builder, "encoding", "UTF-8")
+                                    // Writable w = (Writable)InvokerHelper.invokeMethod(builder, "bindNode", manifestXmlParser)
                                     // println("${w.toString()}")
                                     newManifestFile.withWriter {out->
                                         XmlUtil.serialize(manifestXmlParser, out)

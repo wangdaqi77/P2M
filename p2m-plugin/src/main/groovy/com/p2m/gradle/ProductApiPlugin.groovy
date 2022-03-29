@@ -76,8 +76,8 @@ class ProductApiPlugin implements Plugin<Project> {
                 return
             }
 
-            def apiJarName = "p2m-${moduleProject.getModuleName()}-module-api.jar"
-            def apiSourceJarName = "p2m-${moduleProject.getModuleName()}-module-api-sources.jar"
+            def apiJarName = "${moduleProject.getModuleName()}-api.jar"
+            def apiSourceJarName = "${moduleProject.getModuleName()}-api-sources.jar"
             def p2mApiJarDir = new File(project.buildDir, "generated/p2m/jar/${variantName}")
             def p2mKaptSrcDir = new File(project.buildDir, "generated/source/kapt/${variantName}")
             def p2mApiPropertiesFile = new File(p2mKaptSrcDir, "p2m_module_api.properties")

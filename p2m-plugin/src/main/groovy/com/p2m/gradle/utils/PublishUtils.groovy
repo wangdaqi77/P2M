@@ -64,7 +64,7 @@ class PublishUtils {
                     "p2mModule"(MavenPublication) {
                         version moduleProject.versionName
                         setGroupId moduleProject.groupId
-                        setArtifactId moduleProject.moduleArtifactId
+                        setArtifactId moduleProject.artifactId
                         artifact bundleAarTaskProvider.get()
                         artifact sourcesJar.get()
                     }

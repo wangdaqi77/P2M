@@ -7,7 +7,7 @@ class ModuleNamed extends Named {
     }
 
     @Override
-    def String get() {
+    public String get() {
         return name
     }
 }

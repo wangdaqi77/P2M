@@ -65,11 +65,11 @@ class LastProcessManifestRegister {
 
                                 newManifestFile.withWriter { out ->
                                     //XmlUtil.serialize(topNode, out)
-                                    Writer sw = new StringWriter();
-                                    GroovyPrintWriter pw = new GroovyPrintWriter(sw);
-                                    XmlNodePrinter nodePrinter = new XmlNodePrinter(pw);
-                                    nodePrinter.setPreserveWhitespace(true);
-                                    nodePrinter.print(topNode);
+                                    Writer sw = new StringWriter()
+                                    GroovyPrintWriter pw = new GroovyPrintWriter(sw)
+                                    XmlNodePrinter nodePrinter = new XmlNodePrinter(pw)
+                                    nodePrinter.setPreserveWhitespace(true)
+                                    nodePrinter.print(topNode)
                                     out.write(sw.toString())
                                 }
 

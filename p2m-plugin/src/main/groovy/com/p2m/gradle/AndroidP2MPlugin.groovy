@@ -205,7 +205,7 @@ class AndroidP2MPlugin implements Plugin<Settings> {
         // for remote module aar
         while (iterator.hasNext()) {
             def moduleConfig = iterator.next()
-            if (moduleConfig.useRepo) { // 创建远端的module
+            if (moduleConfig.useRemote) { // 创建remote module
                 def moduleProject = ProjectFactory.createRemoteModuleProject(moduleConfig)
                 moduleProjectConfigDependencies.put(moduleProject, moduleConfig._dependencyContainer._dependencies)
                 remoteModuleProjectTable[moduleConfig._moduleNamed] = moduleProject
@@ -220,7 +220,7 @@ class AndroidP2MPlugin implements Plugin<Settings> {
             iterator = moduleConfigs.iterator()
             while (iterator.hasNext()) {
                 def moduleConfig = iterator.next()
-                if (!moduleConfig.useRepo && NamedUtils.project(project.name) == moduleConfig._projectNamed) {
+                if (!moduleConfig.useRemote && NamedUtils.project(project.name) == moduleConfig._projectNamed) {
                     def moduleProject = ProjectFactory.createLocalModuleProject(moduleConfig)
                     moduleProject.project = rootProject.project(moduleConfig._projectNamed.include)
                     moduleProjectConfigDependencies.put(moduleProject, moduleConfig._dependencyContainer._dependencies)
@@ -299,8 +299,8 @@ class AndroidP2MPlugin implements Plugin<Settings> {
 
         // include modules
         p2mConfig.modulesConfig.forEach { key, moduleConfig ->
-            if (moduleConfig.useRepo) {
-                println("p2m: include module(\"${moduleConfig._moduleNamed.get()}\"), Remote group:${moduleConfig.groupId} version:${moduleConfig.versionName}")
+            if (moduleConfig.useRemote) {
+                println("p2m: include module(\"${moduleConfig._moduleNamed.get()}\"), Remote groupId:${moduleConfig.getGroupId()} artifactId:${moduleConfig.getArtifactId()} versionName:${moduleConfig.getVersionName()}")
             } else {
                 def projectDescriptor = includeProject(settings, moduleConfig)
                 println("p2m: include module(\"${moduleConfig._moduleNamed.get()}\"), Local path:${projectDescriptor.projectDir.absolutePath}")
@@ -377,7 +377,7 @@ class AndroidP2MPlugin implements Plugin<Settings> {
         p2mConfig.modulesConfig.forEach { Named named, ModuleProjectConfig moduleConfig ->
             if (moduleConfig.runApp) {
 
-                if (moduleConfig.useRepo) {
+                if (moduleConfig.useRemote) {
                     throw new P2MSettingsException("""
                             ${NamedUtils.getStatement(moduleConfig._moduleNamed)} setted runApp=true already, it can no longer set repo=true.
                             Please check config in settings.gradle.

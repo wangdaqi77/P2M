@@ -21,10 +21,6 @@ abstract class BaseProjectUnit {
         return moduleNamed.get()
     }
 
-    String getModuleNameLowerCase() {
-        return getModuleName().toLowerCase()
-    }
-
     void error(String message) {
         message = "P2M: $message"
         if (project != null) {

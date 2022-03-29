@@ -4,13 +4,64 @@ P2M
 
 一个完整的Android组件化框架库。
 
-支持AGP：3.4.0+，Gradle：6.1.1+，Kotlin：1.3.20+:
-|APG 版本|Gradle 版本|Kotlin 版本|
-|---|---|---|
-|3.4.0 ~ 4.0.0+|6.1.1|1.3.20 ~ 1.4.20|
-|4.1.0+|6.5+|1.3.20 ~ 1.4.20|
-|4.2.0+|6.7.1+|1.3.20 ~ 1.4.20|
-|7.0.3|7.0.2|1.3.20 ~ 1.4.20|
+以下环境经测试可正常运行：
+<html>
+<body>
+<meta charset=utf-8>
+<span style='font-variant-ligatures: normal;font-variant-caps: normal;
+orphans: 2;widows: 2;-webkit-text-stroke-width: 0px;text-decoration-thickness: initial;
+text-decoration-style: initial;text-decoration-color: initial'>
+
+<table border=0 cellpadding=0 cellspacing=0 width=428 style='border-collapse:
+ collapse;table-layout:fixed;width:321pt'>
+ <col width=132 span=2 style='mso-width-source:userset;mso-width-alt:4224;
+ width:99pt'>
+ <col width=164 style='mso-width-source:userset;mso-width-alt:5248;width:123pt'>
+ <tr height=43 style='mso-height-source:userset;height:32.0pt'>
+  <td height=43 class=xl65 width=132 style='height:32.0pt;width:99pt'>APG版本</span></td>
+  <td class=xl65 width=132 style='border-left:none;width:99pt'>
+  <meta charset=utf-8>
+  <span style='font-variant-ligatures: normal;font-variant-caps: normal;
+  orphans: 2;widows: 2;-webkit-text-stroke-width: 0px;text-decoration-thickness: initial;
+  text-decoration-style: initial;text-decoration-color: initial'>Gradle版本</span></td>
+  <td class=xl65 width=164 style='border-left:none;width:123pt'>
+  <meta charset=utf-8>
+  <span style='font-variant-ligatures: normal;font-variant-caps: normal;
+  orphans: 2;widows: 2;-webkit-text-stroke-width: 0px;text-decoration-thickness: initial;
+  text-decoration-style: initial;text-decoration-color: initial'>Kotlin版本</span></td>
+ </tr>
+ <tr height=33 style='mso-height-source:userset;height:25.0pt'>
+  <td height=33 class=xl66 style='height:25.0pt;border-top:none'>
+  <meta charset=utf-8>
+  <span style='font-variant-ligatures: normal;font-variant-caps: normal;
+  orphans: 2;text-align:start;widows: 2;-webkit-text-stroke-width: 0px;
+  text-decoration-thickness: initial;text-decoration-style: initial;text-decoration-color: initial'>3.4.0+</span></td>
+  <td rowspan=2 class=xl66 style='border-top:none'>6.1.1+</td>
+  <td rowspan=4 class=xl66 style='border-top:none'>1.3.20~1.4.20</td>
+ </tr>
+ <tr height=33 style='mso-height-source:userset;height:25.0pt'>
+  <td height=33 class=xl66 style='height:25.0pt;border-top:none'>4.0.0+</td>
+ </tr>
+ <tr height=33 style='mso-height-source:userset;height:25.0pt'>
+  <td height=33 class=xl66 style='height:25.0pt;border-top:none'>4.1.0+</td>
+  <td class=xl66 style='border-top:none;border-left:none'>6.5+</td>
+ </tr>
+ <tr height=33 style='mso-height-source:userset;height:25.0pt'>
+  <td height=33 class=xl66 style='height:25.0pt;border-top:none'>4.2.0+</td>
+  <td class=xl66 style='border-top:none;border-left:none'>6.7.1+</td>
+ </tr>
+ <tr height=33 style='mso-height-source:userset;height:25.0pt'>
+  <td height=33 class=xl66 style='height:25.0pt;border-top:none'>7.0.3</td>
+  <td class=xl66 style='border-top:none;border-left:none'>7.0.2</td>
+  <td rowspan=2 class=xl66 style='border-top:none'>1.5.10~1.6.0</td>
+ </tr>
+ <tr height=33 style='mso-height-source:userset;height:25.0pt'>
+  <td height=33 class=xl66 style='height:25.0pt;border-top:none'>7.1.2</td>
+  <td class=xl66 style='border-top:none;border-left:none'>7.2</td>
+ </tr>
+</table>
+</body>
+</html>
 
 阅读本文档时结合[示例工程][example]效果更佳。
 
@@ -74,9 +125,10 @@ P2M插件的全名为`p2m-android`，它需要在`settings.gradle`文件中进�
             }
 
             groupId = "com.repo"                    // 组，默认值模块名。用于发布模块到仓库或者使用仓库中的模块
+            artifactId = "module-yourmodulename"    // 发布件id，默认值module-${小写的YourModuleName}。用于发布模块到仓库或者使用仓库中的模块
             versionName = "0.0.1"                   // 版本，默认值unspecified。用于发布模块到仓库或者使用仓库中的模块
     
-            useRepo = false                         // 使用远程仓库开关，默认false。true表示使用仓库，false表示使用源码
+            useRemote = false                       // 使用远程仓库开关，默认false。true表示使用仓库，false表示使用源码
             runApp = false                          // 运行app开关，默认值false，true表示可以运行app，false表示作为模块，applicationId等配置在./projectPath/build.gradle中的p2mRunAppBuildGradle{}
         }
 
@@ -110,9 +162,9 @@ Module态
 
 每个模块还支持：
  * [初始化](#Initialization区)
- * [打包到仓库](#如何发布模块到仓库)
+ * [发布模块到仓库](#如何发布模块到仓库)
  * [依赖仓库中的模块](#如何依赖仓库中的模块)
- * [单独运行](#如何单独运行模块)
+ * [单独运行模块](#如何单独运行模块)
 
 ### 声明模块
 假设有一个工程包含帐号功能和其他的功能，所有的功能都存放一个project中，它的project文件夹名称是`app`，工程的文件结构大致如下：
@@ -507,7 +559,7 @@ Activity启动器如何指定拦截器？
     p2m {
         module("YourModuleName") {
             // ...
-            useRepo = false
+            useRemote = false
             runApp = true
         }
     }
@@ -538,14 +590,14 @@ Activity启动器如何指定拦截器？
 
 如何发布模块到仓库？
 -----------------
- 1. 配置发布件的属性`groupId`、`versionName`、`useRepo`和`maven`仓库，位于工程根目录下的`settings.gradle`：
+ 1. 配置发布件的属性`groupId`、`versionName`、`useRemote`和`maven`仓库，位于工程根目录下的`settings.gradle`：
     ```groovy
     p2m {
         module("YourModuleName") {
             // ...
             groupId = "your.repo.groupId"       // 组
             versionName = "0.0.1"               // 版本
-            useRepo = false
+            useRemote = false
         }
 
         p2mMavenRepository {                    // 声明maven仓库
@@ -572,14 +624,14 @@ Activity启动器如何指定拦截器？
 
 如何依赖仓库中的模块？
 -------------------
- 1. 配置发布件的属性`groupId`、`versionName`、`useRepo`和`maven`仓库，位于工程根目录下的`settings.gradle`：
+ 1. 配置发布件的属性`groupId`、`versionName`、`useRemote`和`maven`仓库，位于工程根目录下的`settings.gradle`：
     ```groovy
     p2m {
         module("YourModuleName") {
             // ...
             groupId = "your.repo.groupId"       // 组
             versionName = "0.0.1"               // 版本
-            useRepo = true                      // 使用已经发布到仓库中的模块，true表示使用仓库，false表示使用源码，默认false
+            useRemote = true                      // 使用已经发布到仓库中的模块，true表示使用仓库，false表示使用源码，默认false
         }
 
         p2mMavenRepository {                    // 声明maven仓库

@@ -1,3 +1,4 @@
+/*在settings.build文件中也需要声明*/
 buildscript {
     repositories {
         google()
@@ -7,7 +8,6 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$KT_VERSION"
         classpath "com.android.tools.build:gradle:$AGP_VERSION"
     }
-
 }
 
 

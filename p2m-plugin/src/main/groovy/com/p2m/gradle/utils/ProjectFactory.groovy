@@ -11,8 +11,10 @@ class ProjectFactory {
     static LocalModuleProjectUnit createLocalModuleProject(ModuleProjectConfig moduleConfig) {
         def moduleProject = new LocalModuleProjectUnit()
         moduleProject.moduleNamed = moduleConfig._moduleNamed
-        moduleProject.groupId = moduleConfig.groupId ?: moduleProject.moduleName
-        moduleProject.versionName = moduleConfig.versionName ?: "unspecified"
+        moduleProject.groupId = moduleConfig.getGroupId()
+        moduleProject.artifactId = moduleConfig.getArtifactId()
+        moduleProject.apiArtifactId = moduleConfig.getApiArtifactId()
+        moduleProject.versionName = moduleConfig.getVersionName()
         moduleProject.runApp = moduleConfig.runApp
         moduleProject.runAppConfig = moduleConfig.runAppConfig
         return moduleProject
@@ -21,8 +23,10 @@ class ProjectFactory {
     static RemoteModuleProjectUnit createRemoteModuleProject(ModuleProjectConfig moduleConfig) {
         def moduleProject = new RemoteModuleProjectUnit()
         moduleProject.moduleNamed = moduleConfig._moduleNamed
-        moduleProject.groupId = moduleConfig.groupId ?: moduleProject.moduleName
-        moduleProject.versionName = moduleConfig.versionName ?: "unspecified"
+        moduleProject.groupId = moduleConfig.getGroupId()
+        moduleProject.artifactId = moduleConfig.getArtifactId()
+        moduleProject.apiArtifactId = moduleConfig.getApiArtifactId()
+        moduleProject.versionName = moduleConfig.getVersionName()
         return moduleProject
     }
     

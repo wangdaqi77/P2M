@@ -6,13 +6,13 @@ class ProjectNamed extends Named{
     }
 
     @Override
-    def String get() {
+    public String get() {
         return name.startsWith(":") ?
                 name.substring(1, name.length()) :
                 name
     }
 
-    def getInclude() {
+    public getInclude() {
         return name.startsWith(":") ?
                 name :
                 ":${name}"

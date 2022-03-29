@@ -48,8 +48,8 @@ abstract class BaseSupportDependencyModulePlugin extends BaseModulePlugin {
     }
 
     def remoteDependsOn = { DependencyHandler dependencyHandler, ModuleProjectUnit moduleProject ->
-        dependencyHandler.add("androidTestImplementation", "${moduleProject.groupId}:${moduleProject.moduleArtifactId}:${moduleProject.versionName}")
-        dependencyHandler.add("runtimeOnly", "${moduleProject.groupId}:${moduleProject.moduleArtifactId}:${moduleProject.versionName}")
+        dependencyHandler.add("androidTestImplementation", "${moduleProject.groupId}:${moduleProject.artifactId}:${moduleProject.versionName}")
+        dependencyHandler.add("runtimeOnly", "${moduleProject.groupId}:${moduleProject.artifactId}:${moduleProject.versionName}")
         dependencyHandler.add("compileOnly", "${moduleProject.groupId}:${moduleProject.apiArtifactId}:${moduleProject.versionName}")
     }
 
