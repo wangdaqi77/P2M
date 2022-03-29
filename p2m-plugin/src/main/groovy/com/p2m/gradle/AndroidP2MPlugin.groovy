@@ -13,12 +13,10 @@ import com.p2m.gradle.bean.Named
 import com.p2m.gradle.utils.Constant
 import com.p2m.gradle.utils.NamedUtils
 import com.p2m.gradle.utils.ProjectFactory
-import org.gradle.BuildListener
-import org.gradle.BuildResult
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.initialization.ProjectDescriptor
 import org.gradle.api.initialization.Settings
-import org.gradle.api.invocation.Gradle
 import org.gradle.util.ConfigureUtil
 
 class AndroidP2MPlugin implements Plugin<Settings> {
@@ -275,7 +273,7 @@ class AndroidP2MPlugin implements Plugin<Settings> {
     }
 
 
-    private static def includeProject(Settings settings, BaseProjectConfig projectConfig) {
+    private static ProjectDescriptor includeProject(Settings settings, BaseProjectConfig projectConfig) {
         settings.include(projectConfig._projectPath)
         if (projectConfig._projectDescriptorClosure != null) {
             def projectDescriptor = settings.project(projectConfig._projectPath)
@@ -286,6 +284,7 @@ class AndroidP2MPlugin implements Plugin<Settings> {
 
             ConfigureUtil.configure(projectConfig._projectDescriptorClosure, projectDescriptor)
         }
+        return settings.project(projectConfig._projectPath)
     }
 
 
@@ -293,18 +292,18 @@ class AndroidP2MPlugin implements Plugin<Settings> {
         if (!existRunAppModule) {
             // include app壳
             p2mConfig.appProjectConfigs.forEach { appProjectConfig ->
-                println("p2m: include App[${appProjectConfig._projectPath}]")
-                includeProject(settings, appProjectConfig)
+                def projectDescriptor = includeProject(settings, appProjectConfig)
+                println("p2m: include App-${projectDescriptor.name}, path:${projectDescriptor.projectDir.absolutePath}")
             }
         }
 
-        // include Modules
+        // include modules
         p2mConfig.modulesConfig.forEach { key, moduleConfig ->
             if (moduleConfig.useRepo) {
-                println("p2m: include Module ${moduleConfig._moduleNamed.get()}[remote aar(group=${moduleConfig.groupId} version=${moduleConfig.versionName})]")
+                println("p2m: include module(\"${moduleConfig._moduleNamed.get()}\"), Remote group:${moduleConfig.groupId} version:${moduleConfig.versionName}")
             } else {
-                println("p2m: include Module ${moduleConfig._moduleNamed.get()}[${moduleConfig._projectPath}]")
-                includeProject(settings, moduleConfig)
+                def projectDescriptor = includeProject(settings, moduleConfig)
+                println("p2m: include module(\"${moduleConfig._moduleNamed.get()}\"), Local path:${projectDescriptor.projectDir.absolutePath}")
             }
         }
     }
