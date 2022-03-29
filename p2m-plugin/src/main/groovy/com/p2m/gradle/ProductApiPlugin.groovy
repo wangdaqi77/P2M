@@ -3,6 +3,7 @@ package com.p2m.gradle
 import com.android.build.gradle.api.BaseVariant
 import com.p2m.gradle.bean.LocalModuleProjectUnit
 import com.p2m.gradle.bean.ModuleProjectUnit
+import com.p2m.gradle.exception.P2MSettingsException
 import com.p2m.gradle.task.ApiJar
 import com.p2m.gradle.task.ApiSourceJar
 import com.p2m.gradle.task.CheckModule
@@ -82,6 +83,15 @@ class ProductApiPlugin implements Plugin<Project> {
             def p2mApiPropertiesFile = new File(p2mKaptSrcDir, "p2m_module_api.properties")
             def p2mApiPropertiesConfigurableFileCollection = project.files(p2mApiPropertiesFile)
             p2mApiPropertiesConfigurableFileCollection.builtBy(kaptKotlin)
+
+            kaptKotlin.configure {
+                doLast {
+                    if (!p2mApiPropertiesFile.exists()) {
+                        project.logger.error(String.format(Constant.ERROR_MODULE_INIT_NOT_EXIST, project.p2mProject.getModuleName()))
+                        throw new P2MSettingsException("")
+                    }
+                }
+            }
 
             def checkModuleProvider = project.tasks.register("${Constant.P2M_TASK_NAME_PREFIX_CHECK_MODULE}${variantTaskMiddleName}", CheckModule.class)
             def compileApiProvider = project.tasks.register("${Constant.P2M_TASK_NAME_PREFIX_COMPILE_MODULE_API}${variantTaskMiddleName}", ApiJar.class)

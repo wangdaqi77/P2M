@@ -4,9 +4,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        // 移除KGP和AGP插件声明，settings.gradle会声明他们
-//        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$KT_VERSION"
-//        classpath "com.android.tools.build:gradle:$AGP_VERSION"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$KT_VERSION"
+        classpath "com.android.tools.build:gradle:$AGP_VERSION"
     }
 
 }
@@ -15,6 +14,7 @@ buildscript {
 allprojects { Project project ->
     def isGradle6 = gradle.gradleVersion.startsWith("6")
     if (isGradle6) {
+        /*Gradle6下的子项目仓库声明*/
         project.repositories {
             google()
             mavenCentral()

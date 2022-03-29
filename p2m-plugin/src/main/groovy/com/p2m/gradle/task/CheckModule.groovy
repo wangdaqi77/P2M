@@ -1,5 +1,7 @@
 package com.p2m.gradle.task
 
+import com.p2m.gradle.exception.P2MSettingsException
+import com.p2m.gradle.utils.Constant
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.InputFile
@@ -14,25 +16,20 @@ abstract class CheckModule extends DefaultTask {
 
     @TaskAction
     void doCheck(){
-        def file = propertiesFile.get().asFile
-        file.newReader(StandardCharsets.UTF_8.name()).eachLine { line ->
+        if (propertiesFile.getOrNull() == null) {
+            project.logger.error(String.format(Constant.ERROR_MODULE_INIT_NOT_EXIST, project.p2mProject.getModuleName()))
+            throw new P2MSettingsException("")
+        }
+
+        propertiesFile.get().asFile.newReader(StandardCharsets.UTF_8.name()).eachLine { line ->
             def split = line.split("=")
             def attr = split[0]
             def value = split[1]
             if (attr == "genModuleInitSource") {
                 def exist = value.toBoolean()
                 if (!exist) {
-                    throw project.logger.error("""
-Must add source code in Module[${project.p2mProject.getModuleName()}]：
-
-@ModuleInitializer
-class ${project.p2mProject.getModuleName()}ModuleInit : ModuleInit{
-
-    override fun onEvaluate(context: Context, taskRegister: TaskRegister) { }
-
-    override fun onCompleted(context: Context, taskOutputProvider: TaskOutputProvider) { }
-}
-""")
+                    project.logger.error(String.format(Constant.ERROR_MODULE_INIT_NOT_EXIST, project.p2mProject.getModuleName()))
+                    throw new P2MSettingsException("")
                 }
             }
         }

@@ -4,22 +4,16 @@ import com.p2m.compiler.FILE_COMMENT
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.sun.tools.javac.code.Symbol
-import java.lang.IllegalStateException
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.*
 import javax.lang.model.type.TypeMirror
 import javax.lang.model.util.Elements
 import kotlin.reflect.KClass
 import javax.lang.model.element.ExecutableElement
-
 import javax.lang.model.element.AnnotationMirror
-
 import javax.lang.model.element.TypeElement
 
-import javax.lang.model.type.DeclaredType
-
-
-
+import kotlin.IllegalStateException
 
 /**
  * Returns the package name of a TypeElement.
@@ -222,14 +216,10 @@ fun TypeElement.checkNotHasInterfaceClassForAnnotation(aClass: KClass<*>) {
 
 inline fun <reified T : Annotation> RoundEnvironment.getSingleTypeElementAnnotatedWith(logger: Logger, moduleName: String, clazz: Class<T>): Element? {
     val elements = getElementsAnnotatedWith(clazz)
-    if (elements.size > 1) {
-        logger.error(
-            IllegalStateException("""
-                Only one class use ${clazz.canonicalName} is allowed in $moduleName.
-            """.trimIndent())
-        )
-    }
     if (elements.isEmpty()) return null
+    if (elements.size > 1) {
+        throw IllegalStateException("Only one class use ${clazz.canonicalName} is allowed in $moduleName.")
+    }
     return elements.first()
 }
 

@@ -45,7 +45,7 @@ P2M插件的全名为`p2m-android`，它需要在`settings.gradle`文件中进�
     // 声明插件
     apply plugin: "p2m-android"
     ```
-    在`settings.gradle`文件中必须声明Kotlin插件依赖项和APG依赖项，与此同时在工程根目录下的`build.gradle`文件中要移除这些依赖，参考示例中工程中[根目录下的settings.gradle](./example/settings.gradle)和[根目录下的build.gradle](./example/build.gradle)。
+    在[根目录下的build.gradle](./example/build.gradle)中声明依赖的插件在`settings.gradle`文件中也必须声明依赖，插件依赖参考示例中工程中[根目录下的settings.gradle](./example/settings.gradle)和[根目录下的build.gradle](./example/build.gradle)。
 
  2. 使用`p2m { }`配置组件化项目，在`settings.gradle`文件中：
     ```groovy
@@ -311,12 +311,12 @@ Source区是[模块](#Module态)的一部分，它是对外隐藏的，主要有
 ### Initialization区
 Initialization区是[Source区](#Source区)的一部分，它是为模块内部初始化而设计的，它至少包含一个初始化类。
 
-在一个模块中必须声明一个初始化类，该类需使用`ModuleInitializer`注解且实现`ModuleInit`接口，如在示例中的`Account`模块中：
+在一个模块中**必须声明一个初始化类**，该类需使用`ModuleInitializer`注解且实现`ModuleInit`接口，如在示例中的`Account`模块中：
 ```kotlin
-@ModuleInitializer
-class AccountModuleInit : ModuleInit {
+@com.p2m.annotation.module.ModuleInitializer
+class AccountModuleInit : com.p2m.core.module.ModuleInit {
     // 评估自身阶段，意味着准备开始初始化
-    override fun onEvaluate(context: Context, taskRegister: TaskRegister) {
+    override fun onEvaluate(context: Context, taskRegister: com.p2m.core.module.task.TaskRegister) {
         // 用户本地缓存
         val userDiskCache = UserDiskCache(context)
         // 注册读取登录状态的任务
@@ -329,7 +329,7 @@ class AccountModuleInit : ModuleInit {
     }
     
     // 初始化完成阶段，意味着初始化完成
-    override fun onCompleted(context: Context, taskOutputProvider: TaskOutputProvider) {
+    override fun onCompleted(context: Context, taskOutputProvider: com.p2m.core.module.task.TaskOutputProvider) {
         // 获取任务输出-登录状态
         val loginState = taskOutputProvider.outputOf(LoadLoginStateTask::class.java) ?: false
         // Account模块初始化完成后，外部模块才可以使用其Api区，因此在初始化完成时在其Api区一定要准备好必要的数据。

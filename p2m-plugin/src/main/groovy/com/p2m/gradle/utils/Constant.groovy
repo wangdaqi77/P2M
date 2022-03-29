@@ -35,7 +35,7 @@ class Constant {
     public static final P2M_NAME_API = "p2m-core"
     public static final P2M_NAME_ANNOTATION = "p2m-annotation"
     public static final P2M_NAME_COMPILER = "p2m-compiler"
-    public static final P2M_VERSION = "0.2.4"
+    public static final P2M_VERSION = "0.2.5"
     public static final P2M_MODULE_AAR_REPO_NAME = "p2mMavenRepository"
     public static final P2M_PUBLISH_TASK_GROUP = "p2mPublish"
     public static final P2M_MODULE_TASK_GROUP = "p2m"
@@ -44,4 +44,25 @@ class Constant {
     public static final P2M_TASK_NAME_PREFIX_COMPILE_MODULE_API = "p2mCompileApi"
     public static final P2M_TASK_NAME_PREFIX_COMPILE_MODULE_API_SOURCE = "p2mCompileApiSource"
     public static final P2M_TASK_NAME_PREFIX_CHECK_MODULE = "p2mCheckModule"
+    public static final ERROR_MODULE_INIT_NOT_EXIST =
+"""
+Must add source code in module(\"%1\$s\")：
+
+@com.p2m.annotation.module.ModuleInitializer
+class %1\$sModuleInit : com.p2m.core.module.ModuleInit {
+
+    override fun onEvaluate(context: Context, taskRegister: com.p2m.core.module.task.TaskRegister) {
+        // Evaluate stage, means ready to start initialization.
+        // Running on a alone work thread.
+        // Used taskRegister to register tasks and organize the dependencies of tasks in this module, these tasks are designed for fast loading of data, which will be used in the initialization completion stage.
+    }
+
+    override fun onCompleted(context: Context, taskOutputProvider: com.p2m.core.module.task.TaskOutputProvider) {
+        // Completion stage, means initialization is complete of the module.
+        // Running on main thread.
+        // Called when its all tasks be completed and all dependencies completed initialized.
+        // Here, you can use TaskOutputProvider get output data and load the data into api, that can the module be used safely by external modules.
+    }
+}
+"""
 }

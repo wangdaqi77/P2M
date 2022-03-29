@@ -49,6 +49,8 @@ class P2MProcessor : BaseProcessor() {
         private var TAG = "P2MProcessor"
     }
 
+    private var round = 0
+    private var writerRoundDone = true
     private var genModuleInitSource = false
     private var exportApiClassPath = mutableListOf<ClassName>()
     private var exportApiSourcePath = mutableListOf<ClassName>()
@@ -56,12 +58,22 @@ class P2MProcessor : BaseProcessor() {
     override fun getSupportedSourceVersion(): SourceVersion = SourceVersion.latestSupported()
 
     override fun process(annotations: MutableSet<out TypeElement>?, roundEnv: RoundEnvironment): Boolean {
-        if (roundEnv.processingOver()){
+        round++
+        mLogger.info("Processing round ${round}, has annotations ${!annotations.isNullOrEmpty()}, in P2MProcessor.")
+        if (roundEnv.processingOver()) {
+            if (!annotations.isNullOrEmpty()) {
+                mLogger.error("Unexpected processing state: annotations still available after processing over in P2MProcessor")
+                return false
+            }
+
             // collect classes of the module api scope, final they be compile
             // into jar provide to external module.
             collectModuleApiClassesToPropertiesFile()
+            mLogger.info("gen properties ok in P2MProcessor.")
             return true
         }
+
+        if (annotations.isNullOrEmpty()) return false
 
         kotlin.runCatching {
 
@@ -90,18 +102,14 @@ class P2MProcessor : BaseProcessor() {
             // collect and provide annotated ApiUse classes for external module
             collectClassesForAnnotatedApiUse(roundEnv)
 
-        }.apply {
-            if (isFailure) {
-                val throwable = exceptionOrNull()
-                if (throwable != null) {
-                    mLogger.error(throwable)
-                } else {
-                    mLogger.error("${toString()}\r\n")
-                }
-            }
+        }.onSuccess {
+            mLogger.info("gen module ok in P2MProcessor.")
+            return true
+        }.onFailure { throwable ->
+            mLogger.error("run fail in P2MProcessor.", throwable)
+            return false
         }
-
-        return true
+        return false
     }
 
     private fun collectClassesForAnnotatedApiUse(roundEnv: RoundEnvironment) {
@@ -262,22 +270,22 @@ class P2MProcessor : BaseProcessor() {
 
         check(moduleInitElement != null) {
             """
-                Must add source code in Module[${optionModuleName}]:
+                Must add source code in module("$optionModuleName"):
                 
-                @ModuleInitializer
-                class ${optionModuleName}ModuleInit : ModuleInit{
+                @com.p2m.annotation.module.ModuleInitializer
+                class ${optionModuleName}ModuleInit : com.p2m.core.module.ModuleInit {
 
-                    override fun onEvaluate(context: Context, taskRegister: TaskRegister) {
-                        // Evaluate stage of itself.
-                        // Here, You can use [taskRegister] to register tasks for help initialize module fast,
-                        // and they will be executed order.
+                    override fun onEvaluate(context: Context, taskRegister: com.p2m.core.module.task.TaskRegister) {
+                        // Evaluate stage, means ready to start initialization.
+                        // Running on a alone work thread.
+                        // Used taskRegister to register tasks and organize the dependencies of tasks in this module, these tasks are designed for fast loading of data, which will be used in the initialization completion stage.
                     }
 
-                    override fun onCompleted(context: Context, taskOutputProvider: TaskOutputProvider) {
-                        // Executed stage of itself, indicates will completed initialized of the module.
+                    override fun onCompleted(context: Context, taskOutputProvider: com.p2m.core.module.task.TaskOutputProvider) {
+                        // Completion stage, means initialization is complete of the module.
+                        // Running on main thread.
                         // Called when its all tasks be completed and all dependencies completed initialized.
-                        // Here, You can use [taskOutputProvider] to get some output of itself tasks.
-                        // More important to ensure its `Api` area safely.
+                        // Here, you can use TaskOutputProvider get output data and load the data into api, that can the module be used safely by external modules.
                     }
                 }
                 

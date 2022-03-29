@@ -1,6 +1,7 @@
 def isGradle7 = gradle.gradleVersion.startsWith("7")
 if (isGradle7) {
 
+    /*Gradle7下的子项目仓库声明*/
     dependencyResolutionManagement {
         repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
         repositories {
@@ -30,8 +31,10 @@ buildscript {
     }
 
     dependencies {
+        /*同时需要声明build.gradle中声明的插件依赖*/
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$KT_VERSION"       // Kotlin支持1.3.20+
         classpath "com.android.tools.build:gradle:$AGP_VERSION"                 // AGP支持3.4.0+
+        /*P2M*/
         classpath "com.github.wangdaqi77.P2M:p2m-plugin:$P2M_VERSION"           // P2M插件
     }
 }

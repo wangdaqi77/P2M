@@ -10,12 +10,12 @@ class Logger(private val msg: Messager) {
         msg.printMessage(Diagnostic.Kind.NOTE, info)
     }
 
-    fun error(error: CharSequence) {
-        msg.printMessage(Diagnostic.Kind.ERROR, "[$error]")
+    fun error(message: CharSequence) {
+        msg.printMessage(Diagnostic.Kind.ERROR, "[$message]")
     }
 
-    fun error(error: Throwable?) {
-        msg.printMessage(Diagnostic.Kind.ERROR, "[${error?.message}] \n${formatStackTrace(error?.stackTrace ?: arrayOf())}")
+    fun error(message: CharSequence, error: Throwable?) {
+        msg.printMessage(Diagnostic.Kind.ERROR, "[$message\n${error?.message}] \n${formatStackTrace(error?.stackTrace ?: arrayOf())}")
     }
 
     fun warning(warning: CharSequence) {

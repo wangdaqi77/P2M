@@ -3,7 +3,6 @@ package com.p2m.core
 import android.content.Context
 import android.os.Looper
 import androidx.annotation.MainThread
-import androidx.annotation.WorkerThread
 import com.p2m.core.config.P2MConfigManager
 import com.p2m.core.internal._P2M
 import com.p2m.core.module.*
@@ -23,7 +22,6 @@ object P2M : ModuleApiProvider {
      * @param context
      * @param externalModuleClassLoader classLoader for [externalPublicModuleClassName]
      * @param externalPublicModuleClassName class name for external public module
-     * @param onIdea run on work thread.
      *
      * @see ModuleInit
      */
