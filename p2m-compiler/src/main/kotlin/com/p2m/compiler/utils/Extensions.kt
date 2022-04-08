@@ -25,7 +25,7 @@ fun Elements.getKDoc(element: Element): CodeBlock? {
     getDocComment(element)
         ?.lineSequence()
         ?.map {
-            it.replace(Regex("^\\s*(.*?)"), "")
+            it.replace(Regex("^\\s(.*?)"), "")
         }
         ?.forEach {
             sb.append(it)
