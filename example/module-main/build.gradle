@@ -53,11 +53,13 @@ p2mRunAppBuildGradle {
 
         defaultConfig{
             applicationId "com.p2m.example.main"
+            multiDexEnabled true
         }
 
         sourceSets {
             debug {
                 java.srcDirs += 'src/app/java'
+                res.srcDirs += 'src/app/res'
                 manifest.srcFile 'src/app/AndroidManifest.xml'
             }
         }
