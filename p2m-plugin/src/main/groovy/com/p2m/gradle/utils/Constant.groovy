@@ -13,8 +13,6 @@ class Constant {
     public static final P2M_PROJECT_NAME_P2M_COMPILER = "p2m-compiler"
     public static final P2M_PROJECT_NAME_P2M_CORE = "p2m-core"
 
-    public static final REPO_P2M_REMOTE = "https://jitpack.io"
-
     public static final LOCAL_PROPERTY_DEV_ENV = "p2m.dev"
     public static final LOCAL_PROPERTY_USE_LOCAL_REPO_FOR_P2M_PROJECT = "p2m.useLocalRepoForP2MProject"
 
@@ -23,7 +21,7 @@ class Constant {
     public static final P2M_NAME_API = "p2m-core"
     public static final P2M_NAME_ANNOTATION = "p2m-annotation"
     public static final P2M_NAME_COMPILER = "p2m-compiler"
-    public static final P2M_VERSION = "0.2.6"
+    public static final P2M_VERSION = "0.3.1"
     public static final P2M_MODULE_AAR_REPO_NAME = "p2mMavenRepository"
     public static final P2M_PUBLISH_TASK_GROUP = "p2mPublish"
     public static final P2M_MODULE_TASK_GROUP = "p2m"

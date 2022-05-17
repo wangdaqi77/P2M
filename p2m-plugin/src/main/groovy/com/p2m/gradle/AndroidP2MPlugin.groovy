@@ -171,15 +171,6 @@ class AndroidP2MPlugin implements Plugin<Settings> {
     }
 
     private def genP2MProjectDependencyConfig(Project rootProject) {
-        rootProject.allprojects {
-            repositories {
-                if (p2mConfig._useLocalRepoForP2MProject) {
-                    mavenLocal()
-                }
-                maven { url Constant.REPO_P2M_REMOTE }
-            }
-        }
-
         if (p2mConfig._devEnv) {
             rootProject.ext._p2mApi = { return rootProject.project(":${Constant.P2M_NAME_API}") }
             rootProject.ext._p2mAnnotation = { return rootProject.project(":${Constant.P2M_NAME_ANNOTATION}") }
@@ -337,7 +328,6 @@ class AndroidP2MPlugin implements Plugin<Settings> {
             settings.project(":${Constant.P2M_PROJECT_NAME_P2M_ANNOTATION}").projectDir = new File("../${Constant.P2M_PROJECT_NAME_P2M_ANNOTATION}")
         }
         p2mConfig._devEnv = isDevEnv
-        p2mConfig._useLocalRepoForP2MProject = useLocalRepoForP2MProject
     }
 
     private def evaluateModulesFromConfigExtensions() {

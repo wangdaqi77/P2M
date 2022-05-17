@@ -1,6 +1,6 @@
 apply plugin: 'java-library'
 apply plugin: 'kotlin'
-apply from: '../publish-jitpack.gradle'
+apply from: '../publish.gradle'
 
 def ignores = [
         "ILaunchActivityInterceptor",

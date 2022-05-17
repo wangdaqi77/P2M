@@ -1,14 +1,13 @@
 group = 'com.github.wangdaqi77.P2M'
-version = '0.2.6'
 afterEvaluate {
     if (plugins.hasPlugin('com.android.library')) {
-        apply plugin: 'maven-publish'
         def buildType = "release"
         publishing {
             publications {
                 "${buildType}"(MavenPublication) {
+                    artifact sourceJar
                     from components."${buildType}"
-                    groupId = group
+                    groupId = project.group
                     artifactId = "${project.name}"
                     version = project.version
                 }
@@ -28,13 +27,12 @@ afterEvaluate {
         }
     }else {
         apply plugin: 'java-library'
-        apply plugin: 'maven-publish'
-
         publishing {
             publications {
                 release(MavenPublication) {
+                    artifact sourceJar
                     from components.java
-                    groupId = group
+                    groupId = project.group
                     artifactId = "${project.name}"
                     version = project.version
                 }

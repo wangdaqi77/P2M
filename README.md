@@ -67,12 +67,12 @@ text-decoration-style: initial;text-decoration-color: initial'>
 
 P2M是什么？
 ---------
-P2M是完整的组件化工具，它的所有功能集成在[P2M插件](#P2M插件)，使用插件可以将Project态升级为[Module态](#Module态)：
+P2M是完整的组件化工具，它的所有功能集成在[P2M插件][P2M插件]，使用插件可以将Project态升级为[Module态][Module态]：
  * 告别代码的下沉处理，模块内部代码完全内聚，提高了安全性
  * 支持增量编译
- * 支持[单独运行模块](#如何单独运行模块)
- * 支持[发布模块到仓库](#如何发布模块到仓库)
- * 支持[依赖仓库中的模块](#如何依赖仓库中的模块)
+ * 支持[单独运行模块][单独运行模块]:
+ * 支持[发布模块到仓库][如何发布模块到仓库]:
+ * 支持[依赖仓库中的模块][如何依赖仓库中的模块]:
 
 P2M插件
 -------
@@ -145,26 +145,26 @@ P2M插件的全名为`p2m-android`，它需要在`settings.gradle`文件中进�
 
 Module态
 --------
-通过[声明](#声明模块)可以将Project态升级为Module态，一个Module态表示一个模块。
+通过[声明][声明模块]可以将Project态升级为Module态，一个Module态表示一个模块。
 
 |Project态|Module态|
 |---|---|
 |include ':projectPath'|p2m {<br>    module('YourModuleName') {<br>        include(':projectPath')<br>    }<br>}|
 |<img src="assets/gradle_project.png" width="260"  alt="image"/>|<img src="assets/p2m_module.png" width="260"  alt="image"/>|
 
-模块之间可以[建立依赖关系](#声明模块的依赖项)，如果有A模块使用B模块，则A模块依赖B模块：
+模块之间可以[建立依赖关系][声明模块的依赖项]，如果有A模块使用B模块，则A模块依赖B模块：
  * 对于A来说，B是**依赖项**；
  * 对于B来说，A是**外部模块**；
  * 此时B不能再依赖A了，**模块之间禁止互相依赖**。
 
-一个模块包含一个[Api区](#Api区)和一个[Source区](#Source区)，Api区会暴露给外部模块，Source区是对外隐藏的。
+一个模块包含一个[Api区][Api区]和一个[Source区][Source区]，Api区会暴露给外部模块，Source区是对外隐藏的。
 <br/><br/><img src="assets/p2m_module_detail.png" width="600"  alt="image"/><br/>
 
 每个模块还支持：
- * [初始化](#Initialization区)
- * [发布模块到仓库](#如何发布模块到仓库)
- * [依赖仓库中的模块](#如何依赖仓库中的模块)
- * [单独运行模块](#如何单独运行模块)
+ * [初始化][Initialization区]
+ * [发布模块到仓库][如何发布模块到仓库]:
+ * [依赖仓库中的模块][如何依赖仓库中的模块]:
+ * [单独运行模块][单独运行模块]:
 
 ### 声明模块
 假设有一个工程包含帐号功能和其他的功能，所有的功能都存放一个project中，它的project文件夹名称是`app`，工程的文件结构大致如下：
@@ -265,12 +265,12 @@ p2m {
 ```
 
 ### Api区
-Api区是[模块](#Module态)的一部分，它会暴露给外部模块，主要包含：
- * [启动器](#启动器)，暴露`Activity`、`Fragment`、`Service`启动器，如`Account`模块对外暴露登录界面的启动器。
- * [服务](#服务)，暴露方法，如`Account`模块对外暴露退出登录的方法。
- * [事件](#事件)，暴露事件，如`Account`模块对外暴露登录状态的事件。
+Api区是[模块][Module态]的一部分，它会暴露给外部模块，主要包含：
+ * [启动器][启动器]，暴露`Activity`、`Fragment`、`Service`启动器，如`Account`模块对外暴露登录界面的启动器。
+ * [服务][服务]，暴露方法，如`Account`模块对外暴露退出登录的方法。
+ * [事件][事件]，暴露事件，如`Account`模块对外暴露登录状态的事件。
 
-在[编译Api区](#如何编译Api区)后访问Api区：
+在[编译Api区][如何编译Api区]后访问Api区：
 ```kotlin
 val accountApi = P2M.apiOf(Account::class.java)     // Account的api
 val launcher = accountApi.launcher                  // Account的api中的启动器
@@ -282,10 +282,10 @@ val event = accountApi.event                        // Account的api中的事件
 val (launcher, service, event) = P2M.apiOf(Account::class.java)
 ```
 
-有时会使用[拦截器](#Activity启动器如何指定拦截器)和[数据类](#如何对外暴露数据类)，它们也属于Api区的一部分。
+有时会使用[拦截器][Activity启动器如何指定拦截器]和[数据类][如何对外暴露数据类]，它们也属于Api区的一部分。
 
 #### 启动器
-启动器是[Api区](#Api区)的一部分，`ApiLauncher`注解是为启动器而设计的，同一模块内可注解多个类，需要指定`launcherName`：
+启动器是[Api区][Api区]的一部分，`ApiLauncher`注解是为启动器而设计的，同一模块内可注解多个类，需要指定`launcherName`：
  * 支持注解Activity的子类，将为其生成启动器`val activityOf$launcherName() : ActivityLauncher`;
  * 支持注解Fragment的子类，将为其生成启动器`val fragmentOf$launcherName() : FragmentLauncher`；
  * 支持注解Service的子类，将为其生成启动器`val serviceOf$launcherName() : ServiceLauncher`。
@@ -296,7 +296,7 @@ val (launcher, service, event) = P2M.apiOf(Account::class.java)
 class LoginActivity: Activity()
 ```
 
-[编译Api区](#如何编译Api区)后，在外部模块启动调用：
+[编译Api区][如何编译Api区]后，在外部模块启动调用：
 ```kotlin
 P2M.apiOf(Account::class.java)
     .launcher
@@ -304,10 +304,10 @@ P2M.apiOf(Account::class.java)
     .launchChannel(::startActivity)
     .navigation()
 ```
-Activity的启动器还支持[ResultApi](#Activity启动器如何支持ResultApi)、[拦截器](#Activity启动器如何指定拦截器)。
+Activity的启动器还支持[ResultApi][Activity启动器如何支持ResultApi]、[拦截器][Activity启动器如何指定拦截器]。
 
 #### 服务
-服务是[Api区](#Api区)的一部分，`ApiService`注解是为服务而设计的，同一模块内只能注解一个类：
+服务是[Api区][Api区]的一部分，`ApiService`注解是为服务而设计的，同一模块内只能注解一个类：
  * 被注解类必须是`class`；
  * 被注解类中的所有公开成员方法将会被提取到Api区中。
 
@@ -320,7 +320,7 @@ class AccountService {
     }
 }
 ```
-[编译Api区](#如何编译Api区)后，在外部模块调用：
+[编译Api区][如何编译Api区]后，在外部模块调用：
 ```kotlin
 P2M.apiOf(Account::class.java)
     .service
@@ -328,7 +328,7 @@ P2M.apiOf(Account::class.java)
 ```
 
 #### 事件
-事件是[Api区](#Api区)的一部分，`ApiEvent`注解是为模块的事件而设计的，同一模块内只能注解一个类：
+事件是[Api区][Api区]的一部分，`ApiEvent`注解是为模块的事件而设计的，同一模块内只能注解一个类：
  * 被注解类必须是`interface`；
  * 被注解类中所有使用`ApiEventField`注解的成员字段将会转换成[可感知生命周期的可观察的事件持有类型][live-event]（概况一下就是类似LiveData，但是比LiveData适合事件场景），用于发送事件和观察事件。`ApiEventField`需要指定`eventOn`和`externalMutable`：
     * `eventOn = EventOn.MAIN`表示在主线程维护和接收事件，`eventOn = EventOn.BACKGROUND`表示在后台线程维护和接收事件；
@@ -345,7 +345,7 @@ interface AccountEvent {
 }
 ```
 
-[编译Api区](#如何编译Api区)后，在外部模块观察此事件：
+[编译Api区][如何编译Api区]后，在外部模块观察此事件：
 ```kotlin
 P2M.apiOf(Account::class.java)
     .event
@@ -356,12 +356,12 @@ P2M.apiOf(Account::class.java)
 ```
 
 ### Source区
-Source区是[模块](#Module态)的一部分，它是对外隐藏的，主要有两个部分：
- * [Initialization](#Initialization区)          - 模块初始化，由开发者编码完成；
+Source区是[模块][Module态]的一部分，它是对外隐藏的，主要有两个部分：
+ * [Initialization][Initialization区]          - 模块初始化，由开发者编码完成；
  * Other   - 模块内部功能编码区，由开发者编码完成。
 
 ### Initialization区
-Initialization区是[Source区](#Source区)的一部分，它是为模块内部初始化而设计的，它至少包含一个初始化类。
+Initialization区是[Source区][Source区]的一部分，它是为模块内部初始化而设计的，它至少包含一个初始化类。
 
 在一个模块中**必须声明一个初始化类**，该类需使用`ModuleInitializer`注解且实现`ModuleInit`接口，如在示例中的`Account`模块中：
 ```kotlin
@@ -418,11 +418,11 @@ class LoadLastUserTask: Task<UserDiskCache, LoginUserInfo?>() {
      * 用于在本模块注册任务和组织任务的依赖关系，这些任务是为了快速加载数据设计的，这些数据将在**初始化完成阶段**使用；
      * 每个模块的`onEvaluate()`运行在单独的子线程。
  2. 执行阶段，意味着开始执行已注册的任务，关联`Task.onExecute()`：
-     * 在任务的依赖项执行`onExecute`完成后且[模块的依赖项](#声明模块的依赖项)执行`onCompleted`完成后执行；
+     * 在任务的依赖项执行`onExecute`完成后且[模块的依赖项][声明模块的依赖项]执行`onCompleted`完成后执行；
      * 用于输出加载的数据；
      * 每个任务的`onExecute`运行在单独的子线程。
  3. 初始化完成阶段，意味着初始化完成，关联`ModuleInit.onCompleted()`：
-     * 在本模块的所有任务执行`onExecute`完成后且[模块的依赖项](#声明模块的依赖项)执行`onCompleted`完成后执行；
+     * 在本模块的所有任务执行`onExecute`完成后且[模块的依赖项][声明模块的依赖项]执行`onCompleted`完成后执行；
      * 获取任务输出的数据，将这些数据加载到Api区；
      * 每个模块的`onCompleted`运行在主线程。
 
@@ -432,7 +432,7 @@ class LoadLastUserTask: Task<UserDiskCache, LoginUserInfo?>() {
  * 如果`A`模块依赖`B`模块，执行顺序一定为`B`模块的`onCompleted()` > `A`模块的`onExecute()`。
  * 如果`A`模块依赖`B`模块且`B`模块依赖`C`模块，执行顺序一定为`C`模块的`onCompleted()` > `A`模块的`onExecute()`。
 
-调用`P2M.init()`开始初始化所有的模块，初始化的顺序是按照[模块的依赖关系](#声明模块的依赖项)，先初始化依赖项再初始化自身。
+调用`P2M.init()`开始初始化所有的模块，初始化的顺序是按照[模块的依赖关系][声明模块的依赖项]，先初始化依赖项再初始化自身。
 
 `Main`模块使用`Account`模块，所以`Main`模块依赖`Account`模块时，模块初始化的流程图：
 <br/><br/><img src="assets/p2m_module_init.png" width="800"  alt="image"/><br/>
@@ -445,7 +445,7 @@ Q&A
 
 如何编译Api区？
 -------------
-编写代码时，如果[Api区注解](#Api区注解)相关的类有增删改操作，手动编译后才能使用Api区的内容：
+编写代码时，如果[Api区注解][Api区注解]相关的类有增删改操作，手动编译后才能使用Api区的内容：
  * 编译单个模块：点击Android Studio中的[Build][AS-Build] > Make Module；
  * 编译所有模块：点击Android Studio中的[Build][AS-Build] > Make Project。
 
@@ -461,7 +461,7 @@ data class UserInfo(
     val userName: String,
 )
 ```
-在[编译Api区](#如何编译Api区)后，外部模块就能使用了。
+在[编译Api区][如何编译Api区]后，外部模块就能使用了。
 
 Activity启动器如何支持ResultApi？
 -------------------------------
@@ -470,7 +470,7 @@ Activity启动器如何支持ResultApi？
     @ApiLauncher(launcherName = "ModifyAccountName", activityResultContract = ModifyUserNameActivityResultContract::class)
     class ModifyAccountNameActivity : AppCompatActivity()
     ```
- 2. 在[编译Api区](#如何编译Api区)；
+ 2. 在[编译Api区][如何编译Api区]；
  3. 使用启动器注册Result启动器并启动，可参考示例工程中[Main模块的MainActivity](./example/module-main/src/main/java/com/p2m/example/main/pre_api/MainActivity.kt)：
     ```kotlin
     // 注册ActivityResult启动器
@@ -516,7 +516,7 @@ Activity启动器如何指定拦截器？
         }
     }
     ```
- 2. 通过[编译Account模块的Api区](#如何编译Api区)在`Account`模块生成外部模块可访问的`AccountLaunchActivityInterceptorForBindPhoneNum`，生成类名规则为`${moduleName}LaunchActivityInterceptorFor${interceptorName}`；
+ 2. 通过[编译Account模块的Api区][如何编译Api区]在`Account`模块生成外部模块可访问的`AccountLaunchActivityInterceptorForBindPhoneNum`，生成类名规则为`${moduleName}LaunchActivityInterceptorFor${interceptorName}`；
  3. 使用`@ApiLauncher`声明启动器时传入拦截器`launchActivityInterceptor`，可参考示例工程中[Mall模块的商城Activity](./example/module-mall/src/main/java/com/p2m/example/mall/pre_api/MallActivity.kt):
     ```kotlin
     @ApiLauncher(
@@ -527,7 +527,7 @@ Activity启动器如何指定拦截器？
     )
     class MallActivity : AppCompatActivity()
     ```
- 4. [编译Api区](#如何编译Mall模块的Api区)；
+ 4. [编译Api区][如何编译Api区]；
  5. 使用启动器启动`MallActivity`，启动时会执行拦截器功能，可参考示例工程中[Main模块的MainActivity](./example/module-main/src/main/java/com/p2m/example/main/pre_api/MainActivity.kt)：
     ```kotlin
     P2M.apiOf(Mall::class.java)
@@ -661,5 +661,23 @@ Activity启动器如何指定拦截器？
 
  [AS-Build]: https://developer.android.com/studio/run#reference
  [live-event]: https://github.com/wangdaqi77/live-event
- [example]: https://github.com/wangdaqi77/P2M/tree/master/example
+ [example]: example
  [LoginUserInfo]: example/module-account/src/main/java/com/p2m/example/account/pre_api/LoginUserInfo.kt
+ [P2M插件]: #P2M插件
+ [单独运行模块]:#如何单独运行模块
+ [如何发布模块到仓库]:#如何发布模块到仓库
+ [如何依赖仓库中的模块]:#如何依赖仓库中的模块
+ [声明模块的依赖项]:#声明模块的依赖项
+ [Api区注解]:#Api区注解
+ [Module态]:#Module态
+ [Api区]:#Api区
+ [Source区]:#Source区
+ [Initialization区]:#Initialization区
+ [声明模块]:#声明模块
+ [启动器]:#启动器
+ [服务]:#服务
+ [事件]:#事件
+ [如何编译Api区]:#如何编译Api区
+ [Activity启动器如何指定拦截器]:#Activity启动器如何指定拦截器
+ [如何对外暴露数据类]:#如何对外暴露数据类
+ [Activity启动器如何支持ResultApi]:#Activity启动器如何支持ResultApi

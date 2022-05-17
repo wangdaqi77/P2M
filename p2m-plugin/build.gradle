@@ -1,8 +1,8 @@
 plugins{
     id 'groovy'
     id 'java-gradle-plugin'
-    id 'maven-publish' // Jitpack
 }
+apply from: '../publish.gradle'
 
 
 dependencies {
@@ -17,8 +17,6 @@ repositories {
     mavenCentral()
 }
 
-group = "com.github.wangdaqi77.P2M"
-version = "0.2.6"
 
 gradlePlugin {
     plugins {
