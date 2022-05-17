@@ -35,7 +35,7 @@ class SplashActivity : AppCompatActivity() {
                 it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(it)
             }
-            .addInterceptorLeft(AccountLaunchActivityInterceptorForLogin::class) // 首先登录
+            .addInterceptorBefore(AccountLaunchActivityInterceptorForLogin::class) // 首先登录
             //.redirectionMode(ChannelRedirectionMode.FLEXIBLY) // 默认就是ChannelRedirectionMode.FLEXIBLY
             .navigation()
         finish()
