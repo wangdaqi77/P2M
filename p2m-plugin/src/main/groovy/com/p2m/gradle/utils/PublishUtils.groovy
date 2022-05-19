@@ -2,6 +2,7 @@ package com.p2m.gradle.utils
 
 import com.android.build.gradle.api.BaseVariant
 import com.p2m.gradle.bean.LocalModuleProjectUnit
+import com.p2m.gradle.bean.ModuleProjectUnit
 import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
@@ -67,6 +68,18 @@ class PublishUtils {
                         setArtifactId moduleProject.artifactId
                         artifact bundleAarTaskProvider.get()
                         artifact sourcesJar.get()
+                        def dependencies = moduleProject.dependencies
+                        if (!dependencies.isEmpty()) {
+                            pom.withXml {
+                                def dependenciesNode = asNode().appendNode('dependencies')
+                                dependencies.forEach { ModuleProjectUnit unit ->
+                                    def dependencyNode = dependenciesNode.appendNode('dependency')
+                                    dependencyNode.appendNode('groupId', unit.groupId)
+                                    dependencyNode.appendNode('artifactId', unit.artifactId)
+                                    dependencyNode.appendNode('version', unit.versionName)
+                                }
+                            }
+                        }
                     }
 
                     "p2mModuleApi"(MavenPublication) {
@@ -98,6 +111,11 @@ class PublishUtils {
                 task.description = "publish ${moduleProject.getModuleName()} module"
                 task.dependsOn(moduleProject.project.tasks.named(publishModuleTaskName))
                 task.dependsOn(moduleProject.project.tasks.named(publishModuleApiTaskName))
+                moduleProject.dependencies.forEach { ModuleProjectUnit unit ->
+                    if (unit instanceof LocalModuleProjectUnit) {
+                        task.dependsOn(moduleProject.project.rootProject.tasks.named("publish${unit.moduleName}"))
+                    }
+                }
             }
 
             publishAllModuleTaskProvider.configure { task ->

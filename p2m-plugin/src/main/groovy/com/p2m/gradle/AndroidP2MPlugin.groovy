@@ -229,7 +229,9 @@ class AndroidP2MPlugin implements Plugin<Settings> {
 
         // 建立module依赖关系
         moduleProjectConfigDependencies.forEach { ModuleProjectUnit moduleProject, Set<ModuleNamed> dependencies ->
-            configDependenciesToProjectDependencies(moduleProject, dependencies, moduleProjectUnitTable)
+            if (moduleProject instanceof LocalModuleProjectUnit) {
+                configDependenciesToProjectDependencies(moduleProject, dependencies, moduleProjectUnitTable)
+            }
         }
     }
 
