@@ -4,6 +4,8 @@ import com.p2m.core.exception.ChannelInterruptedWhenRedirectException
 import com.p2m.core.exception.ChannelClosedException
 import com.p2m.core.exception.P2MException
 import com.p2m.core.internal._P2M
+import com.p2m.core.launcher.ILaunchActivityInterceptor
+import kotlin.reflect.KClass
 
 typealias ChannelBlock = (channel: Channel) -> Unit
 
@@ -106,7 +108,6 @@ open class InterruptibleChannel internal constructor(
     public override fun onInterrupt(onInterrupt: (channel: Channel, e: Throwable?) -> Unit): InterruptibleChannel {
         return super.onInterrupt(onInterrupt) as InterruptibleChannel
     }
-
 
     override fun timeout(timeout: Long): InterruptibleChannel {
         return super.timeout(timeout) as InterruptibleChannel
@@ -373,7 +374,9 @@ open class Channel internal constructor(
         override fun onRedirect(redirectChannel: Channel) {
             val processingInterceptor = this.processingInterceptor
                 ?: throw IllegalStateException("please call `callback.onInterceptorProcessing()` first in service.")
-            val unprocessedInterceptors = processingInterceptors
+            val unprocessedInterceptors = this.processingInterceptors
+            val lastInterruptedInterceptor = this.lastInterruptedInterceptor
+            val lastInterruptedChannel = this.lastInterruptedChannel
             val recoverableChannel = RecoverableChannel(
                 this.channel,
                 redirectChannel,
@@ -381,10 +384,11 @@ open class Channel internal constructor(
                 unprocessedInterceptors
             )
             redirectChannel.recoverableChannel = recoverableChannel
+
             when (this.channel.redirectionMode) {
                 ChannelRedirectionMode.CONSERVATIVE -> onInterrupt(ChannelInterruptedWhenRedirectException(ChannelRedirectionMode.CONSERVATIVE, recoverableChannel))
                 ChannelRedirectionMode.FLEXIBLY -> {
-                    if (this.lastInterruptedInterceptor === processingInterceptor &&  this.lastInterruptedChannel?.owner === redirectChannel.owner) {
+                    if (lastInterruptedInterceptor === processingInterceptor && lastInterruptedChannel?.owner === redirectChannel.owner) {
                         onInterrupt(ChannelInterruptedWhenRedirectException(ChannelRedirectionMode.FLEXIBLY, recoverableChannel))
                         return
                     }
@@ -411,5 +415,22 @@ class RecoverableChannel internal constructor(
 ) {
     fun recoverNavigation() {
         channel.recoverNavigation(interruptedChannel, processingInterceptor, unprocessedInterceptors)
+    }
+
+    /**
+     * Query this `RecoverableChannel` is generative when interrupted from which interceptor.
+     *
+     * @param interceptorClass interceptor class, only classes defined in `Api` area are supported.
+     */
+    fun isInterruptedFrom(interceptorClass: KClass<*>): Boolean {
+        return when {
+            // for launch activity
+            ILaunchActivityInterceptor::class.java.isAssignableFrom(interceptorClass.java) -> {
+                @Suppress("UNCHECKED_CAST")
+                val interceptor = _P2M.interceptorContainer.get(interceptorClass as KClass<out ILaunchActivityInterceptor>)
+                interceptor === processingInterceptor
+            }
+            else -> throw P2MException("no register for ${interceptorClass.qualifiedName}, only class defined in `Api` area are supported.")
+        }
     }
 }

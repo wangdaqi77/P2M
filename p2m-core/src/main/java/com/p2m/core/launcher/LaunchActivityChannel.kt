@@ -37,7 +37,7 @@ class LaunchActivityChannel internal constructor(
     fun addInterceptorAfter(interceptorClass: KClass<out ILaunchActivityInterceptor>): LaunchActivityChannel {
         checkImmutable()
 
-        val interceptors = this.interceptors ?:  arrayListOf<IInterceptor>().also{
+        val interceptors = this.interceptors ?: arrayListOf<IInterceptor>().also {
             this.interceptors = it
         }
         val interceptor = _P2M.interceptorContainer.get(interceptorClass)
@@ -95,7 +95,7 @@ interface ILaunchActivityInterceptor {
     fun process(callback: LaunchActivityInterceptorCallback)
 }
 
-private class LaunchActivityInterceptorDelegate(private val real: ILaunchActivityInterceptor) : IInterceptor {
+internal class LaunchActivityInterceptorDelegate(internal val real: ILaunchActivityInterceptor) : IInterceptor {
 
     override fun init(context: Context) {
         real.init(context)

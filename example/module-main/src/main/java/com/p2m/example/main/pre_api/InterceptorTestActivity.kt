@@ -15,7 +15,9 @@ import com.p2m.core.exception.ChannelInterruptedWhenRedirectException
 import com.p2m.core.launcher.LaunchActivityChannel
 import com.p2m.example.main.R
 import com.p2m.example.account.p2m.api.Account
+import com.p2m.example.account.p2m.api.AccountLaunchActivityInterceptorForBindPhoneNum
 import com.p2m.example.mall.p2m.api.Mall
+import com.p2m.example.mall.p2m.api.MallLaunchActivityInterceptorForAddAddress
 
 @ApiLauncher("Interceptor")
 class InterceptorTestActivity : AppCompatActivity() {
@@ -127,55 +129,48 @@ class InterceptorTestActivity : AppCompatActivity() {
                     printLog("onInterrupt(), message:${e.message}")
                     if (e is ChannelInterruptedWhenRedirectException) {
                         val recoverableChannel = e.recoverableChannel // 可恢复的通道
-                        val interruptedChannel = recoverableChannel.interruptedChannel as LaunchActivityChannel
-                        val bindPhoneLauncher = P2M.apiOf(Account::class.java).launcher.activityOfBindPhone
-                        val addAddressLauncher = P2M.apiOf(Mall::class.java).launcher.activityOfAddAddress
-                        when(interruptedChannel.launcher) {
-                            bindPhoneLauncher -> {
-                                printLog("重定向到绑定手机界面时中断，提示需要绑定手机")
-                                AlertDialog.Builder(this@InterceptorTestActivity)
-                                    .setTitle("跳转商城中断")
-                                    .setMessage("请先绑定手机！")
-                                    .setNegativeButton("取消") { dialog, _ ->
-                                        dialog.dismiss()
-                                        printLog("取消")
-                                    }
-                                    .setPositiveButton("绑定") { dialog, _ ->
-                                        dialog.dismiss()
-                                        printLog("启动绑定手机")
+                        if (recoverableChannel.isInterruptedFrom(AccountLaunchActivityInterceptorForBindPhoneNum::class)) {
+                            printLog("重定向到绑定手机界面时中断，提示需要绑定手机")
+                            AlertDialog.Builder(this@InterceptorTestActivity)
+                                .setTitle("跳转商城中断")
+                                .setMessage("请先绑定手机！")
+                                .setNegativeButton("取消") { dialog, _ ->
+                                    dialog.dismiss()
+                                    printLog("取消")
+                                }
+                                .setPositiveButton("绑定") { dialog, _ ->
+                                    dialog.dismiss()
+                                    printLog("启动绑定手机")
 
-                                        recoverableChannelForTestCONSERVATIVE = recoverableChannel
-                                        // ResultApi 启动绑定手机号
-                                        bindPhoneResultLauncherForTestCONSERVATIVE
-                                            .launchChannel { }
-                                            .navigation()
-                                    }
-                                    .create()
-                                    .show()
-                            }
+                                    recoverableChannelForTestCONSERVATIVE = recoverableChannel
+                                    // ResultApi 启动绑定手机号
+                                    bindPhoneResultLauncherForTestCONSERVATIVE
+                                        .launchChannel { }
+                                        .navigation()
+                                }
+                                .create()
+                                .show()
+                        } else if (recoverableChannel.isInterruptedFrom(MallLaunchActivityInterceptorForAddAddress::class)) {
+                            printLog("重定向到添加收货地址界面时中断，提示需要添加收货地址")
+                            AlertDialog.Builder(this@InterceptorTestActivity)
+                                .setTitle("跳转商城中断")
+                                .setMessage("请先添加收货地址！")
+                                .setNegativeButton("取消") { dialog, _ ->
+                                    dialog.dismiss()
+                                    printLog("取消")
+                                }
+                                .setPositiveButton("添加") { dialog, _ ->
+                                    dialog.dismiss()
+                                    printLog("启动添加收货地址")
 
-                            addAddressLauncher -> {
-                                printLog("重定向到添加收货地址界面时中断，提示需要添加收货地址")
-                                AlertDialog.Builder(this@InterceptorTestActivity)
-                                    .setTitle("跳转商城中断")
-                                    .setMessage("请先添加收货地址！")
-                                    .setNegativeButton("取消") { dialog, _ ->
-                                        dialog.dismiss()
-                                        printLog("取消")
-                                    }
-                                    .setPositiveButton("添加") { dialog, _ ->
-                                        dialog.dismiss()
-                                        printLog("启动添加收货地址")
-
-                                        recoverableChannelForTestCONSERVATIVE = recoverableChannel
-                                        // ResultApi 启动添加收货地址
-                                        addAddressResultLauncherForTestCONSERVATIVE
-                                            .launchChannel{ }
-                                            .navigation()
-                                    }
-                                    .create()
-                                    .show()
-                            }
+                                    recoverableChannelForTestCONSERVATIVE = recoverableChannel
+                                    // ResultApi 启动添加收货地址
+                                    addAddressResultLauncherForTestCONSERVATIVE
+                                        .launchChannel{ }
+                                        .navigation()
+                                }
+                                .create()
+                                .show()
                         }
                     }
                 }
@@ -203,6 +198,14 @@ class InterceptorTestActivity : AppCompatActivity() {
 
                 override fun onInterrupt(channel: Channel, e: Throwable) {
                     printLog("onInterrupt(), message:${e.message}")
+                    if (e is ChannelInterruptedWhenRedirectException) {
+                        val recoverableChannel = e.recoverableChannel // 可恢复的通道
+                        if (recoverableChannel.isInterruptedFrom(AccountLaunchActivityInterceptorForBindPhoneNum::class)) {
+                            printLog("重定向到绑定手机界面时中断，用户取消了绑定手机")
+                        } else if (recoverableChannel.isInterruptedFrom(MallLaunchActivityInterceptorForAddAddress::class)) {
+                            printLog("重定向到添加收货地址界面时中断，用户取消了添加收货地址")
+                        }
+                    }
                 }
 
                 override fun onRedirect(channel: Channel, redirectChannel: Channel) {

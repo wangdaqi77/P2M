@@ -42,7 +42,7 @@ internal class ChannelInterceptorContainer {
 
     fun get(interceptorClass: KClass<out ILaunchActivityInterceptor>): IInterceptor {
         return tableForLaunchActivity[interceptorClass]
-            ?: throw P2MException("no register for ${interceptorClass.qualifiedName}")
+            ?: throw P2MException("no register for ${interceptorClass.qualifiedName}, only class defined in `Api` area are supported.")
     }
 
     fun getInterceptors(module: Module<*>): List<IInterceptor>? = tableForModule[module::class]

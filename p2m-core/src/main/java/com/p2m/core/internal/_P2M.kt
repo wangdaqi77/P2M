@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.SystemClock
-import androidx.annotation.WorkerThread
 import com.p2m.core.app.App
 import com.p2m.core.channel.InterceptorService
 import com.p2m.core.launcher.LaunchActivityChannel
@@ -16,7 +15,6 @@ import com.p2m.core.internal.config.InternalP2MConfigManager
 import com.p2m.core.internal.execution.Executor
 import com.p2m.core.internal.execution.InternalMainExecutor
 import com.p2m.core.internal.execution.InternalThreadPoolExecutor
-import com.p2m.core.internal.log.logE
 import com.p2m.core.internal.log.logW
 import com.p2m.core.internal.module.*
 import com.p2m.core.internal.module.DefaultModuleFactory
@@ -26,7 +24,6 @@ import com.p2m.core.internal.module.ManifestModuleInfoFinder
 import com.p2m.core.internal.module.ModuleContainerDefault
 import com.p2m.core.internal.module.deriver.InternalDriver
 import com.p2m.core.module.*
-import java.util.concurrent.ExecutorService
 import kotlin.collections.ArrayList
 
 @SuppressLint("StaticFieldLeak")

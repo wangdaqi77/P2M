@@ -2,11 +2,7 @@ package com.p2m.core.channel
 
 import android.content.Context
 import androidx.annotation.WorkerThread
-import com.p2m.core.exception.P2MException
 import com.p2m.core.launcher.ILaunchActivityInterceptor
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.TimeUnit
 import kotlin.reflect.KClass
 
 interface InterceptorService {
