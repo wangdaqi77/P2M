@@ -35,7 +35,7 @@ class AppTest {
                     createdIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     appContext.startActivity(createdIntent)
                 }
-                .addInterceptorAfter(AccountLaunchActivityInterceptorForLogin::class)
+                .addAnnotatedInterceptorAfter(AccountLaunchActivityInterceptorForLogin::class)
                 .redirectionMode(ChannelRedirectionMode.RADICAL)
                 .navigation(object : NavigationCallback {
 

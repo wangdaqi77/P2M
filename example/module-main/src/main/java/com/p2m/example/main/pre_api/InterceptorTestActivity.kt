@@ -211,7 +211,7 @@ class InterceptorTestActivity : AppCompatActivity() {
                 override fun onRedirect(channel: Channel, redirectChannel: Channel) {
                     printLog("onRedirect()")
                     redirectChannel as LaunchActivityChannel
-                    when (redirectChannel.launcher) {
+                    when (redirectChannel.activityLauncher) {
                         P2M.apiOf(Account::class.java).launcher.activityOfBindPhone -> toast("需要绑定手机号~")
                         P2M.apiOf(Mall::class.java).launcher.activityOfAddAddress -> toast("需要添加收货地址~")
                     }
@@ -245,7 +245,7 @@ class InterceptorTestActivity : AppCompatActivity() {
                 override fun onRedirect(channel: Channel, redirectChannel: Channel) {
                     printLog("onRedirect()")
                     redirectChannel as LaunchActivityChannel
-                    when (redirectChannel.launcher) {
+                    when (redirectChannel.activityLauncher) {
                         P2M.apiOf(Account::class.java).launcher.activityOfBindPhone -> toast("一定要先绑定手机号!")
                         P2M.apiOf(Mall::class.java).launcher.activityOfAddAddress -> toast("一定要先添加收货地址!")
                     }

@@ -21,7 +21,7 @@ class LauncherActivity : AppCompatActivity() {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(intent)
             }
-            .addInterceptorBefore(AccountLaunchActivityInterceptorForLogin::class) // 首先登录
+            .addAnnotatedInterceptorBefore(AccountLaunchActivityInterceptorForLogin::class) // 首先登录
 //                .redirectionMode(ChannelRedirectionMode.FLEXIBLY)
             .navigation()
         finish()

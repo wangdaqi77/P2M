@@ -23,7 +23,7 @@ import kotlin.reflect.KProperty
  * For example, has a `Activity` of login in `Account` module:
  * ```kotlin
  * @ApiLauncher("Login")
- * class LoginActivity:Activity()
+ * class LoginActivity: Activity()
  * ```
  *
  * then launch in `activity` of external module:

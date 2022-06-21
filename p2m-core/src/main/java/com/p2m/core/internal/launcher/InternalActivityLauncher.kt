@@ -54,14 +54,14 @@ internal class InternalActivityLauncher<I, O>(
         }.compat()
     }
 
-    private fun createActivityResultContract(): ActivityResultContractCompat<I, O> {
-        return createActivityResultContractBlock.invoke().also { it.activityClazz = clazz }
+    internal fun addAnnotatedInterceptor(channel: LaunchActivityChannel){
+        annotatedInterceptorClasses.forEach {
+            channel.addAnnotatedInterceptorAfter(it)
+        }
     }
 
-    internal fun addAnnotatedInterceptor(channel: LaunchActivityChannel){
-        annotatedInterceptorClasses.forEach{
-            channel.addInterceptorAfter(it)
-        }
+    private fun createActivityResultContract(): ActivityResultContractCompat<I, O> {
+        return createActivityResultContractBlock.invoke().also { it.activityClazz = clazz }
     }
 
     private fun ActivityResultLauncher<I>.compat(): InternalActivityResultLauncherCompat<I, O> =

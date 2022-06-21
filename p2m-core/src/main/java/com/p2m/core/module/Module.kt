@@ -77,7 +77,7 @@ abstract class Module<MODULE_API : ModuleApi<*, *, *>> {
     internal fun initLazy(interceptorContainer: ChannelInterceptorContainer) {
         this.interceptorContainer = interceptorContainer
         this.launchActivityInterceptors?.forEach { entry ->
-            this.interceptorContainer.register(this, entry.key, entry.value)
+            this.interceptorContainer.registerFromModule(this, entry.key, entry.value)
         }
     }
 
