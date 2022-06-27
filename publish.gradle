@@ -1,5 +1,5 @@
 apply plugin: 'maven-publish'
-version = '0.3.3'
+version = '0.3.4'
 tasks.register("sourceJar", Jar) {
     if (plugins.hasPlugin('com.android.library')) {
         from android.sourceSets.main.java.srcDirs
