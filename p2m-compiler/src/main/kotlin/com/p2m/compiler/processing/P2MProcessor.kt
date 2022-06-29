@@ -127,7 +127,8 @@ class P2MProcessor : BaseProcessor() {
         this["exportApiClassPath"] = exportApiClassPath.joinToString(",") { className ->
             // com.android.os.Test.InnerClass -> com/android/os/Test
             val prefix = className.packageName.replace(".", File.separator)
-            val suffix = className.canonicalName.removePrefix(className.packageName + ".").substringBefore(".")
+            val suffix = className.canonicalName.removePrefix(className.packageName + ".")
+                .replace(".", "$")
             prefix + File.separator + suffix
         }
 
