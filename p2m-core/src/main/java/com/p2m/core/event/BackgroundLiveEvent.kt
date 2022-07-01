@@ -1,6 +1,7 @@
 package com.p2m.core.event
 
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import com.p2m.annotation.module.api.*
 import com.p2m.core.internal.event.InternalBackgroundLiveEvent
@@ -52,6 +53,8 @@ interface BackgroundLiveEvent<T> {
     fun hasObservers(): Boolean
 
     fun getValue(): T?
+
+    fun asLiveData(): LiveData<T>
 }
 
 interface MutableBackgroundLiveEvent<T> : BackgroundLiveEvent<T> {
@@ -72,10 +75,10 @@ enum class EventDispatcher {
 class BackgroundObserver<T>(eventDispatcher: EventDispatcher, observer: Observer<T>) :
     wang.lifecycle.BackgroundObserver<T>(
         dispatcher = when (eventDispatcher) {
-            EventDispatcher.DEFAULT -> wang.lifecycle.EventDispatcher.DEFAULT
-            EventDispatcher.BACKGROUND -> wang.lifecycle.EventDispatcher.BACKGROUND
-            EventDispatcher.ASYNC -> wang.lifecycle.EventDispatcher.ASYNC
-            EventDispatcher.MAIN -> wang.lifecycle.EventDispatcher.MAIN
+            EventDispatcher.DEFAULT     -> wang.lifecycle.EventDispatcher.DEFAULT
+            EventDispatcher.BACKGROUND  -> wang.lifecycle.EventDispatcher.BACKGROUND
+            EventDispatcher.ASYNC       -> wang.lifecycle.EventDispatcher.ASYNC
+            EventDispatcher.MAIN        -> wang.lifecycle.EventDispatcher.MAIN
         },
         observer = observer
     )

@@ -1,5 +1,6 @@
 package com.p2m.core.internal.event
 
+import androidx.lifecycle.LiveData
 import wang.lifecycle.MutableLiveEvent
 
 /**
