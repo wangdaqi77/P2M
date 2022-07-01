@@ -51,7 +51,7 @@ interface LiveEvent<T>{
 
     fun getValue(): T?
 
-    fun asLiveData(): LiveData<T>
+    fun asLiveData(): LiveData<out T>
 }
 
 interface MutableLiveEvent<T> : LiveEvent<T> {

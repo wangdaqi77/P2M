@@ -54,7 +54,7 @@ interface BackgroundLiveEvent<T> {
 
     fun getValue(): T?
 
-    fun asLiveData(): LiveData<T>
+    fun asLiveData(): LiveData<out T>
 }
 
 interface MutableBackgroundLiveEvent<T> : BackgroundLiveEvent<T> {
