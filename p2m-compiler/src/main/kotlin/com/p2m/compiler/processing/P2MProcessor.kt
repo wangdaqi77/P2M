@@ -1274,6 +1274,7 @@ class P2MProcessor : BaseProcessor() {
         val implInternalMutableEventType = TypeSpec.classBuilder(
             name = internalMutableImplClassName.simpleName
         ).run {
+            addSuperinterface(apiClassName)
             addModifiers(KModifier.INTERNAL)
 
             // 构造
@@ -1302,6 +1303,7 @@ class P2MProcessor : BaseProcessor() {
                 val eventClassName = getEventClassName(eventField.eventOn, true)
                 val delegateOuterClassName = getDelegateOuterClassName(eventField.eventOn)
                 PropertySpec.builder(it.name, eventClassName.parameterizedBy(it.type)).run {
+                    addModifiers(KModifier.OVERRIDE)
                     mutable(false)
                     delegate(
                         "%T.$CLASS_EVENT_INTERNAL_MUTABLE_DELEGATE(%L.%L)",
