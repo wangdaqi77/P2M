@@ -10,7 +10,7 @@ import wang.lifecycle.MutableBackgroundLiveEvent
  *
  * @param T The type of data hold by this instance
  */
-internal class InternalBackgroundLiveEvent<T> : MutableBackgroundLiveEvent<T>, com.p2m.core.event.MutableBackgroundLiveEvent<T> {
+internal open class InternalBackgroundLiveEvent<T> : MutableBackgroundLiveEvent<T>, com.p2m.core.event.MutableBackgroundLiveEvent<T> {
 
     /**
      * Creates a InternalMixedBackgroundLiveEvent initialized with the given value.
