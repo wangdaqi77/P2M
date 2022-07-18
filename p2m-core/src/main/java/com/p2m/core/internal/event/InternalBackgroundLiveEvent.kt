@@ -13,14 +13,14 @@ import wang.lifecycle.MutableBackgroundLiveEvent
 internal open class InternalBackgroundLiveEvent<T> : MutableBackgroundLiveEvent<T>, com.p2m.core.event.MutableBackgroundLiveEvent<T> {
 
     /**
-     * Creates a InternalMixedBackgroundLiveEvent initialized with the given value.
+     * Creates a InternalBackgroundLiveEvent initialized with the given value.
      *
      * @property value initial value
      */
     constructor(value: T) : super(value)
 
     /**
-     * Creates a InternalMixedBackgroundLiveEvent with no value assigned to it.
+     * Creates a InternalBackgroundLiveEvent with no value assigned to it.
      */
     constructor() : super()
 

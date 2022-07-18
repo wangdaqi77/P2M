@@ -6,6 +6,7 @@ import androidx.lifecycle.Observer
 import com.p2m.annotation.module.api.*
 import com.p2m.core.internal.event.InternalBackgroundLiveEvent
 import com.p2m.core.internal.event.InternalLiveEvent
+import com.p2m.core.internal.event.InternalMediatorBackgroundLiveEvent
 import kotlin.reflect.KProperty
 
 /**
@@ -62,6 +63,18 @@ interface MutableBackgroundLiveEvent<T> : BackgroundLiveEvent<T> {
     fun postValue(value: T)
 
     fun setValue(value: T)
+}
+
+interface MediatorBackgroundLiveEvent<T> : MutableBackgroundLiveEvent<T>, MediatorEvent {
+
+    fun <T> delegate(): Lazy<BackgroundLiveEvent<T>> =
+        lazy { InternalMediatorBackgroundLiveEvent() }
+
+    fun <T> delegateMutable(): Lazy<MediatorBackgroundLiveEvent<T>> =
+        lazy { InternalMediatorBackgroundLiveEvent() }
+
+    fun <T> toMutable(real: BackgroundLiveEvent<T>): Lazy<MediatorBackgroundLiveEvent<T>> =
+        lazy(LazyThreadSafetyMode.NONE) { real as MediatorBackgroundLiveEvent }
 }
 
 enum class EventDispatcher {

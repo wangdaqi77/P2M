@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import com.p2m.core.internal.event.InternalLiveEvent
 import com.p2m.annotation.module.api.*
+import com.p2m.core.internal.event.InternalMediatorLiveEvent
 
 /**
  * Defined a common interface for event holder class.
@@ -59,4 +60,18 @@ interface MutableLiveEvent<T> : LiveEvent<T> {
     fun postValue(value: T)
 
     fun setValue(value: T)
+}
+
+interface MediatorLiveEvent<T> : MutableLiveEvent<T>, MediatorEvent {
+    companion object {
+        fun <T> delegate(): Lazy<LiveEvent<T>> =
+            lazy { InternalMediatorLiveEvent() }
+
+        fun <T> delegateMutable(): Lazy<MediatorLiveEvent<T>> =
+            lazy { InternalMediatorLiveEvent() }
+
+        fun <T> toMutable(real: LiveEvent<T>): Lazy<MediatorLiveEvent<T>> =
+            lazy(LazyThreadSafetyMode.NONE) { real as MediatorLiveEvent }
+    }
+
 }
