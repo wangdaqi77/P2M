@@ -1019,8 +1019,8 @@ class P2MProcessor : BaseProcessor() {
                 element is Symbol.MethodSymbol && element.modifiers.toMutableSet().let { fullModifiers ->
                     val notSupportedModifiers = notSupportedFullModifiers.toMutableSet()
                     notSupportedModifiers.removeAll(fullModifiers)
-                    (notSupportedModifiers.size == notSupportedFullModifiers.size).also { hasNotSupported ->
-                        if (hasNotSupported) {
+                    (notSupportedModifiers.size == notSupportedFullModifiers.size).also { allow ->
+                        if (!allow) {
                             notSupportedFullModifiers.toMutableSet()
                                 .apply { removeAll(notSupportedModifiers) }
                                 .also { mLogger.warning("Not supported ${it.joinToString { "," }} at $fullModifiers ${element.qualifiedName}.") }
