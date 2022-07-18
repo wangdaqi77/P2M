@@ -997,7 +997,7 @@ class P2MProcessor : BaseProcessor() {
         // 服务接口
         val apiName = "${optionModuleName}ModuleService"
 
-        val notSupportedModifier = mutableSetOf(
+        val notSupportedFullModifiers = arrayOf(
             Modifier.PRIVATE,
             Modifier.DEFAULT,
             Modifier.PROTECTED,
@@ -1016,11 +1016,16 @@ class P2MProcessor : BaseProcessor() {
                 }
 
                 // modifiers filter
-                element is Symbol.MethodSymbol && element.modifiers.toMutableSet().let{
-                    val size = it.size
-                    it.removeAll(notSupportedModifier)
-
-                    (size == it.size).also {include-> check(include) { "Not supported modifies of $it at ${element.qualifiedName}." } }
+                element is Symbol.MethodSymbol && element.modifiers.toMutableSet().let { fullModifiers ->
+                    val notSupportedModifiers = notSupportedFullModifiers.toMutableSet()
+                    notSupportedModifiers.removeAll(fullModifiers)
+                    (notSupportedModifiers.size == notSupportedFullModifiers.size).also { hasNotSupported ->
+                        if (hasNotSupported) {
+                            notSupportedFullModifiers.toMutableSet()
+                                .apply { removeAll(notSupportedModifiers) }
+                                .also { mLogger.warning("Not supported ${it.joinToString { "," }} at $fullModifiers ${element.qualifiedName}.") }
+                        }
+                    }
                 }
             }
             .map { element ->
