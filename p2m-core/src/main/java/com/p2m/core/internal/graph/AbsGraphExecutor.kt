@@ -34,7 +34,14 @@ internal abstract class AbsGraphExecutor<KEY, NODE : Node<NODE>, GRAPH : Graph<K
     }
 
     override fun executeTask(runnable: Runnable) {
-        check(!quit) { "Not execute task, exit already." }
+        if (quit) {
+            if (runnable is ExitRunnable) {
+                runnable.run()
+                return
+            } else {
+                throw IllegalStateException("Not execute task, exit already.")
+            }
+        }
 
         if (ownerThread === Thread.currentThread() && runnable !is ExitRunnable) {
             runnable.run()
@@ -45,7 +52,14 @@ internal abstract class AbsGraphExecutor<KEY, NODE : Node<NODE>, GRAPH : Graph<K
     }
 
     override fun postTask(runnable: Runnable) {
-        check(!quit) { "Not post task, exit already." }
+        if (quit) {
+            if (runnable is ExitRunnable) {
+                runnable.run()
+                return
+            } else {
+                throw IllegalStateException("Not post task, exit already.")
+            }
+        }
 
         if (ownerThread === Thread.currentThread() && runnable !is ExitRunnable) {
             runnable.run()
